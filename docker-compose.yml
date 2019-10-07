@@ -1,0 +1,35 @@
+version: '3'
+services:
+    postgres:
+        build: ./docker/postgres/
+        environment:
+            POSTGRES_USER: kukkuu
+            POSTGRES_PASSWORD: kukkuu
+            POSTGRES_DB: kukkuu
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres-data-volume:/var/lib/postgresql/data
+        container_name: kukkuu-db
+
+    django:
+        build:
+            context: ./
+            dockerfile: ./docker/django/Dockerfile
+        command: python manage.py runserver 0:8000
+        env_file:
+            - ./.env
+        environment:
+            DATABASE_URL: postgres://kukkuu:kukkuu@kukkuu-db/kukkuu
+        volumes:
+            - .:/code
+            - django-media-volume:/var/media/
+        ports:
+            - "8000:8000"
+        depends_on:
+            - postgres
+        container_name: kukkuu
+
+volumes:
+        postgres-data-volume:
+        django-media-volume:
