@@ -81,13 +81,16 @@ USE_L10N = True
 USE_TZ = True
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "helusers",
+    "helusers.apps.HelusersAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    # local apps
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -120,6 +123,8 @@ TEMPLATES = [
 
 CORS_ORIGIN_WHITELIST = env.list("CORS_ORIGIN_WHITELIST")
 CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL")
+
+AUTH_USER_MODEL = "users.User"
 
 LOGGING = {
     "version": 1,
