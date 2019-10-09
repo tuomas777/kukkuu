@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     "corsheaders",
     # local apps
     "users",
+    "children",
 ]
 
 MIDDLEWARE = [
