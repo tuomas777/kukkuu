@@ -5,7 +5,11 @@ python: 3.7
 cache: pip
 
 addons:
-  postgresql: 11
+  postgresql: "10"
+  apt:
+    packages:
+    - postgresql-10
+    - postgresql-client-10
 
 matrix:
   include:
