@@ -3,4 +3,5 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class ChildrenConfig(AppConfig):
-    name = _("children")
+    name = "children"
+    verbose_name = _("children")
