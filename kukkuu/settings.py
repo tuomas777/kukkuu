@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    "graphene_django",
     # local apps
     "users",
     "children",
@@ -126,6 +127,8 @@ CORS_ORIGIN_WHITELIST = env.list("CORS_ORIGIN_WHITELIST")
 CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL")
 
 AUTH_USER_MODEL = "users.User"
+
+GRAPHENE = {"SCHEMA": "kukkuu.schema.schema"}
 
 LOGGING = {
     "version": 1,
