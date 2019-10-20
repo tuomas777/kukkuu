@@ -6,7 +6,7 @@ from .models import Child, Relationship
 class RelationshipInline(admin.TabularInline):
     model = Relationship
     extra = 0
-    fields = ("user", "type", "created_at")
+    fields = ("guardian", "type", "created_at")
     readonly_fields = ("created_at",)
 
     def has_change_permission(self, request, obj=None):

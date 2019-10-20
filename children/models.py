@@ -1,22 +1,19 @@
-import uuid
-
-from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from common.models import TimestampedModel, UUIDPrimaryKeyModel
+from users.models import Guardian
 
-class Child(models.Model):
-    id = models.UUIDField(
-        verbose_name=_("UUID"), primary_key=True, default=uuid.uuid4, editable=False
+
+class Child(UUIDPrimaryKeyModel, TimestampedModel):
+    first_name = models.CharField(
+        verbose_name=_("first name"), max_length=64, blank=True
     )
-    created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
-    updated_at = models.DateTimeField(verbose_name=_("updated_at"), auto_now=True)
-    first_name = models.CharField(verbose_name=_("first name"), max_length=64)
-    last_name = models.CharField(verbose_name=_("last name"), max_length=64)
+    last_name = models.CharField(verbose_name=_("last name"), max_length=64, blank=True)
     birthdate = models.DateField(verbose_name=_("birthdate"))
-    users = models.ManyToManyField(
-        get_user_model(),
-        verbose_name=_("users"),
+    guardians = models.ManyToManyField(
+        Guardian,
+        verbose_name=_("guardians"),
         related_name="children",
         through="children.Relationship",
         blank=True,
@@ -49,9 +46,9 @@ class Relationship(models.Model):
         related_name="relationships",
         on_delete=models.CASCADE,
     )
-    user = models.ForeignKey(
-        get_user_model(),
-        verbose_name=_("user"),
+    guardian = models.ForeignKey(
+        Guardian,
+        verbose_name=_("guardian"),
         on_delete=models.CASCADE,
         related_name="relationships",
     )

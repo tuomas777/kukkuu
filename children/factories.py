@@ -1,7 +1,7 @@
 import factory
 
 from children.models import Child, Relationship
-from users.factories import UserFactory
+from users.factories import GuardianFactory
 
 
 class ChildFactory(factory.django.DjangoModelFactory):
@@ -15,7 +15,7 @@ class ChildFactory(factory.django.DjangoModelFactory):
 
 class RelationshipFactory(factory.django.DjangoModelFactory):
     child = factory.SubFactory(ChildFactory)
-    user = factory.SubFactory(UserFactory)
+    guardian = factory.SubFactory(GuardianFactory)
     type = factory.Faker(
         "random_element", elements=[t[0] for t in Relationship.TYPE_CHOICES]
     )

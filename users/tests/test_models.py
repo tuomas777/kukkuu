@@ -2,8 +2,9 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from children.models import Child
+from users.models import Guardian
 
-from ..factories import UserFactory
+from ..factories import GuardianFactory, UserFactory
 
 User = get_user_model()
 
@@ -16,8 +17,16 @@ def test_user_creation():
 
 
 @pytest.mark.django_db
-def test_user_with_children_creation():
-    UserFactory(relationships__count=3)
+def test_guardian_creation():
+    GuardianFactory()
     assert User.objects.count() == 1
+    assert Child.objects.count() == 0
+    assert Guardian.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_guardian_with_children_creation():
+    GuardianFactory(relationships__count=3)
+    assert Guardian.objects.count() == 1
     assert Child.objects.count() == 3
-    assert list(User.objects.first().children.all()) == list(Child.objects.all())
+    assert list(Guardian.objects.first().children.all()) == list(Child.objects.all())
