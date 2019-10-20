@@ -1,8 +1,15 @@
 import graphene
 
+import children.schema
+
 
 class Query(graphene.ObjectType):
-    pass
+    # at least one query field is required by GraphQL spec
+    dummy = graphene.Boolean()
 
 
-schema = graphene.Schema(query=Query)
+class Mutation(graphene.ObjectType):
+    submit_child = children.schema.SubmitChildMutation.Field()
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation)
