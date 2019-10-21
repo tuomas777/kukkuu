@@ -2,5 +2,6 @@ Django
 django-cors-headers
 django-environ
 django-helusers
+graphene-django
 psycopg2
 sentry-sdk

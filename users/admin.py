@@ -1,7 +1,7 @@
 from django.contrib import admin
-from django.contrib.auth import get_user_model
 
 from children.models import Relationship
+from users.models import Guardian
 
 
 class RelationshipInline(admin.TabularInline):
@@ -14,6 +14,6 @@ class RelationshipInline(admin.TabularInline):
         return False
 
 
-@admin.register(get_user_model())
-class UserAdmin(admin.ModelAdmin):
+@admin.register(Guardian)
+class GuardianAdmin(admin.ModelAdmin):
     inlines = (RelationshipInline,)
