@@ -35,6 +35,11 @@ env = environ.Env(
     SENTRY_ENVIRONMENT=(str, ""),
     CORS_ORIGIN_WHITELIST=(list, []),
     CORS_ORIGIN_ALLOW_ALL=(bool, False),
+    TOKEN_AUTH_ACCEPTED_AUDIENCE=(str, ""),
+    TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX=(str, ""),
+    TOKEN_AUTH_AUTHSERVER_URL=(str, ""),
+    TOKEN_AUTH_FIELD_FOR_CONSENTS=(str, ""),
+    TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, True),
 )
 if os.path.exists(env_file):
     env.read_env(env_file)
@@ -128,7 +133,26 @@ CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL")
 
 AUTH_USER_MODEL = "users.User"
 
-GRAPHENE = {"SCHEMA": "kukkuu.schema.schema"}
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "kukkuu.oidc.GraphQLApiTokenAuthentication",
+]
+
+OIDC_API_TOKEN_AUTH = {
+    "AUDIENCE": env.str("TOKEN_AUTH_ACCEPTED_AUDIENCE"),
+    "API_SCOPE_PREFIX": env.str("TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX"),
+    "ISSUER": env.str("TOKEN_AUTH_AUTHSERVER_URL"),
+    "API_AUTHORIZATION_FIELD": env.str("TOKEN_AUTH_FIELD_FOR_CONSENTS"),
+    "REQUIRE_API_SCOPE_FOR_AUTHENTICATION": env.bool("TOKEN_AUTH_REQUIRE_SCOPE_PREFIX"),
+}
+
+
+GRAPHENE = {
+    "SCHEMA": "kukkuu.schema.schema",
+    "MIDDLEWARE": ["graphql_jwt.middleware.JSONWebTokenMiddleware"],
+}
+
+GRAPHQL_JWT = {"JWT_AUTH_HEADER_PREFIX": "Bearer"}
 
 LOGGING = {
     "version": 1,

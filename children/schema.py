@@ -1,8 +1,8 @@
 import graphene
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.utils.crypto import get_random_string
 from graphene_django.types import DjangoObjectType
+from graphql_jwt.decorators import login_required
 
 from users.models import Guardian
 
@@ -64,17 +64,15 @@ class SubmitChildMutation(graphene.relay.ClientIDMutation):
     guardian = graphene.Field(GuardianType)
 
     @classmethod
+    @login_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO we'll probably need to check somehow if the child already exists
-        child = Child.objects.create(**kwargs["child"])
+        user = info.context.user
 
-        # TODO change this to logged in user once we have authentication in place
-        user = User.objects.create(
-            first_name=get_random_string(),
-            last_name=get_random_string(),
-            username=get_random_string(),
-        )
+        # TODO we don't really know the final flow yet, so in the mean time to make
+        # development easier we always recreate child here
+        Child.objects.filter(relationships__guardian__user=user).delete()
+        child = Child.objects.create(**kwargs["child"])
 
         guardian_data = kwargs["guardian"]
         guardian, _ = Guardian.objects.update_or_create(
