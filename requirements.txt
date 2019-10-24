@@ -9,6 +9,7 @@ certifi==2019.9.11        # via requests, sentry-sdk
 chardet==3.0.4            # via requests
 django-cors-headers==3.1.1
 django-environ==0.4.5
+django-graphql-jwt==0.2.2
 django-helusers==0.5.2
 django==2.2.6
 djangorestframework==3.10.3  # via drf-oidc-auth
@@ -17,7 +18,7 @@ ecdsa==0.13.3             # via python-jose
 future==0.17.1            # via pyjwkest, python-jose
 graphene-django==2.6.0
 graphene==2.1.8           # via graphene-django
-graphql-core==2.2.1       # via graphene, graphene-django, graphql-relay
+graphql-core==2.2.1       # via django-graphql-jwt, graphene, graphene-django, graphql-relay
 graphql-relay==2.0.0      # via graphene
 idna==2.8                 # via requests
 promise==2.2.1            # via graphene-django, graphql-core, graphql-relay
@@ -25,6 +26,7 @@ psycopg2==2.8.3
 pyasn1==0.4.7             # via rsa
 pycryptodomex==3.9.0      # via pyjwkest
 pyjwkest==1.4.2           # via drf-oidc-auth
+pyjwt==1.7.1              # via django-graphql-jwt
 python-jose==3.0.1        # via django-helusers
 pytz==2019.3              # via django
 requests==2.22.0          # via django-helusers, pyjwkest
