@@ -1,35 +1,39 @@
-version: '3'
+version: '3.7'
 services:
     postgres:
-        build: ./docker/postgres/
+        image: postgres:10
+        restart: on-failure
         environment:
             POSTGRES_USER: kukkuu
             POSTGRES_PASSWORD: kukkuu
             POSTGRES_DB: kukkuu
         ports:
-            - "5432:5432"
+            - 5434:5432
         volumes:
-            - postgres-data-volume:/var/lib/postgresql/data
+          - pgdata:/var/lib/postgresql/data
         container_name: kukkuu-db
 
     django:
         build:
-            context: ./
-            dockerfile: ./docker/django/Dockerfile
-        command: python manage.py runserver 0:8000
+            context: .
+            target: development
         env_file:
-            - ./.env
+            - docker-compose.env.yaml
         environment:
             DATABASE_URL: postgres://kukkuu:kukkuu@kukkuu-db/kukkuu
+            DATABASE_HOST: kukkuu-db.helsinki
         volumes:
-            - .:/code
-            - django-media-volume:/var/media/
+            - .:/app
         ports:
-            - "8000:8000"
+            - 8081:8081
         depends_on:
             - postgres
-        container_name: kukkuu
+        container_name: kukkuu-backend
 
 volumes:
-        postgres-data-volume:
-        django-media-volume:
+    pgdata:
+        driver: local
+
+networks:
+    default:
+        name: helsinki
