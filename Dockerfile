@@ -4,6 +4,7 @@ FROM helsinkitest/python:3.7-slim as appbase
 RUN mkdir /entrypoint
 
 COPY --chown=appuser:appuser requirements.txt /app/requirements.txt
+COPY --chown=appuser:appuser requirements-prod.txt /app/requirements-prod.txt
 
 RUN apt-install.sh \
         git \
@@ -12,6 +13,7 @@ RUN apt-install.sh \
         build-essential \
     && pip install -U pip \
     && pip install --no-cache-dir -r /app/requirements.txt \
+    && pip install --no-cache-dir  -r /app/requirements-prod.txt \
     && apt-cleanup.sh build-essential
 
 COPY --chown=appuser:appuser docker-entrypoint.sh /entrypoint/docker-entrypoint.sh
@@ -37,5 +39,7 @@ FROM appbase as production
 
 COPY --chown=appuser:appuser . /app/
 
+RUN python manage.py collectstatic
+
 USER appuser
-EXPOSE 8081/tcp
+EXPOSE 8000/tcp
