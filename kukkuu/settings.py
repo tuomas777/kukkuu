@@ -35,11 +35,10 @@ env = environ.Env(
     SENTRY_ENVIRONMENT=(str, ""),
     CORS_ORIGIN_WHITELIST=(list, []),
     CORS_ORIGIN_ALLOW_ALL=(bool, False),
-    TOKEN_AUTH_ACCEPTED_AUDIENCE=(str, ""),
-    TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX=(str, ""),
-    TOKEN_AUTH_AUTHSERVER_URL=(str, ""),
-    TOKEN_AUTH_FIELD_FOR_CONSENTS=(str, ""),
+    TOKEN_AUTH_ACCEPTED_AUDIENCE=(str, "https://api.hel.fi/auth/kukkuu"),
+    TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX=(str, "kukkuu"),
     TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, True),
+    TOKEN_AUTH_AUTHSERVER_URL=(str, ""),
 )
 if os.path.exists(env_file):
     env.read_env(env_file)
@@ -98,6 +97,7 @@ INSTALLED_APPS = [
     # local apps
     "users",
     "children",
+    "utils",
 ]
 
 MIDDLEWARE = [
@@ -142,7 +142,6 @@ OIDC_API_TOKEN_AUTH = {
     "AUDIENCE": env.str("TOKEN_AUTH_ACCEPTED_AUDIENCE"),
     "API_SCOPE_PREFIX": env.str("TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX"),
     "ISSUER": env.str("TOKEN_AUTH_AUTHSERVER_URL"),
-    "API_AUTHORIZATION_FIELD": env.str("TOKEN_AUTH_FIELD_FOR_CONSENTS"),
     "REQUIRE_API_SCOPE_FOR_AUTHENTICATION": env.bool("TOKEN_AUTH_REQUIRE_SCOPE_PREFIX"),
 }
 

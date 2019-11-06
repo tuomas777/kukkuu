@@ -22,7 +22,7 @@ graphql-core==2.2.1       # via django-graphql-jwt, graphene, graphene-django, g
 graphql-relay==2.0.0      # via graphene
 idna==2.8                 # via requests
 promise==2.2.1            # via graphene-django, graphql-core, graphql-relay
-psycopg2==2.8.3
+psycopg2==2.8.4
 pyasn1==0.4.7             # via rsa
 pycryptodomex==3.9.0      # via pyjwkest
 pyjwkest==1.4.2           # via drf-oidc-auth
