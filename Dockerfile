@@ -39,7 +39,7 @@ FROM appbase as production
 
 COPY --chown=appuser:appuser . /app/
 
-RUN python manage.py collectstatic
+RUN SECRET_KEY="only-used-for-collectstatic" python manage.py collectstatic
 
 USER appuser
 EXPOSE 8000/tcp
