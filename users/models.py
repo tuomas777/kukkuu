@@ -12,6 +12,15 @@ class User(AbstractUser):
         verbose_name_plural = _("users")
 
 
+class GuardianQuerySet(models.QuerySet):
+    def filter_for_user(self, user):
+        # TODO we'll probably need more fine-grained control than this
+        if user.is_staff:
+            return self
+        else:
+            return self.filter(user=user)
+
+
 class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
     user = models.OneToOneField(
         get_user_model(), verbose_name=_("user"), on_delete=models.CASCADE
@@ -22,6 +31,8 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
     phone_number = models.CharField(
         verbose_name=_("phone number"), max_length=64, blank=True
     )
+
+    objects = GuardianQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("guardian")

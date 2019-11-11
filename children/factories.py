@@ -22,3 +22,7 @@ class RelationshipFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Relationship
+
+
+class ChildWithGuardianFactory(ChildFactory):
+    relationship = factory.RelatedFactory(RelationshipFactory, "child")

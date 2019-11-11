@@ -1,11 +1,11 @@
 import graphene
 
 import children.schema
+import users.schema
 
 
-class Query(graphene.ObjectType):
-    # at least one query field is required by GraphQL spec
-    dummy = graphene.Boolean()
+class Query(children.schema.Query, users.schema.Query, graphene.ObjectType):
+    pass
 
 
 class Mutation(graphene.ObjectType):
