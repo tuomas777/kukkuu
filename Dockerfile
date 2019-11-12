@@ -13,8 +13,7 @@ RUN apt-install.sh \
         build-essential \
     && pip install -U pip \
     && pip install --no-cache-dir -r /app/requirements.txt \
-    && pip install --no-cache-dir  -r /app/requirements-prod.txt \
-    && apt-cleanup.sh build-essential
+    && pip install --no-cache-dir  -r /app/requirements-prod.txt
 
 COPY --chown=appuser:appuser docker-entrypoint.sh /entrypoint/docker-entrypoint.sh
 ENTRYPOINT ["/entrypoint/docker-entrypoint.sh"]
@@ -24,7 +23,8 @@ FROM appbase as development
 # ==============================
 
 COPY --chown=appuser:appuser requirements-dev.txt /app/requirements-dev.txt
-RUN pip install --no-cache-dir -r /app/requirements-dev.txt
+RUN pip install --no-cache-dir -r /app/requirements-dev.txt \
+    && apt-cleanup.sh build-essential
 
 ENV DEV_SERVER=1
 
@@ -39,7 +39,8 @@ FROM appbase as production
 
 COPY --chown=appuser:appuser . /app/
 
-RUN SECRET_KEY="only-used-for-collectstatic" python manage.py collectstatic
+RUN SECRET_KEY="only-used-for-collectstatic" python manage.py collectstatic \
+    && apt-cleanup.sh build-essential
 
 USER appuser
 EXPOSE 8000/tcp
