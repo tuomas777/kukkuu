@@ -24,7 +24,10 @@ FROM appbase as development
 # ==============================
 
 COPY --chown=appuser:appuser requirements-dev.txt /app/requirements-dev.txt
-RUN pip install --no-cache-dir -r /app/requirements-dev.txt
+RUN apt-install.sh \
+        build-essential \
+    && pip install --no-cache-dir -r /app/requirements-dev.txt \
+    && apt-cleanup.sh build-essential
 
 ENV DEV_SERVER=1
 
