@@ -5,6 +5,15 @@ from common.models import TimestampedModel, UUIDPrimaryKeyModel
 from users.models import Guardian
 
 
+class ChildQuerySet(models.QuerySet):
+    def filter_for_user(self, user):
+        # TODO we'll probably need more fine-grained control than this
+        if user.is_staff:
+            return self
+        else:
+            return self.filter(guardians__user=user)
+
+
 class Child(UUIDPrimaryKeyModel, TimestampedModel):
     first_name = models.CharField(
         verbose_name=_("first name"), max_length=64, blank=True
@@ -18,6 +27,8 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
         through="children.Relationship",
         blank=True,
     )
+
+    objects = ChildQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("child")

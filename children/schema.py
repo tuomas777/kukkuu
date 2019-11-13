@@ -1,19 +1,27 @@
 import graphene
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from graphene import relay
+from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 
 from users.models import Guardian
+from users.schema import GuardianNode
 
 from .models import Child, Relationship
 
 User = get_user_model()
 
 
-class ChildType(DjangoObjectType):
+class ChildNode(DjangoObjectType):
     class Meta:
         model = Child
+        interfaces = (relay.Node,)
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter_for_user(info.context.user).order_by("last_name")
 
 
 class ChildInput(graphene.InputObjectType):
@@ -22,11 +30,10 @@ class ChildInput(graphene.InputObjectType):
     birthdate = graphene.Date(required=True)
 
 
-# this class cannot be named just RelationshipType because of graphene-django
-# https://github.com/graphql-python/graphene-django/issues/185
-class RelationshipObjectType(DjangoObjectType):
+class RelationshipNode(DjangoObjectType):
     class Meta:
         model = Relationship
+        interfaces = (relay.Node,)
         fields = ("type", "child", "guardian")
 
 
@@ -39,11 +46,6 @@ class RelationshipTypeEnum(graphene.Enum):
 
 class RelationshipInput(graphene.InputObjectType):
     type = RelationshipTypeEnum()
-
-
-class GuardianType(DjangoObjectType):
-    class Meta:
-        model = Guardian
 
 
 class GuardianInput(graphene.InputObjectType):
@@ -59,9 +61,9 @@ class SubmitChildMutation(graphene.relay.ClientIDMutation):
         relationship = RelationshipInput()
         guardian = GuardianInput(required=True)
 
-    child = graphene.Field(ChildType)
-    relationship = graphene.Field(RelationshipObjectType)
-    guardian = graphene.Field(GuardianType)
+    child = graphene.Field(ChildNode)
+    relationship = graphene.Field(RelationshipNode)
+    guardian = graphene.Field(GuardianNode)
 
     @classmethod
     @login_required
@@ -96,3 +98,12 @@ class SubmitChildMutation(graphene.relay.ClientIDMutation):
         return SubmitChildMutation(
             child=child, relationship=relationship, guardian=guardian
         )
+
+
+class Query:
+    children = DjangoConnectionField(ChildNode)
+
+    @staticmethod
+    @login_required
+    def resolve_children(parent, info, **kwargs):
+        return Child.objects.filter_for_user(info.context.user)
