@@ -92,19 +92,27 @@ snapshots["test_children_query_staff_user 1"] = {
 
 snapshots["test_submit_child_authenticated 1"] = {
     "data": {
-        "submitChild": {
-            "child": {
-                "birthdate": "2020-05-05",
-                "firstName": "Matti",
-                "lastName": "Mainio",
-            },
+        "submitChildrenAndGuardian": {
+            "children": [
+                {
+                    "birthdate": "2020-01-01",
+                    "firstName": "Matti",
+                    "lastName": "Mainio",
+                    "relationship": {"type": "OTHER_GUARDIAN"},
+                },
+                {
+                    "birthdate": "2020-02-02",
+                    "firstName": "Jussi",
+                    "lastName": "Juonio",
+                    "relationship": {"type": None},
+                },
+            ],
             "guardian": {
-                "email": "jussi@example.com",
-                "firstName": "Jussi",
-                "lastName": "Juonio",
+                "email": "gulle@example.com",
+                "firstName": "Gulle",
+                "lastName": "Guardian",
                 "phoneNumber": "777-777777",
             },
-            "relationship": {"type": "PARENT"},
         }
     }
 }

@@ -34,16 +34,16 @@ query getChildren {
 """
 
 
-SUBMIT_CHILD_MUTATION = """
-mutation submitChild($input: SubmitChildMutationInput!) {
-  submitChild(input: $input) {
-    child {
+SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION = """
+mutation submitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInput!) {
+  submitChildrenAndGuardian(input: $input) {
+    children {
       firstName
       lastName
       birthdate
-    }
-    relationship {
-      type
+      relationship {
+        type
+      }
     }
     guardian {
       firstName
@@ -56,23 +56,27 @@ mutation submitChild($input: SubmitChildMutationInput!) {
 """
 
 
-CHILD_DATA = {"firstName": "Matti", "lastName": "Mainio", "birthdate": "2020-05-05"}
+CHILDREN_DATA = [
+    {
+        "firstName": "Matti",
+        "lastName": "Mainio",
+        "birthdate": "2020-01-01",
+        "relationship": {"type": "OTHER_GUARDIAN"},
+    },
+    {"firstName": "Jussi", "lastName": "Juonio", "birthdate": "2020-02-02"},
+]
 
 
 GUARDIAN_DATA = {
-    "firstName": "Jussi",
-    "lastName": "Juonio",
-    "email": "jussi@example.com",
+    "firstName": "Gulle",
+    "lastName": "Guardian",
+    "email": "gulle@example.com",
     "phoneNumber": "777-777777",
 }
 
 
-SUBMIT_CHILD_VARIABLES = {
-    "input": {
-        "child": CHILD_DATA,
-        "guardian": GUARDIAN_DATA,
-        "relationship": {"type": "PARENT"},
-    }
+SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES = {
+    "input": {"children": CHILDREN_DATA, "guardian": GUARDIAN_DATA}
 }
 
 
@@ -83,7 +87,8 @@ def to_snake_dict(d):
 @pytest.mark.django_db
 def test_submit_child_unauthenticated(api_client):
     executed = api_client.execute(
-        SUBMIT_CHILD_MUTATION, variables=SUBMIT_CHILD_VARIABLES
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION,
+        variables=SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES,
     )
 
     # TODO add better check when we have error codes
@@ -93,15 +98,19 @@ def test_submit_child_unauthenticated(api_client):
 @pytest.mark.django_db
 def test_submit_child_authenticated(snapshot, user_api_client):
     executed = user_api_client.execute(
-        SUBMIT_CHILD_MUTATION, variables=SUBMIT_CHILD_VARIABLES
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION,
+        variables=SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES,
     )
 
     snapshot.assert_match(executed)
 
     # check that everything is created properly to the db
-    child = Child.objects.get(**to_snake_dict(CHILD_DATA))
     guardian = Guardian.objects.get(**to_snake_dict(GUARDIAN_DATA))
-    Relationship.objects.get(type=Relationship.PARENT, child=child, guardian=guardian)
+    for child_data in CHILDREN_DATA:
+        relationship_type_name = child_data.pop("relationship", {}).get("type", "")
+        relationship_type = getattr(Relationship, relationship_type_name, None)
+        child = Child.objects.get(**to_snake_dict(child_data))
+        Relationship.objects.get(type=relationship_type, child=child, guardian=guardian)
 
 
 @pytest.mark.django_db
