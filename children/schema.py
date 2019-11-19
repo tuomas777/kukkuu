@@ -24,12 +24,6 @@ class ChildNode(DjangoObjectType):
         return queryset.filter_for_user(info.context.user).order_by("last_name")
 
 
-class ChildInput(graphene.InputObjectType):
-    first_name = graphene.String()
-    last_name = graphene.String()
-    birthdate = graphene.Date(required=True)
-
-
 class RelationshipNode(DjangoObjectType):
     class Meta:
         model = Relationship
@@ -55,14 +49,33 @@ class GuardianInput(graphene.InputObjectType):
     phone_number = graphene.String()
 
 
-class SubmitChildMutation(graphene.relay.ClientIDMutation):
+# Unfortunately DjangoObjectTypes do not seem to play well with inheritance,
+# so we need duplicate code here.
+class ChildMutationOutputNode(ChildNode):
+    relationship = graphene.Field(RelationshipNode)
+
+    class Meta:
+        model = Child
+        interfaces = (relay.Node,)
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter_for_user(info.context.user).order_by("last_name")
+
+
+class ChildInput(graphene.InputObjectType):
+    first_name = graphene.String()
+    last_name = graphene.String()
+    birthdate = graphene.Date(required=True)
+    relationship = RelationshipInput()
+
+
+class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
     class Input:
-        child = ChildInput(required=True)
-        relationship = RelationshipInput()
+        children = graphene.List(ChildInput)
         guardian = GuardianInput(required=True)
 
-    child = graphene.Field(ChildNode)
-    relationship = graphene.Field(RelationshipNode)
+    children = graphene.List(ChildMutationOutputNode)
     guardian = graphene.Field(GuardianNode)
 
     @classmethod
@@ -70,11 +83,6 @@ class SubmitChildMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
-
-        # TODO we don't really know the final flow yet, so in the mean time to make
-        # development easier we always recreate child here
-        Child.objects.filter(relationships__guardian__user=user).delete()
-        child = Child.objects.create(**kwargs["child"])
 
         guardian_data = kwargs["guardian"]
         guardian, _ = Guardian.objects.update_or_create(
@@ -87,17 +95,23 @@ class SubmitChildMutation(graphene.relay.ClientIDMutation):
             ),
         )
 
-        if "relationship" in kwargs:
-            relationship_type = kwargs["relationship"].get("type")
-        else:
-            relationship_type = None
-        relationship = Relationship.objects.create(
-            type=relationship_type, child=child, guardian=guardian
-        )
+        # TODO we don't really know the final flow yet, so in the mean time to make
+        # development easier we always recreate child here
+        Child.objects.filter(relationships__guardian__user=user).delete()
 
-        return SubmitChildMutation(
-            child=child, relationship=relationship, guardian=guardian
-        )
+        children = []
+        for child in kwargs.get("children", ()):
+            relationship_data = child.pop("relationship", {})
+
+            child = Child.objects.create(**child)
+            relationship = Relationship.objects.create(
+                type=relationship_data.get("type"), child=child, guardian=guardian
+            )
+            child.relationship = relationship
+
+            children.append(child)
+
+        return SubmitChildrenAndGuardianMutation(children=children, guardian=guardian)
 
 
 class Query:

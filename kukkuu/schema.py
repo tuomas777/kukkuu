@@ -9,7 +9,9 @@ class Query(children.schema.Query, users.schema.Query, graphene.ObjectType):
 
 
 class Mutation(graphene.ObjectType):
-    submit_child = children.schema.SubmitChildMutation.Field()
+    submit_children_and_guardian = (
+        children.schema.SubmitChildrenAndGuardianMutation.Field()
+    )
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
