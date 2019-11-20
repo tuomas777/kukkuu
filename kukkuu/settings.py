@@ -28,6 +28,8 @@ env = environ.Env(
     USE_X_FORWARDED_HOST=(bool, False),
     DATABASE_URL=(str, "postgres://kukkuu:kukkuu@localhost/kukkuu"),
     CACHE_URL=(str, "locmemcache://"),
+    MAILER_EMAIL_BACKEND=(str, "django.core.mail.backends.console.EmailBackend"),
+    DEFAULT_FROM_EMAIL=(str, "kukkuu@example.com"),
     MAIL_MAILGUN_KEY=(str, ""),
     MAIL_MAILGUN_DOMAIN=(str, ""),
     MAIL_MAILGUN_API=(str, ""),
@@ -56,6 +58,17 @@ USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST")
 DATABASES = {"default": env.db()}
 
 CACHES = {"default": env.cache()}
+
+if env.str("DEFAULT_FROM_EMAIL"):
+    DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL")
+if env("MAIL_MAILGUN_KEY"):
+    ANYMAIL = {
+        "MAILGUN_API_KEY": env("MAIL_MAILGUN_KEY"),
+        "MAILGUN_SENDER_DOMAIN": env("MAIL_MAILGUN_DOMAIN"),
+        "MAILGUN_API_URL": env("MAIL_MAILGUN_API"),
+    }
+EMAIL_BACKEND = "mailer.backend.DbBackend"
+MAILER_EMAIL_BACKEND = env.str("MAILER_EMAIL_BACKEND")
 
 try:
     version = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
@@ -95,6 +108,9 @@ INSTALLED_APPS = [
     "corsheaders",
     "graphene_django",
     "parler",
+    "anymail",
+    "mailer",
+    "django_ilmoitin",
     # local apps
     "users",
     "children",
