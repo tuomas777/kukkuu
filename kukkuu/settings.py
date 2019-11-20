@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "graphene_django",
+    "parler",
     # local apps
     "users",
     "children",
@@ -144,6 +145,10 @@ OIDC_API_TOKEN_AUTH = {
     "ISSUER": env.str("TOKEN_AUTH_AUTHSERVER_URL"),
     "REQUIRE_API_SCOPE_FOR_AUTHENTICATION": env.bool("TOKEN_AUTH_REQUIRE_SCOPE_PREFIX"),
 }
+
+SITE_ID = 1
+
+PARLER_LANGUAGES = {SITE_ID: ({"code": "fi"}, {"code": "sv"}, {"code": "en"})}
 
 
 GRAPHENE = {

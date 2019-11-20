@@ -3,6 +3,7 @@ django-cors-headers
 django-environ
 django-graphql-jwt
 django-helusers
+django-parler
 graphene-django
 psycopg2
 sentry-sdk
