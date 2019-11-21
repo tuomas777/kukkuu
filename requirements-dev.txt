@@ -5,7 +5,6 @@
 #    pip-compile requirements-dev.in
 #
 appdirs==1.4.3            # via black
-appnope==0.1.0            # via ipython
 atomicwrites==1.3.0       # via pytest
 attrs==19.2.0             # via black, pytest
 backcall==0.1.0           # via ipython
@@ -14,8 +13,6 @@ click==7.0                # via black
 coverage==4.5.4           # via pytest-cov
 decorator==4.4.0          # via ipython, traitlets
 entrypoints==0.3          # via flake8
-factory-boy==2.12.0
-faker==2.0.2              # via factory-boy
 fastdiff==0.2.0           # via snapshottest
 flake8==3.7.8
 importlib-metadata==0.23  # via pluggy, pytest
@@ -41,12 +38,10 @@ pyparsing==2.4.2          # via packaging
 pytest-cov==2.8.1
 pytest-django==3.5.1
 pytest==5.2.1
-python-dateutil==2.8.0    # via faker
 regex==2019.11.1          # via black
-six==1.12.0               # via faker, packaging, prompt-toolkit, python-dateutil, snapshottest, traitlets
+six==1.12.0               # via packaging, prompt-toolkit, snapshottest, traitlets
 snapshottest==0.5.1
 termcolor==1.1.0          # via snapshottest
-text-unidecode==1.3       # via faker
 toml==0.10.0              # via black
 traitlets==4.3.3          # via ipython
 typed-ast==1.4.0          # via black
