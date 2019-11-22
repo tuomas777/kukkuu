@@ -18,7 +18,6 @@ class GuardianFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
-    email = factory.Faker("email")
     phone_number = factory.Faker("phone_number")
 
     class Meta:

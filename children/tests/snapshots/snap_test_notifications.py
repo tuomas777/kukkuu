@@ -7,8 +7,8 @@ from snapshottest import Snapshot
 snapshots = Snapshot()
 
 snapshots["test_signup_notification 1"] = [
-    """kukkuu@example.com|['gulle@example.com']|SIGNUP-notifikaation aihe|
+    """kukkuu@example.com|['mperez@cox.com']|SIGNUP-notifikaation aihe|
 SIGNUP-notifikaation sisältö tekstimuodossa.
 Lapset: [<Child: Matti Mainio (2020-01-01)>, <Child: Jussi Juonio (2020-02-02)>]
-Huoltajat: Gulle Guardian (gulle@example.com)"""
+Huoltajat: Gulle Guardian"""
 ]
