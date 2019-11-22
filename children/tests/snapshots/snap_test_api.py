@@ -12,20 +12,19 @@ snapshots["test_children_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "birthdate": "2019-07-22",
-                        "firstName": "Melissa",
-                        "lastName": "Dorsey",
+                        "birthdate": "2019-02-22",
+                        "firstName": "Daniel",
+                        "lastName": "Hernandez",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "guardian": {
-                                            "email": "dianahenry@yahoo.com",
-                                            "firstName": "Christopher",
-                                            "lastName": "Johnson",
-                                            "phoneNumber": "(171)012-3447x44685",
+                                            "firstName": "Melissa",
+                                            "lastName": "Dorsey",
+                                            "phoneNumber": "(307)277-0898x17101",
                                         },
-                                        "type": "ADVOCATE",
+                                        "type": "OTHER_RELATION",
                                     }
                                 }
                             ]
@@ -43,20 +42,19 @@ snapshots["test_children_query_staff_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "birthdate": "2019-07-22",
-                        "firstName": "Melissa",
-                        "lastName": "Dorsey",
+                        "birthdate": "2019-02-22",
+                        "firstName": "Daniel",
+                        "lastName": "Hernandez",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "guardian": {
-                                            "email": "dianahenry@yahoo.com",
-                                            "firstName": "Christopher",
-                                            "lastName": "Johnson",
-                                            "phoneNumber": "(171)012-3447x44685",
+                                            "firstName": "Melissa",
+                                            "lastName": "Dorsey",
+                                            "phoneNumber": "(307)277-0898x17101",
                                         },
-                                        "type": "ADVOCATE",
+                                        "type": "OTHER_RELATION",
                                     }
                                 }
                             ]
@@ -73,12 +71,11 @@ snapshots["test_children_query_staff_user 1"] = {
                                 {
                                     "node": {
                                         "guardian": {
-                                            "email": "adamsrobert@hotmail.com",
                                             "firstName": "Robert",
                                             "lastName": "Crane",
-                                            "phoneNumber": "011-715-9102",
+                                            "phoneNumber": "+1-034-669-7270x11715",
                                         },
-                                        "type": "PARENT",
+                                        "type": "OTHER_RELATION",
                                     }
                                 }
                             ]
@@ -108,7 +105,6 @@ snapshots["test_submit_child_authenticated 1"] = {
                 },
             ],
             "guardian": {
-                "email": "gulle@example.com",
                 "firstName": "Gulle",
                 "lastName": "Guardian",
                 "phoneNumber": "777-777777",

@@ -21,7 +21,6 @@ query getChildren {
               guardian {
                 firstName
                 lastName
-                email
                 phoneNumber
               }
             }
@@ -48,7 +47,6 @@ mutation submitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInpu
     guardian {
       firstName
       lastName
-      email
       phoneNumber
     }
   }
@@ -70,7 +68,6 @@ CHILDREN_DATA = [
 GUARDIAN_DATA = {
     "firstName": "Gulle",
     "lastName": "Guardian",
-    "email": "gulle@example.com",
     "phoneNumber": "777-777777",
 }
 
