@@ -14,6 +14,7 @@ query getChildren {
         firstName
         lastName
         birthdate
+        postalCode
         relationships {
           edges {
             node {
@@ -40,6 +41,7 @@ mutation submitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInpu
       firstName
       lastName
       birthdate
+      postalCode
       relationship {
         type
       }
@@ -59,9 +61,15 @@ CHILDREN_DATA = [
         "firstName": "Matti",
         "lastName": "Mainio",
         "birthdate": "2020-01-01",
+        "postalCode": "00840",
         "relationship": {"type": "OTHER_GUARDIAN"},
     },
-    {"firstName": "Jussi", "lastName": "Juonio", "birthdate": "2020-02-02"},
+    {
+        "firstName": "Jussi",
+        "lastName": "Juonio",
+        "birthdate": "2020-02-02",
+        "postalCode": "00820",
+    },
 ]
 
 
