@@ -68,6 +68,7 @@ class ChildInput(graphene.InputObjectType):
     first_name = graphene.String()
     last_name = graphene.String()
     birthdate = graphene.Date(required=True)
+    postal_code = graphene.String()
     relationship = RelationshipInput()
 
 
