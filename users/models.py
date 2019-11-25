@@ -30,6 +30,7 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
     phone_number = models.CharField(
         verbose_name=_("phone number"), max_length=64, blank=True
     )
+    language = models.CharField(verbose_name=_("language"), max_length=10, blank=True)
 
     objects = GuardianQuerySet.as_manager()
 

@@ -12,17 +12,17 @@ snapshots["test_guardians_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "firstName": "Monique",
-                        "lastName": "Smith",
-                        "phoneNumber": "(028)130-7277",
+                        "firstName": "Sandra",
+                        "lastName": "Meyer",
+                        "phoneNumber": "(727)708-9817",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2019-02-06",
-                                            "firstName": "Austin",
-                                            "lastName": "George",
+                                            "birthdate": "2019-11-23",
+                                            "firstName": "Christopher",
+                                            "lastName": "Jones",
                                         },
                                         "type": "ADVOCATE",
                                     }
@@ -54,7 +54,7 @@ snapshots["test_guardians_query_staff_user 1"] = {
                                             "firstName": "Robin",
                                             "lastName": "Moses",
                                         },
-                                        "type": "OTHER_GUARDIAN",
+                                        "type": "ADVOCATE",
                                     }
                                 }
                             ]
@@ -63,17 +63,17 @@ snapshots["test_guardians_query_staff_user 1"] = {
                 },
                 {
                     "node": {
-                        "firstName": "Monique",
-                        "lastName": "Smith",
-                        "phoneNumber": "(028)130-7277",
+                        "firstName": "Sandra",
+                        "lastName": "Meyer",
+                        "phoneNumber": "(727)708-9817",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2019-02-06",
-                                            "firstName": "Austin",
-                                            "lastName": "George",
+                                            "birthdate": "2019-11-23",
+                                            "firstName": "Christopher",
+                                            "lastName": "Jones",
                                         },
                                         "type": "ADVOCATE",
                                     }
