@@ -9,7 +9,7 @@ from graphql_jwt.decorators import login_required
 
 from children.notifications import NotificationType
 from users.models import Guardian
-from users.schema import GuardianNode
+from users.schema import GuardianNode, LanguageEnum
 
 from .models import Child, Relationship
 
@@ -48,6 +48,7 @@ class GuardianInput(graphene.InputObjectType):
     first_name = graphene.String(required=True)
     last_name = graphene.String(required=True)
     phone_number = graphene.String()
+    language = LanguageEnum()
 
 
 # Unfortunately DjangoObjectTypes do not seem to play well with inheritance,
@@ -93,6 +94,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
                 first_name=guardian_data["first_name"],
                 last_name=guardian_data["last_name"],
                 phone_number=guardian_data.get("phone_number", ""),
+                language=guardian_data.get("language", ""),
             ),
         )
 
@@ -117,6 +119,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
                 guardian.user.email,
                 NotificationType.SIGNUP,
                 {"children": children, "guardian": guardian},
+                guardian.language,
             )
 
         return SubmitChildrenAndGuardianMutation(children=children, guardian=guardian)

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -29,6 +30,9 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
     last_name = models.CharField(verbose_name=_("last name"), max_length=64)
     phone_number = models.CharField(
         verbose_name=_("phone number"), max_length=64, blank=True
+    )
+    language = models.CharField(
+        verbose_name=_("language"), max_length=10, default=settings.LANGUAGES[0][0]
     )
 
     objects = GuardianQuerySet.as_manager()

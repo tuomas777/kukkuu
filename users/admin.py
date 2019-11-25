@@ -1,3 +1,5 @@
+from django import forms
+from django.conf import settings
 from django.contrib import admin
 
 from children.models import Relationship
@@ -14,6 +16,13 @@ class RelationshipInline(admin.TabularInline):
         return False
 
 
+class GuardianForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["language"] = forms.ChoiceField(choices=settings.LANGUAGES)
+
+
 @admin.register(Guardian)
 class GuardianAdmin(admin.ModelAdmin):
+    form = GuardianForm
     inlines = (RelationshipInline,)
