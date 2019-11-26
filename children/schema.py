@@ -48,7 +48,7 @@ class GuardianInput(graphene.InputObjectType):
     first_name = graphene.String(required=True)
     last_name = graphene.String(required=True)
     phone_number = graphene.String()
-    language = LanguageEnum()
+    language = LanguageEnum(required=True)
 
 
 # Unfortunately DjangoObjectTypes do not seem to play well with inheritance,
@@ -94,7 +94,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
                 first_name=guardian_data["first_name"],
                 last_name=guardian_data["last_name"],
                 phone_number=guardian_data.get("phone_number", ""),
-                language=guardian_data.get("language", ""),
+                language=guardian_data["language"],
             ),
         )
 

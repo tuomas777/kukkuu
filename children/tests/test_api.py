@@ -79,6 +79,7 @@ GUARDIAN_DATA = {
     "firstName": "Gulle",
     "lastName": "Guardian",
     "phoneNumber": "777-777777",
+    "language": "FI",
 }
 
 
@@ -112,7 +113,9 @@ def test_submit_child_authenticated(snapshot, user_api_client):
     snapshot.assert_match(executed)
 
     # check that everything is created properly to the db
-    guardian = Guardian.objects.get(**to_snake_dict(GUARDIAN_DATA))
+    guardian_filters = to_snake_dict(GUARDIAN_DATA)
+    guardian_filters["language"] = guardian_filters["language"].lower()
+    guardian = Guardian.objects.get(**guardian_filters)
     for child_data in CHILDREN_DATA:
         relationship_type_name = child_data.pop("relationship", {}).get("type", "")
         relationship_type = getattr(Relationship, relationship_type_name, None)
