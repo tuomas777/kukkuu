@@ -1,11 +1,13 @@
 import graphene
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django_ilmoitin.utils import send_notification
 from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 
+from children.notifications import NotificationType
 from users.models import Guardian
 from users.schema import GuardianNode
 
@@ -85,7 +87,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         user = info.context.user
 
         guardian_data = kwargs["guardian"]
-        guardian, _ = Guardian.objects.update_or_create(
+        guardian, guardian_created = Guardian.objects.update_or_create(
             user=user,
             defaults=dict(
                 first_name=guardian_data["first_name"],
@@ -110,6 +112,13 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             child.relationship = relationship
 
             children.append(child)
+
+        if guardian_created:
+            send_notification(
+                guardian.email,
+                NotificationType.SIGNUP,
+                {"children": children, "guardian": guardian},
+            )
 
         return SubmitChildrenAndGuardianMutation(children=children, guardian=guardian)
 
