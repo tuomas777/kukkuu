@@ -23,6 +23,7 @@ query getChildren {
                 firstName
                 lastName
                 phoneNumber
+                email
               }
             }
           }
@@ -50,6 +51,7 @@ mutation submitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInpu
       firstName
       lastName
       phoneNumber
+      email
     }
   }
 }

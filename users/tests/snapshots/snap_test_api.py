@@ -12,6 +12,7 @@ snapshots["test_guardians_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
+                        "email": "mperez@cox.com",
                         "firstName": "Sandra",
                         "lastName": "Meyer",
                         "phoneNumber": "(727)708-9817",
@@ -42,6 +43,7 @@ snapshots["test_guardians_query_staff_user 1"] = {
             "edges": [
                 {
                     "node": {
+                        "email": "ramirezandrew@burns.com",
                         "firstName": "Christy",
                         "lastName": "Jenkins",
                         "phoneNumber": "001-803-466-9727x0117",
@@ -63,6 +65,7 @@ snapshots["test_guardians_query_staff_user 1"] = {
                 },
                 {
                     "node": {
+                        "email": "mperez@cox.com",
                         "firstName": "Sandra",
                         "lastName": "Meyer",
                         "phoneNumber": "(727)708-9817",

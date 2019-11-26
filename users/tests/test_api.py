@@ -10,6 +10,7 @@ query getGuardians {
         firstName
         lastName
         phoneNumber
+        email
         relationships {
           edges {
             node {

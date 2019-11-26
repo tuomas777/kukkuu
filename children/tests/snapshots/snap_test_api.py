@@ -26,6 +26,7 @@ snapshots["test_submit_child_authenticated 1"] = {
                 },
             ],
             "guardian": {
+                "email": "mperez@cox.com",
                 "firstName": "Gulle",
                 "lastName": "Guardian",
                 "phoneNumber": "777-777777",
@@ -49,6 +50,7 @@ snapshots["test_children_query_normal_user 1"] = {
                                 {
                                     "node": {
                                         "guardian": {
+                                            "email": "mperez@cox.com",
                                             "firstName": "Selena",
                                             "lastName": "Roy",
                                             "phoneNumber": "123-447-4468",
@@ -80,6 +82,7 @@ snapshots["test_children_query_staff_user 1"] = {
                                 {
                                     "node": {
                                         "guardian": {
+                                            "email": "mperez@cox.com",
                                             "firstName": "Selena",
                                             "lastName": "Roy",
                                             "phoneNumber": "123-447-4468",
@@ -102,6 +105,7 @@ snapshots["test_children_query_staff_user 1"] = {
                                 {
                                     "node": {
                                         "guardian": {
+                                            "email": "kelly76@allen.com",
                                             "firstName": "Ashley",
                                             "lastName": "Castillo",
                                             "phoneNumber": "(117)159-1023x202",

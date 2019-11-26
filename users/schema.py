@@ -18,6 +18,7 @@ LanguageEnum = graphene.Enum(
 
 class GuardianNode(DjangoObjectType):
     language = LanguageEnum()
+    email = graphene.String()
 
     class Meta:
         model = Guardian
@@ -26,6 +27,9 @@ class GuardianNode(DjangoObjectType):
     @classmethod
     def get_queryset(cls, queryset, info):
         return queryset.filter_for_user(info.context.user).order_by("last_name")
+
+    def resolve_email(self, info, **kwargs):
+        return self.user.email
 
 
 class Query:
