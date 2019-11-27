@@ -12,18 +12,18 @@ snapshots["test_guardians_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "email": "angelahawkins@gmail.com",
-                        "firstName": "Jessica",
-                        "lastName": "Chavez",
-                        "phoneNumber": "(012)344-7446x8581",
+                        "email": "mperez@cox.com",
+                        "firstName": "Sandra",
+                        "lastName": "Meyer",
+                        "phoneNumber": "(727)708-9817",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2019-05-16",
-                                            "firstName": "Patrick",
-                                            "lastName": "Thompson",
+                                            "birthdate": "2019-11-23",
+                                            "firstName": "Christopher",
+                                            "lastName": "Jones",
                                         },
                                         "type": "ADVOCATE",
                                     }
@@ -43,18 +43,18 @@ snapshots["test_guardians_query_staff_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "email": "angelahawkins@gmail.com",
-                        "firstName": "Jessica",
-                        "lastName": "Chavez",
-                        "phoneNumber": "(012)344-7446x8581",
+                        "email": "ramirezandrew@burns.com",
+                        "firstName": "Christy",
+                        "lastName": "Jenkins",
+                        "phoneNumber": "001-803-466-9727x0117",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2019-05-16",
-                                            "firstName": "Patrick",
-                                            "lastName": "Thompson",
+                                            "birthdate": "2019-02-14",
+                                            "firstName": "Robin",
+                                            "lastName": "Moses",
                                         },
                                         "type": "ADVOCATE",
                                     }
@@ -65,20 +65,20 @@ snapshots["test_guardians_query_staff_user 1"] = {
                 },
                 {
                     "node": {
-                        "email": "nwilliams@yahoo.com",
-                        "firstName": "Christy",
-                        "lastName": "Jenkins",
-                        "phoneNumber": "+1-270-117-1591x02320",
+                        "email": "mperez@cox.com",
+                        "firstName": "Sandra",
+                        "lastName": "Meyer",
+                        "phoneNumber": "(727)708-9817",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2019-03-24",
-                                            "firstName": "Sandra",
-                                            "lastName": "Meyer",
+                                            "birthdate": "2019-11-23",
+                                            "firstName": "Christopher",
+                                            "lastName": "Jones",
                                         },
-                                        "type": "PARENT",
+                                        "type": "ADVOCATE",
                                     }
                                 }
                             ]
