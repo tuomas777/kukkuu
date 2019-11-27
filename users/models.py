@@ -14,7 +14,7 @@ class User(AbstractUser):
 
 
 class GuardianQuerySet(models.QuerySet):
-    def filter_for_user(self, user):
+    def user_can_view(self, user):
         # TODO we'll probably need more fine-grained control than this
         if user.is_staff:
             return self

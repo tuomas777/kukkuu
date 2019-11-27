@@ -26,7 +26,7 @@ class GuardianNode(DjangoObjectType):
 
     @classmethod
     def get_queryset(cls, queryset, info):
-        return queryset.filter_for_user(info.context.user).order_by("last_name")
+        return queryset.user_can_view(info.context.user).order_by("last_name")
 
     def resolve_email(self, info, **kwargs):
         return self.user.email
@@ -38,4 +38,4 @@ class Query:
     @staticmethod
     @login_required
     def resolve_guardians(parent, info, **kwargs):
-        return Guardian.objects.filter_for_user(info.context.user)
+        return Guardian.objects.user_can_view(info.context.user)
