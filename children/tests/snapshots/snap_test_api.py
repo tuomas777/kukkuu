@@ -93,31 +93,25 @@ snapshots["test_children_query_staff_user 1"] = {
                             ]
                         },
                     }
-                },
-                {
-                    "node": {
-                        "birthdate": "2019-09-08",
-                        "firstName": "John",
-                        "lastName": "Terrell",
-                        "postalCode": "77671",
-                        "relationships": {
-                            "edges": [
-                                {
-                                    "node": {
-                                        "guardian": {
-                                            "email": "kelly76@allen.com",
-                                            "firstName": "Ashley",
-                                            "lastName": "Castillo",
-                                            "phoneNumber": "(117)159-1023x202",
-                                        },
-                                        "type": "OTHER_RELATION",
-                                    }
-                                }
-                            ]
-                        },
-                    }
-                },
+                }
             ]
         }
     }
+}
+
+snapshots["test_update_child_mutation 1"] = {
+    "data": {
+        "updateChild": {
+            "child": {
+                "birthdate": "2020-01-01",
+                "firstName": "Matti",
+                "lastName": "Mainio",
+                "postalCode": "00840",
+            }
+        }
+    }
+}
+
+snapshots["test_delete_child_mutation 1"] = {
+    "data": {"deleteChild": {"__typename": "DeleteChildMutationPayload"}}
 }

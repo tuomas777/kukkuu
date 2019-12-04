@@ -6,12 +6,18 @@ from users.models import Guardian
 
 
 class ChildQuerySet(models.QuerySet):
-    def filter_for_user(self, user):
+    def user_can_view(self, user):
         # TODO we'll probably need more fine-grained control than this
         if user.is_staff:
             return self
         else:
             return self.filter(guardians__user=user)
+
+    def user_can_update(self, user):
+        return self.filter(guardians__user=user)
+
+    def user_can_delete(self, user):
+        return self.filter(guardians__user=user)
 
 
 class Child(UUIDPrimaryKeyModel, TimestampedModel):

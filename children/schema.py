@@ -6,6 +6,7 @@ from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
+from graphql_relay import from_global_id
 
 from children.notifications import NotificationType
 from users.models import Guardian
@@ -16,6 +17,14 @@ from .models import Child, Relationship
 User = get_user_model()
 
 
+def update_object(obj, data):
+    if not data:
+        return
+    for k, v in data.items():
+        setattr(obj, k, v)
+    obj.save()
+
+
 class ChildNode(DjangoObjectType):
     class Meta:
         model = Child
@@ -23,7 +32,7 @@ class ChildNode(DjangoObjectType):
 
     @classmethod
     def get_queryset(cls, queryset, info):
-        return queryset.filter_for_user(info.context.user).order_by("last_name")
+        return queryset.user_can_view(info.context.user).order_by("last_name")
 
 
 class RelationshipNode(DjangoObjectType):
@@ -62,7 +71,7 @@ class ChildMutationOutputNode(ChildNode):
 
     @classmethod
     def get_queryset(cls, queryset, info):
-        return queryset.filter_for_user(info.context.user).order_by("last_name")
+        return queryset.user_can_view(info.context.user).order_by("last_name")
 
 
 class ChildInput(graphene.InputObjectType):
@@ -125,10 +134,65 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         return SubmitChildrenAndGuardianMutation(children=children, guardian=guardian)
 
 
+class UpdateChildMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        id = graphene.ID(required=True)
+        first_name = graphene.String()
+        last_name = graphene.String()
+        birthdate = graphene.Date()
+        postal_code = graphene.String()
+        relationship = RelationshipInput()
+
+    child = graphene.Field(ChildNode)
+
+    @classmethod
+    @login_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        user = info.context.user
+        child_global_id = kwargs.pop("id")
+        child = Child.objects.user_can_view(user).get(
+            pk=from_global_id(child_global_id)[1]
+        )
+
+        try:
+            relationship = child.relationships.get(guardian__user=user)
+            update_object(relationship, kwargs.pop("relationship", None))
+        except Relationship.DoesNotExist:
+            pass
+
+        update_object(child, kwargs)
+
+        return UpdateChildMutation(child=child)
+
+
+class DeleteChildMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        id = graphene.ID(required=True)
+
+    @classmethod
+    @login_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        user = info.context.user
+        child = Child.objects.user_can_update(user).get(
+            pk=from_global_id(kwargs["id"])[1]
+        )
+        child.delete()
+
+        return DeleteChildMutation()
+
+
 class Query:
     children = DjangoConnectionField(ChildNode)
 
     @staticmethod
     @login_required
     def resolve_children(parent, info, **kwargs):
-        return Child.objects.filter_for_user(info.context.user)
+        return Child.objects.user_can_delete(info.context.user)
+
+
+class Mutation:
+    submit_children_and_guardian = SubmitChildrenAndGuardianMutation.Field()
+    update_child = UpdateChildMutation.Field()
+    delete_child = DeleteChildMutation.Field()
