@@ -46,8 +46,18 @@ mutation submitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInpu
       lastName
       birthdate
       postalCode
-      relationship {
-        type
+      relationships {
+        edges {
+          node {
+            type
+            guardian {
+              firstName
+              lastName
+              phoneNumber
+              email
+            }
+          }
+        }
       }
     }
     guardian {

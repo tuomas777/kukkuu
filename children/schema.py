@@ -60,20 +60,6 @@ class GuardianInput(graphene.InputObjectType):
     language = LanguageEnum(required=True)
 
 
-# Unfortunately DjangoObjectTypes do not seem to play well with inheritance,
-# so we need duplicate code here.
-class ChildMutationOutputNode(ChildNode):
-    relationship = graphene.Field(RelationshipNode)
-
-    class Meta:
-        model = Child
-        interfaces = (relay.Node,)
-
-    @classmethod
-    def get_queryset(cls, queryset, info):
-        return queryset.user_can_view(info.context.user).order_by("last_name")
-
-
 class ChildInput(graphene.InputObjectType):
     first_name = graphene.String()
     last_name = graphene.String()
@@ -87,7 +73,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         children = graphene.List(ChildInput)
         guardian = GuardianInput(required=True)
 
-    children = graphene.List(ChildMutationOutputNode)
+    children = graphene.List(ChildNode)
     guardian = graphene.Field(GuardianNode)
 
     @classmethod
@@ -116,10 +102,9 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             relationship_data = child.pop("relationship", {})
 
             child = Child.objects.create(**child)
-            relationship = Relationship.objects.create(
+            Relationship.objects.create(
                 type=relationship_data.get("type"), child=child, guardian=guardian
             )
-            child.relationship = relationship
 
             children.append(child)
 
