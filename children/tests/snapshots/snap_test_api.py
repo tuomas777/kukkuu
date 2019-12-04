@@ -115,3 +115,16 @@ snapshots["test_update_child_mutation 1"] = {
 snapshots["test_delete_child_mutation 1"] = {
     "data": {"deleteChild": {"__typename": "DeleteChildMutationPayload"}}
 }
+
+snapshots["test_add_child_mutation 1"] = {
+    "data": {
+        "addChild": {
+            "child": {
+                "birthdate": "2020-11-11",
+                "firstName": "Pekka",
+                "lastName": "Perälä",
+                "postalCode": "00820",
+            }
+        }
+    }
+}

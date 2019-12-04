@@ -134,6 +134,31 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         return SubmitChildrenAndGuardianMutation(children=children, guardian=guardian)
 
 
+class AddChildMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        first_name = graphene.String()
+        last_name = graphene.String()
+        birthdate = graphene.Date(required=True)
+        postal_code = graphene.String()
+        relationship = RelationshipInput()
+
+    child = graphene.Field(ChildNode)
+
+    @classmethod
+    @login_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        user = info.context.user
+        relationship_data = kwargs.pop("relationship", {})
+
+        child = Child.objects.create(**kwargs)
+        Relationship.objects.create(
+            type=relationship_data.get("type"), child=child, guardian=user.guardian
+        )
+
+        return AddChildMutation(child=child)
+
+
 class UpdateChildMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.ID(required=True)
@@ -194,5 +219,6 @@ class Query:
 
 class Mutation:
     submit_children_and_guardian = SubmitChildrenAndGuardianMutation.Field()
+    add_child = AddChildMutation.Field()
     update_child = UpdateChildMutation.Field()
     delete_child = DeleteChildMutation.Field()
