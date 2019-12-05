@@ -3,7 +3,7 @@ import pytest
 from users.factories import GuardianFactory
 
 GUARDIANS_QUERY = """
-query getGuardians {
+query Guardians {
   guardians {
     edges {
       node {
@@ -54,5 +54,59 @@ def test_guardians_query_staff_user(snapshot, staff_api_client):
     GuardianFactory(user=staff_api_client.user, relationships__count=1)
 
     executed = staff_api_client.execute(GUARDIANS_QUERY)
+
+    snapshot.assert_match(executed)
+
+
+MY_PROFILE_QUERY = """
+query MyProfile {
+  myProfile {
+    firstName
+    lastName
+    phoneNumber
+    email
+    relationships {
+      edges {
+        node {
+          type
+          child {
+            firstName
+            lastName
+            birthdate
+            postalCode
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+
+@pytest.mark.django_db
+def test_my_profile_query_unauthenticated(snapshot, api_client):
+    GuardianFactory()
+
+    executed = api_client.execute(MY_PROFILE_QUERY)
+    assert executed["data"]["myProfile"] is None
+    assert "errors" in executed
+
+
+@pytest.mark.django_db
+def test_my_profile_query(snapshot, user_api_client):
+    GuardianFactory()
+    GuardianFactory(user=user_api_client.user, relationships__count=1)
+    GuardianFactory(relationships__count=1)
+
+    executed = user_api_client.execute(MY_PROFILE_QUERY)
+
+    snapshot.assert_match(executed)
+
+
+@pytest.mark.django_db
+def test_my_profile_no_profile(snapshot, staff_api_client):
+    GuardianFactory()
+
+    executed = staff_api_client.execute(MY_PROFILE_QUERY)
 
     snapshot.assert_match(executed)

@@ -34,8 +34,14 @@ class GuardianNode(DjangoObjectType):
 
 class Query:
     guardians = DjangoConnectionField(GuardianNode)
+    my_profile = graphene.Field(GuardianNode)
 
     @staticmethod
     @login_required
     def resolve_guardians(parent, info, **kwargs):
         return Guardian.objects.user_can_view(info.context.user)
+
+    @staticmethod
+    @login_required
+    def resolve_my_profile(parent, info, **kwargs):
+        return Guardian.objects.filter(user=info.context.user).first()

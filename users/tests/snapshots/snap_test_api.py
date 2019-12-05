@@ -89,3 +89,31 @@ snapshots["test_guardians_query_staff_user 1"] = {
         }
     }
 }
+
+snapshots["test_my_profile_query 1"] = {
+    "data": {
+        "myProfile": {
+            "email": "mperez@cox.com",
+            "firstName": "Robin",
+            "lastName": "Moses",
+            "phoneNumber": "910-232-0281",
+            "relationships": {
+                "edges": [
+                    {
+                        "node": {
+                            "child": {
+                                "birthdate": "2019-03-02",
+                                "firstName": "Jason",
+                                "lastName": "Owens",
+                                "postalCode": "70898",
+                            },
+                            "type": "ADVOCATE",
+                        }
+                    }
+                ]
+            },
+        }
+    }
+}
+
+snapshots["test_my_profile_no_profile 1"] = {"data": {"myProfile": None}}
