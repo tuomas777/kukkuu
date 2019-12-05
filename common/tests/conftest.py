@@ -5,7 +5,7 @@ from django.test import RequestFactory
 from graphene.test import Client
 
 from kukkuu.schema import schema
-from users.factories import UserFactory
+from users.factories import GuardianFactory, UserFactory
 
 
 @pytest.fixture(autouse=True)
@@ -31,6 +31,11 @@ def user_api_client():
 @pytest.fixture
 def staff_api_client():
     return _create_api_client_with_user(UserFactory(is_staff=True))
+
+
+@pytest.fixture
+def guardian_api_client():
+    return _create_api_client_with_user(UserFactory(guardian=GuardianFactory()))
 
 
 def _create_api_client_with_user(user):

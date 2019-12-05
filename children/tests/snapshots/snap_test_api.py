@@ -15,14 +15,42 @@ snapshots["test_submit_child_authenticated 1"] = {
                     "firstName": "Matti",
                     "lastName": "Mainio",
                     "postalCode": "00840",
-                    "relationship": {"type": "OTHER_GUARDIAN"},
+                    "relationships": {
+                        "edges": [
+                            {
+                                "node": {
+                                    "guardian": {
+                                        "email": "mperez@cox.com",
+                                        "firstName": "Gulle",
+                                        "lastName": "Guardian",
+                                        "phoneNumber": "777-777777",
+                                    },
+                                    "type": "OTHER_GUARDIAN",
+                                }
+                            }
+                        ]
+                    },
                 },
                 {
                     "birthdate": "2020-02-02",
                     "firstName": "Jussi",
                     "lastName": "Juonio",
                     "postalCode": "00820",
-                    "relationship": {"type": None},
+                    "relationships": {
+                        "edges": [
+                            {
+                                "node": {
+                                    "guardian": {
+                                        "email": "mperez@cox.com",
+                                        "firstName": "Gulle",
+                                        "lastName": "Guardian",
+                                        "phoneNumber": "777-777777",
+                                    },
+                                    "type": None,
+                                }
+                            }
+                        ]
+                    },
                 },
             ],
             "guardian": {
@@ -114,4 +142,17 @@ snapshots["test_update_child_mutation 1"] = {
 
 snapshots["test_delete_child_mutation 1"] = {
     "data": {"deleteChild": {"__typename": "DeleteChildMutationPayload"}}
+}
+
+snapshots["test_add_child_mutation 1"] = {
+    "data": {
+        "addChild": {
+            "child": {
+                "birthdate": "2020-11-11",
+                "firstName": "Pekka",
+                "lastName": "Perälä",
+                "postalCode": "00820",
+            }
+        }
+    }
 }

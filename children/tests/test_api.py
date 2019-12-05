@@ -46,8 +46,18 @@ mutation submitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInpu
       lastName
       birthdate
       postalCode
-      relationship {
-        type
+      relationships {
+        edges {
+          node {
+            type
+            guardian {
+              firstName
+              lastName
+              phoneNumber
+              email
+            }
+          }
+        }
       }
     }
     guardian {
@@ -176,6 +186,60 @@ def test_children_query_staff_user(snapshot, staff_api_client):
     executed = staff_api_client.execute(CHILDREN_QUERY)
 
     snapshot.assert_match(executed)
+
+
+ADD_CHILD_MUTATION = """
+mutation addChild($input: AddChildMutationInput!) {
+  addChild(input: $input) {
+    child {
+      firstName
+      lastName
+      birthdate
+      postalCode
+    }
+  }
+}
+"""
+
+
+ADD_CHILD_VARIABLES = {
+    "input": {
+        "firstName": "Pekka",
+        "lastName": "Perälä",
+        "birthdate": "2020-11-11",
+        "postalCode": "00820",
+        "relationship": {"type": "PARENT"},
+    }
+}
+
+
+@pytest.mark.django_db
+def test_add_child_mutation(snapshot, guardian_api_client):
+    executed = guardian_api_client.execute(
+        ADD_CHILD_MUTATION, variables=ADD_CHILD_VARIABLES
+    )
+
+    snapshot.assert_match(executed)
+
+    child = Child.objects.last()
+    assert_child_matches_data(child, ADD_CHILD_VARIABLES["input"])
+
+    relationship = Relationship.objects.get(
+        guardian=guardian_api_client.user.guardian, child=child
+    )
+    assert_relationship_matches_data(
+        relationship, ADD_CHILD_VARIABLES["input"]["relationship"]
+    )
+
+
+@pytest.mark.django_db
+def test_add_child_mutation_birthdate_required(snapshot, guardian_api_client):
+    variables = deepcopy(ADD_CHILD_VARIABLES)
+    variables["input"].pop("birthdate")
+    executed = guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
+
+    assert "errors" in executed
+    assert Child.objects.count() == 0
 
 
 UPDATE_CHILD_MUTATION = """

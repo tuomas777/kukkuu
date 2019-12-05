@@ -60,20 +60,6 @@ class GuardianInput(graphene.InputObjectType):
     language = LanguageEnum(required=True)
 
 
-# Unfortunately DjangoObjectTypes do not seem to play well with inheritance,
-# so we need duplicate code here.
-class ChildMutationOutputNode(ChildNode):
-    relationship = graphene.Field(RelationshipNode)
-
-    class Meta:
-        model = Child
-        interfaces = (relay.Node,)
-
-    @classmethod
-    def get_queryset(cls, queryset, info):
-        return queryset.user_can_view(info.context.user).order_by("last_name")
-
-
 class ChildInput(graphene.InputObjectType):
     first_name = graphene.String()
     last_name = graphene.String()
@@ -87,7 +73,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         children = graphene.List(ChildInput)
         guardian = GuardianInput(required=True)
 
-    children = graphene.List(ChildMutationOutputNode)
+    children = graphene.List(ChildNode)
     guardian = graphene.Field(GuardianNode)
 
     @classmethod
@@ -116,10 +102,9 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             relationship_data = child.pop("relationship", {})
 
             child = Child.objects.create(**child)
-            relationship = Relationship.objects.create(
+            Relationship.objects.create(
                 type=relationship_data.get("type"), child=child, guardian=guardian
             )
-            child.relationship = relationship
 
             children.append(child)
 
@@ -132,6 +117,31 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             )
 
         return SubmitChildrenAndGuardianMutation(children=children, guardian=guardian)
+
+
+class AddChildMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        first_name = graphene.String()
+        last_name = graphene.String()
+        birthdate = graphene.Date(required=True)
+        postal_code = graphene.String()
+        relationship = RelationshipInput()
+
+    child = graphene.Field(ChildNode)
+
+    @classmethod
+    @login_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        user = info.context.user
+        relationship_data = kwargs.pop("relationship", {})
+
+        child = Child.objects.create(**kwargs)
+        Relationship.objects.create(
+            type=relationship_data.get("type"), child=child, guardian=user.guardian
+        )
+
+        return AddChildMutation(child=child)
 
 
 class UpdateChildMutation(graphene.relay.ClientIDMutation):
@@ -194,5 +204,6 @@ class Query:
 
 class Mutation:
     submit_children_and_guardian = SubmitChildrenAndGuardianMutation.Field()
+    add_child = AddChildMutation.Field()
     update_child = UpdateChildMutation.Field()
     delete_child = DeleteChildMutation.Field()
