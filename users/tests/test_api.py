@@ -1,6 +1,13 @@
 import pytest
 
+from children.tests.test_api import assert_permission_denied
 from users.factories import GuardianFactory
+
+
+@pytest.fixture(autouse=True)
+def autouse_db(db):
+    pass
+
 
 GUARDIANS_QUERY = """
 query Guardians {
@@ -30,15 +37,12 @@ query Guardians {
 """
 
 
-@pytest.mark.django_db
 def test_guardians_query_unauthenticated(api_client):
     executed = api_client.execute(GUARDIANS_QUERY)
 
-    # TODO add better check when we have error codes
-    assert "errors" in executed
+    assert_permission_denied(executed)
 
 
-@pytest.mark.django_db
 def test_guardians_query_normal_user(snapshot, user_api_client):
     GuardianFactory(relationships__count=1)
     GuardianFactory(user=user_api_client.user, relationships__count=1)
@@ -48,7 +52,6 @@ def test_guardians_query_normal_user(snapshot, user_api_client):
     snapshot.assert_match(executed)
 
 
-@pytest.mark.django_db
 def test_guardians_query_staff_user(snapshot, staff_api_client):
     GuardianFactory(relationships__count=1)
     GuardianFactory(user=staff_api_client.user, relationships__count=1)
@@ -83,16 +86,15 @@ query MyProfile {
 """
 
 
-@pytest.mark.django_db
-def test_my_profile_query_unauthenticated(snapshot, api_client):
+def test_my_profile_query_unauthenticated(api_client):
     GuardianFactory()
 
     executed = api_client.execute(MY_PROFILE_QUERY)
+
     assert executed["data"]["myProfile"] is None
-    assert "errors" in executed
+    assert_permission_denied(executed)
 
 
-@pytest.mark.django_db
 def test_my_profile_query(snapshot, user_api_client):
     GuardianFactory()
     GuardianFactory(user=user_api_client.user, relationships__count=1)
@@ -103,7 +105,6 @@ def test_my_profile_query(snapshot, user_api_client):
     snapshot.assert_match(executed)
 
 
-@pytest.mark.django_db
 def test_my_profile_no_profile(snapshot, staff_api_client):
     GuardianFactory()
 

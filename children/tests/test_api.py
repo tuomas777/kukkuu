@@ -5,9 +5,15 @@ from graphene.utils.str_converters import to_snake_case
 from graphql_relay import to_global_id
 
 from children.factories import ChildWithGuardianFactory
+from common.tests.utils import assert_permission_denied
 from users.models import Guardian
 
 from ..models import Child, Relationship
+
+
+@pytest.fixture(autouse=True)
+def autouse_db(db):
+    pass
 
 
 def assert_child_matches_data(child_obj, child_data):
@@ -38,15 +44,8 @@ def assert_guardian_matches_data(guardian_obj, guardian_data):
         assert guardian_obj.language == guardian_data["language"].lower()
 
 
-def assert_permission_denied(response):
-    assert (
-        response["errors"][0]["message"]
-        == "You do not have permission to perform this action"
-    )
-
-
 SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION = """
-mutation submitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInput!) {
+mutation SubmitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInput!) {
   submitChildrenAndGuardian(input: $input) {
     children {
       firstName
@@ -108,19 +107,16 @@ SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES = {
 }
 
 
-@pytest.mark.django_db
-def test_submit_child_unauthenticated(api_client):
+def test_submit_children_and_guardian_unauthenticated(api_client):
     executed = api_client.execute(
         SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION,
         variables=SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES,
     )
 
-    # TODO add better check when we have error codes
-    assert "errors" in executed
+    assert_permission_denied(executed)
 
 
-@pytest.mark.django_db
-def test_submit_child_authenticated(snapshot, user_api_client):
+def test_submit_children_and_guardian(snapshot, user_api_client):
     variables = SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES
 
     executed = user_api_client.execute(
@@ -132,14 +128,16 @@ def test_submit_child_authenticated(snapshot, user_api_client):
     guardian = Guardian.objects.last()
     assert_guardian_matches_data(guardian, variables["input"]["guardian"])
 
-    for child, child_data in zip(Child.objects.all(), variables["input"]["children"]):
+    for child, child_data in zip(
+        Child.objects.order_by("created_at"), variables["input"]["children"]
+    ):
         assert_child_matches_data(child, child_data)
         relationship = Relationship.objects.get(guardian=guardian, child=child)
         assert_relationship_matches_data(relationship, child_data.get("relationship"))
 
 
 CHILDREN_QUERY = """
-query getChildren {
+query Children {
   children {
     edges {
       node {
@@ -167,15 +165,12 @@ query getChildren {
 """
 
 
-@pytest.mark.django_db
 def test_children_query_unauthenticated(api_client):
     executed = api_client.execute(CHILDREN_QUERY)
 
-    # TODO add better check when we have error codes
-    assert "errors" in executed
+    assert_permission_denied(executed)
 
 
-@pytest.mark.django_db
 def test_children_query_normal_user(snapshot, user_api_client):
     ChildWithGuardianFactory()
     ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
@@ -185,7 +180,6 @@ def test_children_query_normal_user(snapshot, user_api_client):
     snapshot.assert_match(executed)
 
 
-@pytest.mark.django_db
 def test_children_query_staff_user(snapshot, staff_api_client):
     ChildWithGuardianFactory()
     ChildWithGuardianFactory(relationship__guardian__user=staff_api_client.user)
@@ -196,7 +190,7 @@ def test_children_query_staff_user(snapshot, staff_api_client):
 
 
 CHILD_QUERY = """
-query getChild($id: ID!) {
+query Child($id: ID!) {
   child(id: $id) {
     firstName
     lastName
@@ -220,7 +214,6 @@ query getChild($id: ID!) {
 """
 
 
-@pytest.mark.django_db
 def test_child_query_unauthenticated(snapshot, api_client):
     child = ChildWithGuardianFactory()
     variables = {"id": to_global_id("ChildNode", child.id)}
@@ -230,7 +223,6 @@ def test_child_query_unauthenticated(snapshot, api_client):
     assert_permission_denied(executed)
 
 
-@pytest.mark.django_db
 def test_child_query(snapshot, user_api_client):
     child = ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
     variables = {"id": to_global_id("ChildNode", child.id)}
@@ -240,7 +232,6 @@ def test_child_query(snapshot, user_api_client):
     snapshot.assert_match(executed)
 
 
-@pytest.mark.django_db
 def test_child_query_not_own_child(user_api_client):
     child = ChildWithGuardianFactory()
     variables = {"id": to_global_id("ChildNode", child.id)}
@@ -250,7 +241,6 @@ def test_child_query_not_own_child(user_api_client):
     assert executed["data"]["child"] is None
 
 
-@pytest.mark.django_db
 def test_child_query_not_own_child_staff_user(snapshot, staff_api_client):
     child = ChildWithGuardianFactory()
     variables = {"id": to_global_id("ChildNode", child.id)}
@@ -261,7 +251,7 @@ def test_child_query_not_own_child_staff_user(snapshot, staff_api_client):
 
 
 ADD_CHILD_MUTATION = """
-mutation addChild($input: AddChildMutationInput!) {
+mutation AddChild($input: AddChildMutationInput!) {
   addChild(input: $input) {
     child {
       firstName
@@ -285,7 +275,6 @@ ADD_CHILD_VARIABLES = {
 }
 
 
-@pytest.mark.django_db
 def test_add_child_mutation(snapshot, guardian_api_client):
     executed = guardian_api_client.execute(
         ADD_CHILD_MUTATION, variables=ADD_CHILD_VARIABLES
@@ -304,18 +293,17 @@ def test_add_child_mutation(snapshot, guardian_api_client):
     )
 
 
-@pytest.mark.django_db
 def test_add_child_mutation_birthdate_required(snapshot, guardian_api_client):
     variables = deepcopy(ADD_CHILD_VARIABLES)
     variables["input"].pop("birthdate")
     executed = guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
 
-    assert "errors" in executed
+    assert "birthdate" in str(executed["errors"])
     assert Child.objects.count() == 0
 
 
 UPDATE_CHILD_MUTATION = """
-mutation updateChild($input: UpdateChildMutationInput!) {
+mutation UpdateChild($input: UpdateChildMutationInput!) {
   updateChild(input: $input) {
     child {
       firstName
@@ -340,7 +328,6 @@ UPDATE_CHILD_VARIABLES = {
 }
 
 
-@pytest.mark.django_db
 def test_update_child_mutation(snapshot, user_api_client):
     child = ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
@@ -359,7 +346,6 @@ def test_update_child_mutation(snapshot, user_api_client):
     assert_relationship_matches_data(relationship, variables["input"]["relationship"])
 
 
-@pytest.mark.django_db
 def test_update_child_mutation_wrong_user(snapshot, user_api_client):
     child = ChildWithGuardianFactory()
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
@@ -367,17 +353,16 @@ def test_update_child_mutation_wrong_user(snapshot, user_api_client):
 
     executed = user_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
 
-    assert "errors" in executed
+    assert "does not exist" in str(executed["errors"])
 
 
 DELETE_CHILD_MUTATION = """
-mutation deleteChild($input: DeleteChildMutationInput!) {
+mutation DeleteChild($input: DeleteChildMutationInput!) {
   deleteChild(input: $input) {__typename}
 }
 """
 
 
-@pytest.mark.django_db
 def test_delete_child_mutation(snapshot, user_api_client):
     child = ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
     variables = {"input": {"id": to_global_id("ChildNode", child.id)}}
@@ -388,12 +373,11 @@ def test_delete_child_mutation(snapshot, user_api_client):
     assert Child.objects.count() == 0
 
 
-@pytest.mark.django_db
 def test_delete_child_mutation_wrong_user(snapshot, user_api_client):
     child = ChildWithGuardianFactory()
     variables = {"input": {"id": to_global_id("ChildNode", child.id)}}
 
-    executed = user_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
+    executed = user_api_client.execute(DELETE_CHILD_MUTATION, variables=variables)
 
-    assert "errors" in executed
+    assert "does not exist" in str(executed["errors"])
     assert Child.objects.count() == 1
