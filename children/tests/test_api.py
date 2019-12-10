@@ -38,6 +38,13 @@ def assert_guardian_matches_data(guardian_obj, guardian_data):
         assert guardian_obj.language == guardian_data["language"].lower()
 
 
+def assert_permission_denied(response):
+    assert (
+        response["errors"][0]["message"]
+        == "You do not have permission to perform this action"
+    )
+
+
 SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION = """
 mutation submitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInput!) {
   submitChildrenAndGuardian(input: $input) {
@@ -184,6 +191,71 @@ def test_children_query_staff_user(snapshot, staff_api_client):
     ChildWithGuardianFactory(relationship__guardian__user=staff_api_client.user)
 
     executed = staff_api_client.execute(CHILDREN_QUERY)
+
+    snapshot.assert_match(executed)
+
+
+CHILD_QUERY = """
+query getChild($id: ID!) {
+  child(id: $id) {
+    firstName
+    lastName
+    birthdate
+    postalCode
+    relationships {
+      edges {
+        node {
+          type
+          guardian {
+            firstName
+            lastName
+            phoneNumber
+            email
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+
+@pytest.mark.django_db
+def test_child_query_unauthenticated(snapshot, api_client):
+    child = ChildWithGuardianFactory()
+    variables = {"id": to_global_id("ChildNode", child.id)}
+
+    executed = api_client.execute(CHILD_QUERY, variables=variables)
+
+    assert_permission_denied(executed)
+
+
+@pytest.mark.django_db
+def test_child_query(snapshot, user_api_client):
+    child = ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
+    variables = {"id": to_global_id("ChildNode", child.id)}
+
+    executed = user_api_client.execute(CHILD_QUERY, variables=variables)
+
+    snapshot.assert_match(executed)
+
+
+@pytest.mark.django_db
+def test_child_query_not_own_child(user_api_client):
+    child = ChildWithGuardianFactory()
+    variables = {"id": to_global_id("ChildNode", child.id)}
+
+    executed = user_api_client.execute(CHILD_QUERY, variables=variables)
+
+    assert executed["data"]["child"] is None
+
+
+@pytest.mark.django_db
+def test_child_query_not_own_child_staff_user(snapshot, staff_api_client):
+    child = ChildWithGuardianFactory()
+    variables = {"id": to_global_id("ChildNode", child.id)}
+
+    executed = staff_api_client.execute(CHILD_QUERY, variables=variables)
 
     snapshot.assert_match(executed)
 

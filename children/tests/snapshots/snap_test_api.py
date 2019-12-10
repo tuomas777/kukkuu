@@ -6,6 +6,32 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
+snapshots["test_child_query 1"] = {
+    "data": {
+        "child": {
+            "birthdate": "2019-09-08",
+            "firstName": "John",
+            "lastName": "Terrell",
+            "postalCode": "77671",
+            "relationships": {
+                "edges": [
+                    {
+                        "node": {
+                            "guardian": {
+                                "email": "mperez@cox.com",
+                                "firstName": "Gregory",
+                                "lastName": "Cross",
+                                "phoneNumber": "750-649-7638x0346",
+                            },
+                            "type": "OTHER_GUARDIAN",
+                        }
+                    }
+                ]
+            },
+        }
+    }
+}
+
 snapshots["test_submit_child_authenticated 1"] = {
     "data": {
         "submitChildrenAndGuardian": {
@@ -127,6 +153,19 @@ snapshots["test_children_query_staff_user 1"] = {
     }
 }
 
+snapshots["test_add_child_mutation 1"] = {
+    "data": {
+        "addChild": {
+            "child": {
+                "birthdate": "2020-11-11",
+                "firstName": "Pekka",
+                "lastName": "Perälä",
+                "postalCode": "00820",
+            }
+        }
+    }
+}
+
 snapshots["test_update_child_mutation 1"] = {
     "data": {
         "updateChild": {
@@ -144,15 +183,28 @@ snapshots["test_delete_child_mutation 1"] = {
     "data": {"deleteChild": {"__typename": "DeleteChildMutationPayload"}}
 }
 
-snapshots["test_add_child_mutation 1"] = {
+snapshots["test_child_query_not_own_child_staff_user 1"] = {
     "data": {
-        "addChild": {
-            "child": {
-                "birthdate": "2020-11-11",
-                "firstName": "Pekka",
-                "lastName": "Perälä",
-                "postalCode": "00820",
-            }
+        "child": {
+            "birthdate": "2019-09-08",
+            "firstName": "John",
+            "lastName": "Terrell",
+            "postalCode": "77671",
+            "relationships": {
+                "edges": [
+                    {
+                        "node": {
+                            "guardian": {
+                                "email": "kelly76@allen.com",
+                                "firstName": "Ashley",
+                                "lastName": "Castillo",
+                                "phoneNumber": "(117)159-1023x202",
+                            },
+                            "type": "OTHER_RELATION",
+                        }
+                    }
+                ]
+            },
         }
     }
 }
