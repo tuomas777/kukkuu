@@ -136,6 +136,17 @@ def test_submit_children_and_guardian(snapshot, user_api_client):
         assert_relationship_matches_data(relationship, child_data.get("relationship"))
 
 
+def test_submit_children_and_guardian_one_child_required(snapshot, user_api_client):
+    variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
+    variables["input"]["children"] = []
+
+    executed = user_api_client.execute(
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
+    )
+
+    assert "At least one child is required." in str(executed["errors"])
+
+
 CHILDREN_QUERY = """
 query Children {
   children {

@@ -5,6 +5,7 @@ from django_ilmoitin.utils import send_notification
 from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
+from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 
@@ -79,7 +80,11 @@ class ChildInput(graphene.InputObjectType):
 
 class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
     class Input:
-        children = graphene.List(ChildInput)
+        children = graphene.List(
+            graphene.NonNull(ChildInput),
+            required=True,
+            description="At least one child is required.",
+        )
         guardian = GuardianInput(required=True)
 
     children = graphene.List(ChildNode)
@@ -89,8 +94,11 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
     @login_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        user = info.context.user
+        children_data = kwargs["children"]
+        if not children_data:
+            raise GraphQLError("At least one child is required.")
 
+        user = info.context.user
         guardian_data = kwargs["guardian"]
         guardian, guardian_created = Guardian.objects.update_or_create(
             user=user,
@@ -107,7 +115,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         Child.objects.filter(relationships__guardian__user=user).delete()
 
         children = []
-        for child in kwargs.get("children", ()):
+        for child in children_data:
             relationship_data = child.pop("relationship", {})
 
             child = Child.objects.create(**child)
