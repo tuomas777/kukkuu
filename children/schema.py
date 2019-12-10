@@ -31,6 +31,7 @@ class ChildNode(DjangoObjectType):
         interfaces = (relay.Node,)
 
     @classmethod
+    @login_required
     def get_queryset(cls, queryset, info):
         return queryset.user_can_view(info.context.user).order_by("last_name")
 
@@ -169,7 +170,7 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         child_global_id = kwargs.pop("id")
-        child = Child.objects.user_can_view(user).get(
+        child = Child.objects.user_can_update(user).get(
             pk=from_global_id(child_global_id)[1]
         )
 
@@ -193,7 +194,7 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
-        child = Child.objects.user_can_update(user).get(
+        child = Child.objects.user_can_delete(user).get(
             pk=from_global_id(kwargs["id"])[1]
         )
         child.delete()
@@ -204,11 +205,6 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
 class Query:
     children = DjangoConnectionField(ChildNode)
     child = relay.Node.Field(ChildNode)
-
-    @staticmethod
-    @login_required
-    def resolve_children(parent, info, **kwargs):
-        return Child.objects.user_can_delete(info.context.user)
 
 
 class Mutation:

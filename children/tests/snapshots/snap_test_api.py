@@ -147,7 +147,30 @@ snapshots["test_children_query_staff_user 1"] = {
                             ]
                         },
                     }
-                }
+                },
+                {
+                    "node": {
+                        "birthdate": "2019-09-08",
+                        "firstName": "John",
+                        "lastName": "Terrell",
+                        "postalCode": "77671",
+                        "relationships": {
+                            "edges": [
+                                {
+                                    "node": {
+                                        "guardian": {
+                                            "email": "kelly76@allen.com",
+                                            "firstName": "Ashley",
+                                            "lastName": "Castillo",
+                                            "phoneNumber": "(117)159-1023x202",
+                                        },
+                                        "type": "OTHER_RELATION",
+                                    }
+                                }
+                            ]
+                        },
+                    }
+                },
             ]
         }
     }
