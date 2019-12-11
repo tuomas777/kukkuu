@@ -1,5 +1,6 @@
 import graphene
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django_ilmoitin.utils import send_notification
 from graphene import relay
@@ -13,7 +14,7 @@ from children.notifications import NotificationType
 from users.models import Guardian
 from users.schema import GuardianNode, LanguageEnum
 
-from .models import Child, Relationship
+from .models import Child, postal_code_validator, Relationship
 
 User = get_user_model()
 
@@ -78,6 +79,14 @@ class ChildInput(graphene.InputObjectType):
     relationship = RelationshipInput()
 
 
+def validate_child_data(child_data):
+    try:
+        postal_code_validator(child_data["postal_code"])
+    except ValidationError as e:
+        raise GraphQLError(e.message)
+    return child_data
+
+
 class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
     class Input:
         children = graphene.List(
@@ -115,10 +124,11 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         Child.objects.filter(relationships__guardian__user=user).delete()
 
         children = []
-        for child in children_data:
-            relationship_data = child.pop("relationship", {})
+        for child_data in children_data:
+            validate_child_data(child_data)
+            relationship_data = child_data.pop("relationship", {})
 
-            child = Child.objects.create(**child)
+            child = Child.objects.create(**child_data)
             Relationship.objects.create(
                 type=relationship_data.get("type"), child=child, guardian=guardian
             )
@@ -150,6 +160,7 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
     @login_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        validate_child_data(kwargs)
         user = info.context.user
         relationship_data = kwargs.pop("relationship", {})
 
@@ -176,6 +187,7 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
     @login_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        validate_child_data(kwargs)
         user = info.context.user
         child_global_id = kwargs.pop("id")
         child = Child.objects.user_can_update(user).get(

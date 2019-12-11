@@ -147,6 +147,17 @@ def test_submit_children_and_guardian_one_child_required(snapshot, user_api_clie
     assert "At least one child is required." in str(executed["errors"])
 
 
+def test_submit_children_and_guardian_postal_code_validation(user_api_client):
+    variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
+    variables["input"]["children"][0]["postalCode"] = "1234x"
+
+    executed = user_api_client.execute(
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
+    )
+
+    assert "Postal code must be 5 digits" in str(executed["errors"])
+
+
 CHILDREN_QUERY = """
 query Children {
   children {
@@ -304,12 +315,21 @@ def test_add_child_mutation(snapshot, guardian_api_client):
     )
 
 
-def test_add_child_mutation_birthdate_required(snapshot, guardian_api_client):
+def test_add_child_mutation_birthdate_required(guardian_api_client):
     variables = deepcopy(ADD_CHILD_VARIABLES)
     variables["input"].pop("birthdate")
     executed = guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
 
     assert "birthdate" in str(executed["errors"])
+    assert Child.objects.count() == 0
+
+
+def test_add_child_mutation_postal_code_validation(guardian_api_client):
+    variables = deepcopy(ADD_CHILD_VARIABLES)
+    variables["input"]["postalCode"] = "1234x"
+    executed = guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
+
+    assert "Postal code must be 5 digits" in str(executed["errors"])
     assert Child.objects.count() == 0
 
 
@@ -365,6 +385,19 @@ def test_update_child_mutation_wrong_user(snapshot, user_api_client):
     executed = user_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
 
     assert "does not exist" in str(executed["errors"])
+
+
+def test_update_child_mutation_postal_code_validation(guardian_api_client):
+    child = ChildWithGuardianFactory(
+        relationship__guardian=guardian_api_client.user.guardian
+    )
+    variables = deepcopy(UPDATE_CHILD_VARIABLES)
+    variables["input"]["id"] = to_global_id("ChildNode", child.id)
+    variables["input"]["postalCode"] = "1234x"
+
+    executed = guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
+
+    assert "Postal code must be 5 digits" in str(executed["errors"])
 
 
 DELETE_CHILD_MUTATION = """

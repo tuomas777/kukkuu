@@ -1,3 +1,4 @@
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -20,6 +21,11 @@ class ChildQuerySet(models.QuerySet):
         return self.filter(guardians__user=user)
 
 
+postal_code_validator = RegexValidator(
+    regex=r"^\d{5}$", message="Postal code must be 5 digits", code="invalid_postal_code"
+)
+
+
 class Child(UUIDPrimaryKeyModel, TimestampedModel):
     first_name = models.CharField(
         verbose_name=_("first name"), max_length=64, blank=True
@@ -27,7 +33,10 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     last_name = models.CharField(verbose_name=_("last name"), max_length=64, blank=True)
     birthdate = models.DateField(verbose_name=_("birthdate"))
     postal_code = models.CharField(
-        verbose_name=_("postal code"), max_length=5, blank=True
+        verbose_name=_("postal code"),
+        max_length=5,
+        blank=True,
+        validators=[postal_code_validator],
     )
     guardians = models.ManyToManyField(
         Guardian,
