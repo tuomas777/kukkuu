@@ -34,6 +34,14 @@ class ChildNode(DjangoObjectType):
     def get_queryset(cls, queryset, info):
         return queryset.user_can_view(info.context.user).order_by("last_name")
 
+    @classmethod
+    @login_required
+    def get_node(cls, info, id):
+        try:
+            return cls._meta.model.objects.user_can_view(info.context.user).get(id=id)
+        except cls._meta.model.DoesNotExist:
+            return None
+
 
 class RelationshipNode(DjangoObjectType):
     class Meta:
@@ -195,6 +203,7 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
 
 class Query:
     children = DjangoConnectionField(ChildNode)
+    child = relay.Node.Field(ChildNode)
 
     @staticmethod
     @login_required
