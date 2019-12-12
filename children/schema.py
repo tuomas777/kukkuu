@@ -80,10 +80,11 @@ class ChildInput(graphene.InputObjectType):
 
 
 def validate_child_data(child_data):
-    try:
-        postal_code_validator(child_data["postal_code"])
-    except ValidationError as e:
-        raise GraphQLError(e.message)
+    if "postal_code" in child_data:
+        try:
+            postal_code_validator(child_data["postal_code"])
+        except ValidationError as e:
+            raise GraphQLError(e.message)
     return child_data
 
 

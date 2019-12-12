@@ -377,6 +377,17 @@ def test_update_child_mutation(snapshot, user_api_client):
     assert_relationship_matches_data(relationship, variables["input"]["relationship"])
 
 
+def test_update_child_mutation_should_have_no_required_fields(
+    snapshot, user_api_client
+):
+    child = ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
+    variables = {"input": {"id": to_global_id("ChildNode", child.id)}}
+
+    executed = user_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
+
+    snapshot.assert_match(executed)
+
+
 def test_update_child_mutation_wrong_user(snapshot, user_api_client):
     child = ChildWithGuardianFactory()
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
