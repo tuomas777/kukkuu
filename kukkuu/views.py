@@ -1,6 +1,8 @@
 import sentry_sdk
 from graphene_django.views import GraphQLView
 
+from kukkuu.exceptions import KukkuuGraphQLError
+
 
 class SentryGraphQLView(GraphQLView):
     def execute_graphql_request(self, request, data, query, *args, **kwargs):
@@ -8,7 +10,15 @@ class SentryGraphQLView(GraphQLView):
         result = super().execute_graphql_request(request, data, query, *args, **kwargs)
         # If 'invalid' is set, it's a bad request
         if result and result.errors and not result.invalid:
-            self._capture_sentry_exceptions(result.errors, query)
+            errors = [
+                e
+                for e in result.errors
+                if not isinstance(
+                    getattr(e, "original_error", None), KukkuuGraphQLError
+                )
+            ]
+            if errors:
+                self._capture_sentry_exceptions(result.errors, query)
         return result
 
     def _capture_sentry_exceptions(self, errors, query):

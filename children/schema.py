@@ -6,11 +6,11 @@ from django_ilmoitin.utils import send_notification
 from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
-from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 
 from children.notifications import NotificationType
+from kukkuu.exceptions import KukkuuGraphQLError
 from users.models import Guardian
 from users.schema import GuardianNode, LanguageEnum
 
@@ -84,7 +84,7 @@ def validate_child_data(child_data):
         try:
             postal_code_validator(child_data["postal_code"])
         except ValidationError as e:
-            raise GraphQLError(e.message)
+            raise KukkuuGraphQLError(e.message)
     return child_data
 
 
@@ -106,7 +106,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **kwargs):
         children_data = kwargs["children"]
         if not children_data:
-            raise GraphQLError("At least one child is required.")
+            raise KukkuuGraphQLError("At least one child is required.")
 
         user = info.context.user
         guardian_data = kwargs["guardian"]
@@ -191,9 +191,13 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
         validate_child_data(kwargs)
         user = info.context.user
         child_global_id = kwargs.pop("id")
-        child = Child.objects.user_can_update(user).get(
-            pk=from_global_id(child_global_id)[1]
-        )
+
+        try:
+            child = Child.objects.user_can_update(user).get(
+                pk=from_global_id(child_global_id)[1]
+            )
+        except Child.DoesNotExist as e:
+            raise KukkuuGraphQLError(e)
 
         try:
             relationship = child.relationships.get(guardian__user=user)
@@ -215,9 +219,14 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
-        child = Child.objects.user_can_delete(user).get(
-            pk=from_global_id(kwargs["id"])[1]
-        )
+
+        try:
+            child = Child.objects.user_can_delete(user).get(
+                pk=from_global_id(kwargs["id"])[1]
+            )
+        except Child.DoesNotExist as e:
+            raise KukkuuGraphQLError(e)
+
         child.delete()
 
         return DeleteChildMutation()
