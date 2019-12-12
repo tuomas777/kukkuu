@@ -1,14 +1,14 @@
 from django.http import HttpResponse
 from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
-from graphene_django.views import GraphQLView
 from helusers.admin_site import admin
 
 from kukkuu import settings
+from kukkuu.views import SentryGraphQLView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("graphql", csrf_exempt(GraphQLView.as_view(graphiql=settings.DEBUG))),
+    path("graphql", csrf_exempt(SentryGraphQLView.as_view(graphiql=settings.DEBUG))),
 ]
 
 
