@@ -32,63 +32,6 @@ snapshots["test_child_query 1"] = {
     }
 }
 
-snapshots["test_submit_child_authenticated 1"] = {
-    "data": {
-        "submitChildrenAndGuardian": {
-            "children": [
-                {
-                    "birthdate": "2020-01-01",
-                    "firstName": "Matti",
-                    "lastName": "Mainio",
-                    "postalCode": "00840",
-                    "relationships": {
-                        "edges": [
-                            {
-                                "node": {
-                                    "guardian": {
-                                        "email": "mperez@cox.com",
-                                        "firstName": "Gulle",
-                                        "lastName": "Guardian",
-                                        "phoneNumber": "777-777777",
-                                    },
-                                    "type": "OTHER_GUARDIAN",
-                                }
-                            }
-                        ]
-                    },
-                },
-                {
-                    "birthdate": "2020-02-02",
-                    "firstName": "Jussi",
-                    "lastName": "Juonio",
-                    "postalCode": "00820",
-                    "relationships": {
-                        "edges": [
-                            {
-                                "node": {
-                                    "guardian": {
-                                        "email": "mperez@cox.com",
-                                        "firstName": "Gulle",
-                                        "lastName": "Guardian",
-                                        "phoneNumber": "777-777777",
-                                    },
-                                    "type": None,
-                                }
-                            }
-                        ]
-                    },
-                },
-            ],
-            "guardian": {
-                "email": "mperez@cox.com",
-                "firstName": "Gulle",
-                "lastName": "Guardian",
-                "phoneNumber": "777-777777",
-            },
-        }
-    }
-}
-
 snapshots["test_children_query_normal_user 1"] = {
     "data": {
         "children": {
@@ -147,7 +90,30 @@ snapshots["test_children_query_staff_user 1"] = {
                             ]
                         },
                     }
-                }
+                },
+                {
+                    "node": {
+                        "birthdate": "2019-09-08",
+                        "firstName": "John",
+                        "lastName": "Terrell",
+                        "postalCode": "77671",
+                        "relationships": {
+                            "edges": [
+                                {
+                                    "node": {
+                                        "guardian": {
+                                            "email": "kelly76@allen.com",
+                                            "firstName": "Ashley",
+                                            "lastName": "Castillo",
+                                            "phoneNumber": "(117)159-1023x202",
+                                        },
+                                        "type": "OTHER_RELATION",
+                                    }
+                                }
+                            ]
+                        },
+                    }
+                },
             ]
         }
     }
@@ -204,6 +170,63 @@ snapshots["test_child_query_not_own_child_staff_user 1"] = {
                         }
                     }
                 ]
+            },
+        }
+    }
+}
+
+snapshots["test_submit_children_and_guardian 1"] = {
+    "data": {
+        "submitChildrenAndGuardian": {
+            "children": [
+                {
+                    "birthdate": "2020-01-01",
+                    "firstName": "Matti",
+                    "lastName": "Mainio",
+                    "postalCode": "00840",
+                    "relationships": {
+                        "edges": [
+                            {
+                                "node": {
+                                    "guardian": {
+                                        "email": "mperez@cox.com",
+                                        "firstName": "Gulle",
+                                        "lastName": "Guardian",
+                                        "phoneNumber": "777-777777",
+                                    },
+                                    "type": "OTHER_GUARDIAN",
+                                }
+                            }
+                        ]
+                    },
+                },
+                {
+                    "birthdate": "2020-02-02",
+                    "firstName": "Jussi",
+                    "lastName": "Juonio",
+                    "postalCode": "00820",
+                    "relationships": {
+                        "edges": [
+                            {
+                                "node": {
+                                    "guardian": {
+                                        "email": "mperez@cox.com",
+                                        "firstName": "Gulle",
+                                        "lastName": "Guardian",
+                                        "phoneNumber": "777-777777",
+                                    },
+                                    "type": None,
+                                }
+                            }
+                        ]
+                    },
+                },
+            ],
+            "guardian": {
+                "email": "mperez@cox.com",
+                "firstName": "Gulle",
+                "lastName": "Guardian",
+                "phoneNumber": "777-777777",
             },
         }
     }

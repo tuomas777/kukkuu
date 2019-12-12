@@ -1,10 +1,12 @@
 import graphene
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django_ilmoitin.utils import send_notification
 from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
+from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 
@@ -12,7 +14,7 @@ from children.notifications import NotificationType
 from users.models import Guardian
 from users.schema import GuardianNode, LanguageEnum
 
-from .models import Child, Relationship
+from .models import Child, postal_code_validator, Relationship
 
 User = get_user_model()
 
@@ -31,6 +33,7 @@ class ChildNode(DjangoObjectType):
         interfaces = (relay.Node,)
 
     @classmethod
+    @login_required
     def get_queryset(cls, queryset, info):
         return queryset.user_can_view(info.context.user).order_by("last_name")
 
@@ -76,9 +79,21 @@ class ChildInput(graphene.InputObjectType):
     relationship = RelationshipInput()
 
 
+def validate_child_data(child_data):
+    try:
+        postal_code_validator(child_data["postal_code"])
+    except ValidationError as e:
+        raise GraphQLError(e.message)
+    return child_data
+
+
 class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
     class Input:
-        children = graphene.List(ChildInput)
+        children = graphene.List(
+            graphene.NonNull(ChildInput),
+            required=True,
+            description="At least one child is required.",
+        )
         guardian = GuardianInput(required=True)
 
     children = graphene.List(ChildNode)
@@ -88,8 +103,11 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
     @login_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        user = info.context.user
+        children_data = kwargs["children"]
+        if not children_data:
+            raise GraphQLError("At least one child is required.")
 
+        user = info.context.user
         guardian_data = kwargs["guardian"]
         guardian, guardian_created = Guardian.objects.update_or_create(
             user=user,
@@ -106,10 +124,11 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         Child.objects.filter(relationships__guardian__user=user).delete()
 
         children = []
-        for child in kwargs.get("children", ()):
-            relationship_data = child.pop("relationship", {})
+        for child_data in children_data:
+            validate_child_data(child_data)
+            relationship_data = child_data.pop("relationship", {})
 
-            child = Child.objects.create(**child)
+            child = Child.objects.create(**child_data)
             Relationship.objects.create(
                 type=relationship_data.get("type"), child=child, guardian=guardian
             )
@@ -141,6 +160,7 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
     @login_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        validate_child_data(kwargs)
         user = info.context.user
         relationship_data = kwargs.pop("relationship", {})
 
@@ -167,9 +187,10 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
     @login_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        validate_child_data(kwargs)
         user = info.context.user
         child_global_id = kwargs.pop("id")
-        child = Child.objects.user_can_view(user).get(
+        child = Child.objects.user_can_update(user).get(
             pk=from_global_id(child_global_id)[1]
         )
 
@@ -193,7 +214,7 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
-        child = Child.objects.user_can_update(user).get(
+        child = Child.objects.user_can_delete(user).get(
             pk=from_global_id(kwargs["id"])[1]
         )
         child.delete()
@@ -204,11 +225,6 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
 class Query:
     children = DjangoConnectionField(ChildNode)
     child = relay.Node.Field(ChildNode)
-
-    @staticmethod
-    @login_required
-    def resolve_children(parent, info, **kwargs):
-        return Child.objects.user_can_delete(info.context.user)
 
 
 class Mutation:
