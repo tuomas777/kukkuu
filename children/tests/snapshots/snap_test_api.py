@@ -231,3 +231,16 @@ snapshots["test_submit_children_and_guardian 1"] = {
         }
     }
 }
+
+snapshots["test_update_child_mutation_should_have_no_required_fields 1"] = {
+    "data": {
+        "updateChild": {
+            "child": {
+                "birthdate": "2019-09-08",
+                "firstName": "John",
+                "lastName": "Terrell",
+                "postalCode": "77671",
+            }
+        }
+    }
+}
