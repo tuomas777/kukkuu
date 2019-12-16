@@ -104,25 +104,22 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
     @login_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        user = info.context.user
+        if hasattr(user, "guardian"):
+            raise KukkuuGraphQLError("You have already used this mutation.")
+
         children_data = kwargs["children"]
         if not children_data:
             raise KukkuuGraphQLError("At least one child is required.")
 
-        user = info.context.user
         guardian_data = kwargs["guardian"]
-        guardian, guardian_created = Guardian.objects.update_or_create(
+        guardian = Guardian.objects.create(
             user=user,
-            defaults=dict(
-                first_name=guardian_data["first_name"],
-                last_name=guardian_data["last_name"],
-                phone_number=guardian_data.get("phone_number", ""),
-                language=guardian_data["language"],
-            ),
+            first_name=guardian_data["first_name"],
+            last_name=guardian_data["last_name"],
+            phone_number=guardian_data.get("phone_number", ""),
+            language=guardian_data["language"],
         )
-
-        # TODO we don't really know the final flow yet, so in the mean time to make
-        # development easier we always recreate child here
-        Child.objects.filter(relationships__guardian__user=user).delete()
 
         children = []
         for child_data in children_data:
@@ -136,13 +133,12 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
 
             children.append(child)
 
-        if guardian_created:
-            send_notification(
-                guardian.user.email,
-                NotificationType.SIGNUP,
-                {"children": children, "guardian": guardian},
-                guardian.language,
-            )
+        send_notification(
+            guardian.user.email,
+            NotificationType.SIGNUP,
+            {"children": children, "guardian": guardian},
+            guardian.language,
+        )
 
         return SubmitChildrenAndGuardianMutation(children=children, guardian=guardian)
 
@@ -161,6 +157,12 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
     @login_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        user = info.context.user
+        if not hasattr(user, "guardian"):
+            raise KukkuuGraphQLError(
+                'You need to use "SubmitChildrenAndGuardianMutation" first.'
+            )
+
         validate_child_data(kwargs)
         user = info.context.user
         relationship_data = kwargs.pop("relationship", {})
@@ -238,7 +240,13 @@ class Query:
 
 
 class Mutation:
-    submit_children_and_guardian = SubmitChildrenAndGuardianMutation.Field()
-    add_child = AddChildMutation.Field()
+    submit_children_and_guardian = SubmitChildrenAndGuardianMutation.Field(
+        description="This is the first mutation one needs to execute to start using "
+        "the service. After that this mutation cannot be used anymore."
+    )
+    add_child = AddChildMutation.Field(
+        description="This mutation cannot be used before one has started using the "
+        'service with "SubmitChildrenAndGuardianMutation".'
+    )
     update_child = UpdateChildMutation.Field()
     delete_child = DeleteChildMutation.Field()

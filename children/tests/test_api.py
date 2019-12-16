@@ -158,6 +158,15 @@ def test_submit_children_and_guardian_postal_code_validation(user_api_client):
     assert "Postal code must be 5 digits" in str(executed["errors"])
 
 
+def test_submit_children_and_guardian_can_be_done_only_once(guardian_api_client):
+    executed = guardian_api_client.execute(
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION,
+        variables=SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES,
+    )
+
+    assert "You have already used this mutation." in str(executed["errors"])
+
+
 CHILDREN_QUERY = """
 query Children {
   children {
@@ -333,6 +342,17 @@ def test_add_child_mutation_postal_code_validation(guardian_api_client):
     assert Child.objects.count() == 0
 
 
+def test_add_child_mutation_requires_guardian(user_api_client):
+    executed = user_api_client.execute(
+        ADD_CHILD_MUTATION, variables=ADD_CHILD_VARIABLES
+    )
+
+    assert 'You need to use "SubmitChildrenAndGuardianMutation" first.' in str(
+        executed["errors"]
+    )
+    assert Child.objects.count() == 0
+
+
 UPDATE_CHILD_MUTATION = """
 mutation UpdateChild($input: UpdateChildMutationInput!) {
   updateChild(input: $input) {
@@ -359,12 +379,14 @@ UPDATE_CHILD_VARIABLES = {
 }
 
 
-def test_update_child_mutation(snapshot, user_api_client):
-    child = ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
+def test_update_child_mutation(snapshot, guardian_api_client):
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user
+    )
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
     variables["input"]["id"] = to_global_id("ChildNode", child.id)
 
-    executed = user_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
+    executed = guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
 
     snapshot.assert_match(executed)
 
@@ -372,23 +394,25 @@ def test_update_child_mutation(snapshot, user_api_client):
     assert_child_matches_data(child, variables["input"])
 
     relationship = Relationship.objects.get(
-        guardian=user_api_client.user.guardian, child=child
+        guardian=guardian_api_client.user.guardian, child=child
     )
     assert_relationship_matches_data(relationship, variables["input"]["relationship"])
 
 
 def test_update_child_mutation_should_have_no_required_fields(
-    snapshot, user_api_client
+    snapshot, guardian_api_client
 ):
-    child = ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user
+    )
     variables = {"input": {"id": to_global_id("ChildNode", child.id)}}
 
-    executed = user_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
+    executed = guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
 
     snapshot.assert_match(executed)
 
 
-def test_update_child_mutation_wrong_user(snapshot, user_api_client):
+def test_update_child_mutation_wrong_user(user_api_client):
     child = ChildWithGuardianFactory()
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
     variables["input"]["id"] = to_global_id("ChildNode", child.id)
@@ -418,21 +442,23 @@ mutation DeleteChild($input: DeleteChildMutationInput!) {
 """
 
 
-def test_delete_child_mutation(snapshot, user_api_client):
-    child = ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
+def test_delete_child_mutation(snapshot, guardian_api_client):
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user
+    )
     variables = {"input": {"id": to_global_id("ChildNode", child.id)}}
 
-    executed = user_api_client.execute(DELETE_CHILD_MUTATION, variables=variables)
+    executed = guardian_api_client.execute(DELETE_CHILD_MUTATION, variables=variables)
 
     snapshot.assert_match(executed)
     assert Child.objects.count() == 0
 
 
-def test_delete_child_mutation_wrong_user(snapshot, user_api_client):
+def test_delete_child_mutation_wrong_user(snapshot, guardian_api_client):
     child = ChildWithGuardianFactory()
     variables = {"input": {"id": to_global_id("ChildNode", child.id)}}
 
-    executed = user_api_client.execute(DELETE_CHILD_MUTATION, variables=variables)
+    executed = guardian_api_client.execute(DELETE_CHILD_MUTATION, variables=variables)
 
     assert "does not exist" in str(executed["errors"])
     assert Child.objects.count() == 1
