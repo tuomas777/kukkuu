@@ -129,7 +129,7 @@ def test_submit_children_and_guardian(snapshot, user_api_client):
     assert_guardian_matches_data(guardian, variables["input"]["guardian"])
 
     for child, child_data in zip(
-        Child.objects.order_by("created_at"), variables["input"]["children"]
+        Child.objects.order_by("birthdate"), variables["input"]["children"]
     ):
         assert_child_matches_data(child, child_data)
         relationship = Relationship.objects.get(guardian=guardian, child=child)
