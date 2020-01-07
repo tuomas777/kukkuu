@@ -117,3 +117,16 @@ snapshots["test_my_profile_query 1"] = {
 }
 
 snapshots["test_my_profile_no_profile 1"] = {"data": {"myProfile": None}}
+
+snapshots["test_update_my_profile_mutation 1"] = {
+    "data": {
+        "updateMyProfile": {
+            "myProfile": {
+                "firstName": "Updated First Name",
+                "language": "EN",
+                "lastName": "Updated Last Name",
+                "phoneNumber": "Updated phone number",
+            }
+        }
+    }
+}
