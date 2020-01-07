@@ -30,6 +30,7 @@ env = environ.Env(
     CACHE_URL=(str, "locmemcache://"),
     MAILER_EMAIL_BACKEND=(str, "django.core.mail.backends.console.EmailBackend"),
     DEFAULT_FROM_EMAIL=(str, "kukkuu@example.com"),
+    ILMOITIN_TRANSLATED_FROM_EMAIL=(dict, {}),
     MAIL_MAILGUN_KEY=(str, ""),
     MAIL_MAILGUN_DOMAIN=(str, ""),
     MAIL_MAILGUN_API=(str, ""),
@@ -69,6 +70,7 @@ if env("MAIL_MAILGUN_KEY"):
     }
 EMAIL_BACKEND = "mailer.backend.DbBackend"
 MAILER_EMAIL_BACKEND = env.str("MAILER_EMAIL_BACKEND")
+ILMOITIN_TRANSLATED_FROM_EMAIL = env("ILMOITIN_TRANSLATED_FROM_EMAIL")
 
 try:
     version = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
