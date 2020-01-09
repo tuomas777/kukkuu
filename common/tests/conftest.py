@@ -12,6 +12,8 @@ from users.factories import GuardianFactory, UserFactory
 @pytest.fixture(autouse=True)
 def setup_test_environment(settings):
     factory.random.reseed_random("777")
+    settings.DEFAULT_FROM_EMAIL = "kukkuu@example.com"
+    settings.ILMOITIN_TRANSLATED_FROM_EMAIL = {}
     with freeze_time("2019-12-12"):
         yield
 
