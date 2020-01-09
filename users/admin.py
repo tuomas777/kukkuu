@@ -1,6 +1,8 @@
 from django import forms
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
 from children.models import Relationship
 from users.models import Guardian
@@ -26,3 +28,11 @@ class GuardianForm(forms.ModelForm):
 class GuardianAdmin(admin.ModelAdmin):
     form = GuardianForm
     inlines = (RelationshipInline,)
+
+
+class UserAdmin(DjangoUserAdmin):
+    fieldsets = DjangoUserAdmin.fieldsets + (("UUID", {"fields": ("uuid",)}),)
+    readonly_fields = ("uuid",)
+
+
+admin.site.register(get_user_model(), UserAdmin)
