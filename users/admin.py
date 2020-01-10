@@ -26,6 +26,15 @@ class GuardianForm(forms.ModelForm):
 
 @admin.register(Guardian)
 class GuardianAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "first_name",
+        "last_name",
+        "phone_number",
+        "language",
+        "created_at",
+        "updated_at",
+    )
     form = GuardianForm
     inlines = (RelationshipInline,)
 
