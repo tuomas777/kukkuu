@@ -16,6 +16,7 @@ class RelationshipInline(admin.TabularInline):
 @admin.register(Child)
 class ChildAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "first_name",
         "last_name",
         "birthdate",
