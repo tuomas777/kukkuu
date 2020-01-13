@@ -117,6 +117,8 @@ INSTALLED_APPS = [
     "users",
     "children",
     "utils",
+    "events",
+    "venues",
 ]
 
 MIDDLEWARE = [
