@@ -8,6 +8,8 @@ from venues.factories import VenueFactory
 class EventFactory(factory.django.DjangoModelFactory):
     name = factory.Faker("text", max_nb_chars=64)
     duration = factory.Faker("random_int", max=1000)
+    short_description = factory.Faker("text", max_nb_chars=64)
+    description = factory.Faker("text")
 
     class Meta:
         model = Event
