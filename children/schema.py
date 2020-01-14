@@ -10,6 +10,7 @@ from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 
 from children.notifications import NotificationType
+from common.utils import update_object
 from kukkuu.exceptions import KukkuuGraphQLError
 from users.models import Guardian
 from users.schema import GuardianNode, LanguageEnum
@@ -17,14 +18,6 @@ from users.schema import GuardianNode, LanguageEnum
 from .models import Child, postal_code_validator, Relationship
 
 User = get_user_model()
-
-
-def update_object(obj, data):
-    if not data:
-        return
-    for k, v in data.items():
-        setattr(obj, k, v)
-    obj.save()
 
 
 class ChildNode(DjangoObjectType):

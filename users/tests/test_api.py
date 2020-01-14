@@ -1,7 +1,11 @@
 import pytest
 
-from children.tests.test_api import assert_permission_denied
+from children.tests.test_api import (
+    assert_guardian_matches_data,
+    assert_permission_denied,
+)
 from users.factories import GuardianFactory
+from users.models import Guardian
 
 
 @pytest.fixture(autouse=True)
@@ -111,3 +115,47 @@ def test_my_profile_no_profile(snapshot, staff_api_client):
     executed = staff_api_client.execute(MY_PROFILE_QUERY)
 
     snapshot.assert_match(executed)
+
+
+UPDATE_MY_PROFILE_MUTATION = """
+mutation UpdateMyProfile($input: UpdateMyProfileMutationInput!) {
+  updateMyProfile(input: $input) {
+    myProfile {
+      firstName
+      lastName
+      phoneNumber
+      language
+    }
+  }
+}
+"""
+
+
+UPDATE_MY_PROFILE_VARIABLES = {
+    "input": {
+        "firstName": "Updated First Name",
+        "lastName": "Updated Last Name",
+        "phoneNumber": "Updated phone number",
+        "language": "EN",
+    }
+}
+
+
+def test_update_my_profile_mutation_unauthenticated(api_client):
+    executed = api_client.execute(
+        UPDATE_MY_PROFILE_MUTATION, variables=UPDATE_MY_PROFILE_VARIABLES
+    )
+
+    assert_permission_denied(executed)
+
+
+def test_update_my_profile_mutation(snapshot, user_api_client):
+    GuardianFactory(user=user_api_client.user, language="fi")
+
+    executed = user_api_client.execute(
+        UPDATE_MY_PROFILE_MUTATION, variables=UPDATE_MY_PROFILE_VARIABLES
+    )
+
+    snapshot.assert_match(executed)
+    guardian = Guardian.objects.get(user=user_api_client.user)
+    assert_guardian_matches_data(guardian, UPDATE_MY_PROFILE_VARIABLES["input"])

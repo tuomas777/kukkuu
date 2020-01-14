@@ -1,10 +1,14 @@
 import graphene
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
+
+from common.utils import update_object
+from kukkuu.exceptions import KukkuuGraphQLError
 
 from .models import Guardian
 
@@ -32,6 +36,31 @@ class GuardianNode(DjangoObjectType):
         return self.user.email
 
 
+class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        first_name = graphene.String()
+        last_name = graphene.String()
+        phone_number = graphene.String()
+        language = LanguageEnum()
+
+    my_profile = graphene.Field(GuardianNode)
+
+    @classmethod
+    @login_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        user = info.context.user
+
+        try:
+            guardian = user.guardian
+        except Guardian.DoesNotExist as e:
+            raise KukkuuGraphQLError(e)
+
+        update_object(guardian, kwargs)
+
+        return UpdateMyProfileMutation(my_profile=guardian)
+
+
 class Query:
     guardians = DjangoConnectionField(GuardianNode)
     my_profile = graphene.Field(GuardianNode)
@@ -45,3 +74,7 @@ class Query:
     @login_required
     def resolve_my_profile(parent, info, **kwargs):
         return Guardian.objects.filter(user=info.context.user).first()
+
+
+class Mutation:
+    update_my_profile = UpdateMyProfileMutation.Field()
