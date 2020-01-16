@@ -1,10 +1,19 @@
 import graphene
+from django.apps import apps
 from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 from graphql_jwt.decorators import login_required
 
 from events.models import Event, Occurrence
 from venues.schema import VenueNode
+
+EventTranslation = apps.get_model("events", "EventTranslation")
+
+
+class EventTranslationType(DjangoObjectType):
+    class Meta:
+        model = EventTranslation
+        exclude = ("id", "master")
 
 
 class EventNode(DjangoObjectType):

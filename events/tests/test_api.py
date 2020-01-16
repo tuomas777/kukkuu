@@ -15,20 +15,26 @@ query Events {
   events {
     edges {
       node {
-        name
-        shortDescription
-        description
+        translations{
+          name
+          description
+          shortDescription
+          languageCode
+        }
+        duration
         createdAt
         updatedAt
-        duration
         occurrences {
           edges {
             node {
               time
               venue {
-                name
+                translations{
+                  name
+                  description
+                  languageCode
+                }
                 seatCount
-                description
               }
             }
           }
@@ -37,15 +43,18 @@ query Events {
     }
   }
 }
+
 """
 
 EVENT_QUERY = """
 query Event($id:ID!) {
   event(id: $id) {
-    id
-    name
-    shortDescription
-    description
+    translations{
+      name
+      shortDescription
+      description
+      languageCode
+    }
     createdAt
     updatedAt
     duration
@@ -54,9 +63,12 @@ query Event($id:ID!) {
         node{
           time
           venue{
-            name
+            translations{
+              name
+              description
+              languageCode
+            }
             seatCount
-            description
           }
         }
       }
@@ -67,15 +79,26 @@ query Event($id:ID!) {
 
 OCCURRENCES_QUERY = """
 query Occurrences {
-  occurrences{
-    edges{
-      node{
+  occurrences {
+    edges {
+      node {
         time
-        event{
-          name
+        event {
+          translations {
+            name
+            shortDescription
+            description
+            languageCode
+          }
           duration
-          shortDescription
-          description
+        }
+        venue{
+          translations{
+            name
+            description
+            languageCode
+          }
+          seatCount
         }
       }
     }
@@ -86,18 +109,23 @@ query Occurrences {
 OCCURRENCE_QUERY = """
 query Occurrence($id: ID!) {
   occurrence(id: $id){
-    id
     time
-    event{
-      name
-      shortDescription
+    event {
+      translations {
+        name
+        shortDescription
+        description
+        languageCode
+      }
       duration
-      description
     }
     venue{
-      name
+      translations{
+        name
+        description,
+        languageCode
+      }
       seatCount
-      description
     }
   }
 }
