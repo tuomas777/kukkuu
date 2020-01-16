@@ -21,4 +21,4 @@ class EventAdmin(admin.ModelAdmin):
 class OccurrenceAdmin(admin.ModelAdmin):
     list_display = ("id", "time", "event", "created_at", "updated_at")
     list_display_links = ("id", "time")
-    fields = ("time", "event")
+    fields = ("time", "event", "venue")
