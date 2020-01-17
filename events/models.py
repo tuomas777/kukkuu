@@ -1,16 +1,19 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from parler.models import TranslatableModel, TranslatedFields
 
 from common.models import TimestampedModel
 from venues.models import Venue
 
 
-class Event(TimestampedModel):
-    name = models.CharField(verbose_name=_("name"), max_length=255)
-    short_description = models.TextField(
-        verbose_name=_("short description"), blank=True,
+class Event(TimestampedModel, TranslatableModel):
+    translations = TranslatedFields(
+        name=models.CharField(verbose_name=_("name"), max_length=255),
+        short_description=models.TextField(
+            verbose_name=_("short description"), blank=True,
+        ),
+        description=models.TextField(verbose_name=_("description"), blank=True),
     )
-    description = models.TextField(verbose_name=_("description"), blank=True)
     duration = models.PositiveIntegerField(verbose_name=_("duration"))
 
     class Meta:
@@ -18,7 +21,7 @@ class Event(TimestampedModel):
         verbose_name_plural = _("events")
 
     def __str__(self):
-        return f"{self.pk} {self.name}"
+        return self.safe_translation_getter("name", super().__str__())
 
 
 class Occurrence(TimestampedModel):

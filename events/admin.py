@@ -1,10 +1,11 @@
 from django.contrib import admin
+from parler.admin import TranslatableAdmin
 
 from .models import Event, Occurrence
 
 
 @admin.register(Event)
-class EventAdmin(admin.ModelAdmin):
+class EventAdmin(TranslatableAdmin):
     list_display = (
         "id",
         "name",

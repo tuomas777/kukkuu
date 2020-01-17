@@ -1,12 +1,15 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from parler.models import TranslatableModel, TranslatedFields
 
 from common.models import TimestampedModel
 
 
-class Venue(TimestampedModel):
-    name = models.CharField(verbose_name=_("name"), max_length=255)
-    description = models.TextField(verbose_name=_("description"), blank=True)
+class Venue(TimestampedModel, TranslatableModel):
+    translations = TranslatedFields(
+        name=models.CharField(verbose_name=_("name"), max_length=255),
+        description=models.TextField(verbose_name=_("description"), blank=True),
+    )
     seat_count = models.PositiveIntegerField(verbose_name=_("seat count"))
 
     class Meta:

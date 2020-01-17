@@ -1,8 +1,17 @@
+from django.apps import apps
 from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 from graphql_jwt.decorators import login_required
 
 from venues.models import Venue
+
+VenueTranslation = apps.get_model("venues", "VenueTranslation")
+
+
+class VenueTranslationType(DjangoObjectType):
+    class Meta:
+        model = VenueTranslation
+        exclude = ("id", "master")
 
 
 class VenueNode(DjangoObjectType):
