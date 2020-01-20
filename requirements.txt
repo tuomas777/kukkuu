@@ -24,7 +24,7 @@ faker==2.0.4              # via factory-boy
 future==0.17.1            # via pyjwkest, python-jose
 graphene-django==2.6.0
 graphene==2.1.8           # via graphene-django
-graphql-core==2.2.1       # via django-graphql-jwt, graphene, graphene-django, graphql-relay
+graphql-core==2.2.1       # via django-graphql-jwt, graphene, graphene-django, graphql-relay, secure-graphene
 graphql-relay==2.0.0      # via graphene
 idna==2.8                 # via requests
 jinja2==2.10.3            # via django-ilmoitin
@@ -42,6 +42,7 @@ pytz==2019.3              # via django
 requests==2.22.0          # via django-anymail, django-helusers, pyjwkest
 rsa==4.0                  # via python-jose
 rx==1.6.1                 # via graphql-core
+secure-graphene==0.1.2
 sentry-sdk==0.12.3
 singledispatch==3.4.0.3   # via graphene-django
 six==1.12.0               # via django-anymail, django-mailer, faker, graphene, graphene-django, graphql-core, graphql-relay, promise, pyjwkest, python-dateutil, python-jose, singledispatch
