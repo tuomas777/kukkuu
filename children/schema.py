@@ -2,6 +2,7 @@ import graphene
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.utils.timezone import localtime, now
 from django_ilmoitin.utils import send_notification
 from graphene import relay
 from graphene_django import DjangoConnectionField
@@ -78,6 +79,13 @@ def validate_child_data(child_data):
             postal_code_validator(child_data["postal_code"])
         except ValidationError as e:
             raise KukkuuGraphQLError(e.message)
+    # TODO temporarily hard-coded until further specs are figured out
+    if "birthdate" in child_data:
+        if (
+            child_data["birthdate"].year != 2020
+            or child_data["birthdate"] > localtime(now()).date()
+        ):
+            raise KukkuuGraphQLError("Illegal birthdate.")
     return child_data
 
 

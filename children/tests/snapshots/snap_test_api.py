@@ -9,7 +9,7 @@ snapshots = Snapshot()
 snapshots["test_child_query 1"] = {
     "data": {
         "child": {
-            "birthdate": "2019-09-08",
+            "birthdate": "2020-09-07",
             "firstName": "John",
             "lastName": "Terrell",
             "postalCode": "77671",
@@ -38,7 +38,7 @@ snapshots["test_children_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "birthdate": "2019-03-02",
+                        "birthdate": "2020-03-01",
                         "firstName": "Jason",
                         "lastName": "Owens",
                         "postalCode": "70898",
@@ -70,7 +70,7 @@ snapshots["test_children_query_staff_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "birthdate": "2019-03-02",
+                        "birthdate": "2020-03-01",
                         "firstName": "Jason",
                         "lastName": "Owens",
                         "postalCode": "70898",
@@ -93,7 +93,7 @@ snapshots["test_children_query_staff_user 1"] = {
                 },
                 {
                     "node": {
-                        "birthdate": "2019-09-08",
+                        "birthdate": "2020-09-07",
                         "firstName": "John",
                         "lastName": "Terrell",
                         "postalCode": "77671",
@@ -152,7 +152,7 @@ snapshots["test_delete_child_mutation 1"] = {
 snapshots["test_child_query_not_own_child_staff_user 1"] = {
     "data": {
         "child": {
-            "birthdate": "2019-09-08",
+            "birthdate": "2020-09-07",
             "firstName": "John",
             "lastName": "Terrell",
             "postalCode": "77671",
@@ -236,7 +236,7 @@ snapshots["test_update_child_mutation_should_have_no_required_fields 1"] = {
     "data": {
         "updateChild": {
             "child": {
-                "birthdate": "2019-09-06",
+                "birthdate": "2020-09-05",
                 "firstName": "Katherine",
                 "lastName": "Wells",
                 "postalCode": "15910",

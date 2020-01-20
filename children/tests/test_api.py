@@ -1,6 +1,8 @@
 from copy import deepcopy
+from datetime import date, timedelta
 
 import pytest
+from django.utils.timezone import localtime, now
 from graphene.utils.str_converters import to_snake_case
 from graphql_relay import to_global_id
 
@@ -19,6 +21,16 @@ def autouse_db(db):
 @pytest.fixture(params=("1234x", ""))
 def invalid_postal_code(request):
     return request.param
+
+
+@pytest.fixture(params=[0, 1])
+def illegal_birthdate(request):
+    # these dates cannot be set to params directly because now() would not be
+    # the faked one
+    return (
+        date(2019, 10, 10),  # wrong year
+        localtime(now()).date() + timedelta(days=1),  # in the future
+    )[request.param]
 
 
 def assert_child_matches_data(child_obj, child_data):
@@ -163,6 +175,19 @@ def test_submit_children_and_guardian_postal_code_validation(
     )
 
     assert "Postal code must be 5 digits" in str(executed["errors"])
+
+
+def test_submit_children_and_guardian_birthdate_validation(
+    user_api_client, illegal_birthdate
+):
+    variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
+    variables["input"]["children"][0]["birthdate"] = illegal_birthdate
+
+    executed = user_api_client.execute(
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
+    )
+
+    assert "Illegal birthdate." in str(executed["errors"])
 
 
 def test_submit_children_and_guardian_can_be_done_only_once(guardian_api_client):
@@ -352,6 +377,17 @@ def test_add_child_mutation_postal_code_validation(
     assert Child.objects.count() == 0
 
 
+def test_add_child_mutation_birthdate_validation(
+    guardian_api_client, illegal_birthdate
+):
+    variables = deepcopy(ADD_CHILD_VARIABLES)
+    variables["input"]["birthdate"] = illegal_birthdate
+
+    executed = guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
+
+    assert "Illegal birthdate." in str(executed["errors"])
+
+
 def test_add_child_mutation_requires_guardian(user_api_client):
     executed = user_api_client.execute(
         ADD_CHILD_MUTATION, variables=ADD_CHILD_VARIABLES
@@ -445,6 +481,21 @@ def test_update_child_mutation_postal_code_validation(
     executed = guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
 
     assert "Postal code must be 5 digits" in str(executed["errors"])
+
+
+def test_update_child_mutation_birthdate_validation(
+    guardian_api_client, illegal_birthdate
+):
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user
+    )
+    variables = deepcopy(UPDATE_CHILD_VARIABLES)
+    variables["input"]["id"] = to_global_id("ChildNode", child.id)
+    variables["input"]["birthdate"] = illegal_birthdate
+
+    executed = guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
+
+    assert "Illegal birthdate." in str(executed["errors"])
 
 
 DELETE_CHILD_MUTATION = """
