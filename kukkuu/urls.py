@@ -1,10 +1,10 @@
+from django.conf import settings
 from django.http import HttpResponse
 from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
 from helusers.admin_site import admin
 from secure_graphene.depth import DepthAnalysisBackend
 
-from kukkuu import settings
 from kukkuu.views import SentryGraphQLView
 
 gql_backend = DepthAnalysisBackend(
