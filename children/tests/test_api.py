@@ -16,6 +16,11 @@ def autouse_db(db):
     pass
 
 
+@pytest.fixture(params=("1234x", ""))
+def invalid_postal_code(request):
+    return request.param
+
+
 def assert_child_matches_data(child_obj, child_data):
     child_data = child_data or {}
     for field_name in ("firstName", "lastName", "birthDate", "postalCode"):
@@ -147,29 +152,17 @@ def test_submit_children_and_guardian_one_child_required(snapshot, user_api_clie
     assert "At least one child is required." in str(executed["errors"])
 
 
-def test_submit_children_and_guardian_postal_code_validation(user_api_client):
+def test_submit_children_and_guardian_postal_code_validation(
+    user_api_client, invalid_postal_code
+):
     variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
-    variables["input"]["children"][0]["postalCode"] = "1234x"
+    variables["input"]["children"][0]["postalCode"] = invalid_postal_code
 
     executed = user_api_client.execute(
         SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
     )
 
     assert "Postal code must be 5 digits" in str(executed["errors"])
-
-
-def test_submit_children_and_guardian_postal_code_can_be_empty(user_api_client):
-    variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
-    variables["input"]["children"][0]["postalCode"] = ""
-
-    user_api_client.execute(SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables)
-
-    assert (
-        Child.objects.get(
-            first_name=variables["input"]["children"][0]["firstName"]
-        ).postal_code
-        == ""
-    )
 
 
 def test_submit_children_and_guardian_can_be_done_only_once(guardian_api_client):
@@ -347,25 +340,16 @@ def test_add_child_mutation_birthdate_required(guardian_api_client):
     assert Child.objects.count() == 0
 
 
-def test_add_child_mutation_postal_code_validation(guardian_api_client):
+def test_add_child_mutation_postal_code_validation(
+    guardian_api_client, invalid_postal_code
+):
     variables = deepcopy(ADD_CHILD_VARIABLES)
-    variables["input"]["postalCode"] = "1234x"
+    variables["input"]["postalCode"] = invalid_postal_code
 
     executed = guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
 
     assert "Postal code must be 5 digits" in str(executed["errors"])
     assert Child.objects.count() == 0
-
-
-def test_add_child_mutation_postal_code_can_be_empty(guardian_api_client):
-    variables = deepcopy(ADD_CHILD_VARIABLES)
-    variables["input"]["postalCode"] = ""
-
-    guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
-
-    assert (
-        Child.objects.get(first_name=variables["input"]["firstName"]).postal_code == ""
-    )
 
 
 def test_add_child_mutation_requires_guardian(user_api_client):
@@ -448,31 +432,19 @@ def test_update_child_mutation_wrong_user(user_api_client):
     assert "does not exist" in str(executed["errors"])
 
 
-def test_update_child_mutation_postal_code_validation(guardian_api_client):
+def test_update_child_mutation_postal_code_validation(
+    guardian_api_client, invalid_postal_code
+):
     child = ChildWithGuardianFactory(
         relationship__guardian__user=guardian_api_client.user
     )
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
     variables["input"]["id"] = to_global_id("ChildNode", child.id)
-    variables["input"]["postalCode"] = "1234x"
+    variables["input"]["postalCode"] = invalid_postal_code
 
     executed = guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
 
     assert "Postal code must be 5 digits" in str(executed["errors"])
-
-
-def test_update_child_mutation_postal_code_can_be_empty(guardian_api_client):
-    child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user, postal_code="12345",
-    )
-    variables = deepcopy(UPDATE_CHILD_VARIABLES)
-    variables["input"]["id"] = to_global_id("ChildNode", child.id)
-    variables["input"]["postalCode"] = ""
-
-    guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
-
-    child.refresh_from_db()
-    assert child.postal_code == ""
 
 
 DELETE_CHILD_MUTATION = """

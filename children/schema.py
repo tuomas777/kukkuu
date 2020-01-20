@@ -68,12 +68,12 @@ class ChildInput(graphene.InputObjectType):
     first_name = graphene.String()
     last_name = graphene.String()
     birthdate = graphene.Date(required=True)
-    postal_code = graphene.String()
+    postal_code = graphene.String(required=True)
     relationship = RelationshipInput()
 
 
 def validate_child_data(child_data):
-    if child_data.get("postal_code"):
+    if "postal_code" in child_data:
         try:
             postal_code_validator(child_data["postal_code"])
         except ValidationError as e:
@@ -141,7 +141,7 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
         first_name = graphene.String()
         last_name = graphene.String()
         birthdate = graphene.Date(required=True)
-        postal_code = graphene.String()
+        postal_code = graphene.String(required=True)
         relationship = RelationshipInput()
 
     child = graphene.Field(ChildNode)

@@ -33,10 +33,7 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     last_name = models.CharField(verbose_name=_("last name"), max_length=64, blank=True)
     birthdate = models.DateField(verbose_name=_("birthdate"))
     postal_code = models.CharField(
-        verbose_name=_("postal code"),
-        max_length=5,
-        blank=True,
-        validators=[postal_code_validator],
+        verbose_name=_("postal code"), max_length=5, validators=[postal_code_validator],
     )
     guardians = models.ManyToManyField(
         Guardian,
