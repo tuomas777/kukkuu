@@ -15,7 +15,7 @@ django-helusers==0.5.2
 django-ilmoitin==0.3.0
 django-mailer==2.0        # via django-ilmoitin
 django-parler==1.9.2
-django==2.2.8
+django==2.2.9
 djangorestframework==3.10.3  # via drf-oidc-auth
 drf-oidc-auth==0.9        # via django-helusers
 ecdsa==0.13.3             # via python-jose
