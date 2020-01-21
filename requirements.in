@@ -8,4 +8,8 @@ django-parler
 factory-boy
 graphene-django
 psycopg2
+
+# this is not exactly a very widely used package, so be extra cautious if updating this
+secure-graphene==0.1.2
+
 sentry-sdk
