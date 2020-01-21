@@ -12,7 +12,7 @@ snapshots["test_events_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "createdAt": "2019-12-12T00:00:00+00:00",
+                        "createdAt": "2020-12-12T00:00:00+00:00",
                         "duration": 362,
                         "occurrences": {
                             "edges": [
@@ -42,7 +42,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                                 "shortDescription": "Together history perform.",
                             }
                         ],
-                        "updatedAt": "2019-12-12T00:00:00+00:00",
+                        "updatedAt": "2020-12-12T00:00:00+00:00",
                     }
                 }
             ]
@@ -53,7 +53,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
 snapshots["test_event_query_normal_user 1"] = {
     "data": {
         "event": {
-            "createdAt": "2019-12-12T00:00:00+00:00",
+            "createdAt": "2020-12-12T00:00:00+00:00",
             "duration": 760,
             "occurrences": {"edges": []},
             "translations": [
@@ -65,7 +65,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                     "shortDescription": "Fall long respond draw military dog.",
                 }
             ],
-            "updatedAt": "2019-12-12T00:00:00+00:00",
+            "updatedAt": "2020-12-12T00:00:00+00:00",
         }
     }
 }

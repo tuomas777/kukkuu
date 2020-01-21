@@ -21,7 +21,7 @@ snapshots["test_guardians_query_normal_user 1"] = {
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2019-11-23",
+                                            "birthdate": "2020-11-22",
                                             "firstName": "Christopher",
                                             "lastName": "Jones",
                                         },
@@ -52,7 +52,7 @@ snapshots["test_guardians_query_staff_user 1"] = {
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2019-02-14",
+                                            "birthdate": "2020-02-14",
                                             "firstName": "Robin",
                                             "lastName": "Moses",
                                         },
@@ -74,7 +74,7 @@ snapshots["test_guardians_query_staff_user 1"] = {
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2019-11-23",
+                                            "birthdate": "2020-11-22",
                                             "firstName": "Christopher",
                                             "lastName": "Jones",
                                         },
@@ -102,7 +102,7 @@ snapshots["test_my_profile_query 1"] = {
                     {
                         "node": {
                             "child": {
-                                "birthdate": "2019-03-02",
+                                "birthdate": "2020-03-01",
                                 "firstName": "Jason",
                                 "lastName": "Owens",
                                 "postalCode": "70898",

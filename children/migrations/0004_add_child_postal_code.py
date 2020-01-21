@@ -13,7 +13,6 @@ class Migration(migrations.Migration):
             model_name="child",
             name="postal_code",
             field=models.CharField(
-                blank=True,
                 max_length=5,
                 verbose_name="postal code",
                 validators=[
