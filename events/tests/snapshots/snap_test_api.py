@@ -12,27 +12,30 @@ snapshots["test_events_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
+                        "capacityPerOccurrence": 805,
                         "createdAt": "2020-12-12T00:00:00+00:00",
-                        "duration": 362,
+                        "duration": 1450.0,
+                        "image": "spring.jpg",
                         "occurrences": {
                             "edges": [
                                 {
                                     "node": {
                                         "time": "1986-12-12T16:40:48+00:00",
                                         "venue": {
-                                            "seatCount": 88,
                                             "translations": [
                                                 {
                                                     "description": "Later evening southern would according strong. Analysis season project executive entire.",
                                                     "languageCode": "FI",
-                                                    "name": "Never skill down subject town.",
+                                                    "name": "Subject town range.",
                                                 }
-                                            ],
+                                            ]
                                         },
                                     }
                                 }
                             ]
                         },
+                        "participantsPerInvite": "FAMILY",
+                        "publishedAt": "1986-02-27T01:22:35+00:00",
                         "translations": [
                             {
                                 "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
@@ -53,9 +56,13 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
 snapshots["test_event_query_normal_user 1"] = {
     "data": {
         "event": {
+            "capacityPerOccurrence": 805,
             "createdAt": "2020-12-12T00:00:00+00:00",
-            "duration": 760,
+            "duration": 3041.0,
+            "image": "spring.jpg",
             "occurrences": {"edges": []},
+            "participantsPerInvite": "FAMILY",
+            "publishedAt": "1986-02-27T01:22:35+00:00",
             "translations": [
                 {
                     "description": """Serious listen police shake. Page box child care any concern.
@@ -77,7 +84,11 @@ snapshots["test_occurrences_query_normal_user 1"] = {
                 {
                     "node": {
                         "event": {
-                            "duration": 362,
+                            "capacityPerOccurrence": 805,
+                            "duration": 1450.0,
+                            "image": "spring.jpg",
+                            "participantsPerInvite": "FAMILY",
+                            "publishedAt": "1986-02-27T01:22:35+00:00",
                             "translations": [
                                 {
                                     "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
@@ -90,14 +101,21 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                         },
                         "time": "1986-12-12T16:40:48+00:00",
                         "venue": {
-                            "seatCount": 88,
                             "translations": [
                                 {
+                                    "accessibilityInfo": "Enjoy office water those notice medical. Already name likely behind mission network. Think significant land especially can quite.",
+                                    "additionalInfo": """Prevent pressure point. Voice radio happen color scene.
+Assume training seek full several. Authority develop identify ready.""",
+                                    "address": """1449 Hill Squares
+South Zacharyborough, CO 33337""",
+                                    "arrivalInstructions": """Last appear experience seven. Throw wrong party wall agency customer clear. Control as receive cup.
+Family around year off. Sense person the probably.""",
                                     "description": "Later evening southern would according strong. Analysis season project executive entire.",
                                     "languageCode": "FI",
-                                    "name": "Never skill down subject town.",
+                                    "name": "Subject town range.",
+                                    "wwwUrl": "http://brooks.org/",
                                 }
-                            ],
+                            ]
                         },
                     }
                 }
@@ -110,7 +128,11 @@ snapshots["test_occurrence_query_normal_user 1"] = {
     "data": {
         "occurrence": {
             "event": {
-                "duration": 362,
+                "capacityPerOccurrence": 805,
+                "duration": 1450.0,
+                "image": "spring.jpg",
+                "participantsPerInvite": "FAMILY",
+                "publishedAt": "1986-02-27T01:22:35+00:00",
                 "translations": [
                     {
                         "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
@@ -123,14 +145,21 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
             },
             "time": "1986-12-12T16:40:48+00:00",
             "venue": {
-                "seatCount": 88,
                 "translations": [
                     {
+                        "accessibilityInfo": "Enjoy office water those notice medical. Already name likely behind mission network. Think significant land especially can quite.",
+                        "additionalInfo": """Prevent pressure point. Voice radio happen color scene.
+Assume training seek full several. Authority develop identify ready.""",
+                        "address": """1449 Hill Squares
+South Zacharyborough, CO 33337""",
+                        "arrivalInstructions": """Last appear experience seven. Throw wrong party wall agency customer clear. Control as receive cup.
+Family around year off. Sense person the probably.""",
                         "description": "Later evening southern would according strong. Analysis season project executive entire.",
                         "languageCode": "FI",
-                        "name": "Never skill down subject town.",
+                        "name": "Subject town range.",
+                        "wwwUrl": "http://brooks.org/",
                     }
-                ],
+                ]
             },
         }
     }

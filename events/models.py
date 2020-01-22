@@ -7,14 +7,33 @@ from venues.models import Venue
 
 
 class Event(TimestampedModel, TranslatableModel):
+    CHILD_AND_GUARDIAN = "child_and_guardian"
+    FAMILY = "family"
+    PARTICIPANT_AMOUNT_CHOICES = (
+        (CHILD_AND_GUARDIAN, _("Child and Guardian")),
+        (FAMILY, _("Family")),
+    )
+
     translations = TranslatedFields(
         name=models.CharField(verbose_name=_("name"), max_length=255),
         short_description=models.TextField(
-            verbose_name=_("short description"), blank=True,
+            verbose_name=_("short description"), blank=True
         ),
         description=models.TextField(verbose_name=_("description"), blank=True),
     )
-    duration = models.PositiveIntegerField(verbose_name=_("duration"))
+    image = models.ImageField(blank=True, verbose_name=_("image"))
+    participants_per_invite = models.CharField(
+        max_length=255,
+        choices=PARTICIPANT_AMOUNT_CHOICES,
+        verbose_name=_("participants per invite"),
+    )
+    duration = models.DurationField(verbose_name=_("duration"), blank=True, null=True)
+    capacity_per_occurrence = models.PositiveSmallIntegerField(
+        verbose_name=_("capacity per occurrence")
+    )
+    published_at = models.DateTimeField(
+        blank=True, null=True, verbose_name=_("published at")
+    )
 
     class Meta:
         verbose_name = _("event")

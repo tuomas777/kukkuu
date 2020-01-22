@@ -30,6 +30,7 @@ idna==2.8                 # via requests
 jinja2==2.10.3            # via django-ilmoitin
 lockfile==0.12.2          # via django-mailer
 markupsafe==1.1.1         # via jinja2
+pillow==7.0.0
 promise==2.2.1            # via graphene-django, graphql-core, graphql-relay
 psycopg2==2.8.4
 pyasn1==0.4.7             # via rsa

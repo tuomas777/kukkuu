@@ -22,6 +22,10 @@ query Events {
           languageCode
         }
         duration
+        image
+        participantsPerInvite
+        capacityPerOccurrence
+        publishedAt
         createdAt
         updatedAt
         occurrences {
@@ -34,7 +38,6 @@ query Events {
                   description
                   languageCode
                 }
-                seatCount
               }
             }
           }
@@ -55,6 +58,10 @@ query Event($id:ID!) {
       description
       languageCode
     }
+    image
+    participantsPerInvite
+    capacityPerOccurrence
+    publishedAt
     createdAt
     updatedAt
     duration
@@ -68,7 +75,6 @@ query Event($id:ID!) {
               description
               languageCode
             }
-            seatCount
           }
         }
       }
@@ -90,15 +96,23 @@ query Occurrences {
             description
             languageCode
           }
+          image
+          participantsPerInvite
+          capacityPerOccurrence
+          publishedAt
           duration
         }
         venue{
           translations{
             name
             description
+            address
+            accessibilityInfo
+            arrivalInstructions
+            additionalInfo
+            wwwUrl
             languageCode
           }
-          seatCount
         }
       }
     }
@@ -117,15 +131,23 @@ query Occurrence($id: ID!) {
         description
         languageCode
       }
+      image
+      participantsPerInvite
+      capacityPerOccurrence
+      publishedAt
       duration
     }
     venue{
       translations{
         name
-        description,
+        description
+        address
+        accessibilityInfo
+        arrivalInstructions
+        additionalInfo
+        wwwUrl
         languageCode
       }
-      seatCount
     }
   }
 }
