@@ -10,12 +10,13 @@ class EventAdmin(TranslatableAdmin):
         "id",
         "name",
         "short_description",
-        "duration",
+        "capacity_per_occurrence",
+        "participants_per_invite",
         "created_at",
         "updated_at",
     )
     list_display_links = ("id", "name")
-    fields = ("name", "short_description", "description", "duration")
+    exclude = ("id", "created_at", "updated_at")
 
 
 @admin.register(Occurrence)

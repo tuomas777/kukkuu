@@ -16,22 +16,31 @@ query Venues {
     edges {
       node {
         translations {
-          languageCode
           name
           description
+          address
+          accessibilityInfo
+          arrivalInstructions
+          additionalInfo
+          wwwUrl
+          languageCode
         }
-        seatCount
         occurrences {
           edges {
             node {
               time
               event {
                 translations {
-                  name
-                  description
-                  shortDescription
+                    name
+                    shortDescription
+                    description
+                    languageCode
                 }
-                duration
+                  image
+                  participantsPerInvite
+                  capacityPerOccurrence
+                  publishedAt
+                  duration
               }
             }
           }
@@ -45,24 +54,33 @@ query Venues {
 VENUE_QUERY = """
 query Venue($id: ID!) {
   venue(id: $id){
-    seatCount
     translations{
-      name
-      description
-      languageCode
+        name
+        description
+        address
+        accessibilityInfo
+        arrivalInstructions
+        additionalInfo
+        wwwUrl
+        languageCode
     }
     occurrences{
       edges{
         node{
           time
-          event{
-            translations{
-              name,
-              description,
-              languageCode
+          event {
+              translations {
+                name
+                shortDescription
+                description
+                languageCode
+              }
+              image
+              participantsPerInvite
+              capacityPerOccurrence
+              publishedAt
+              duration
             }
-            duration
-          }
         }
       }
     }
