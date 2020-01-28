@@ -166,6 +166,8 @@ OIDC_API_TOKEN_AUTH = {
     "REQUIRE_API_SCOPE_FOR_AUTHENTICATION": env.bool("TOKEN_AUTH_REQUIRE_SCOPE_PREFIX"),
 }
 
+OIDC_AUTH = {"OIDC_LEEWAY": 60 * 60}
+
 SITE_ID = 1
 
 PARLER_LANGUAGES = {SITE_ID: ({"code": "fi"}, {"code": "sv"}, {"code": "en"})}
