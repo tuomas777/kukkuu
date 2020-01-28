@@ -5,8 +5,10 @@ from django.test import RequestFactory
 from freezegun import freeze_time
 from graphene.test import Client
 
+from events.factories import EventFactory, OccurrenceFactory
 from kukkuu.schema import schema
 from users.factories import GuardianFactory, UserFactory
+from venues.factories import VenueFactory
 
 
 @pytest.fixture(autouse=True)
@@ -41,6 +43,21 @@ def staff_api_client():
 @pytest.fixture
 def guardian_api_client():
     return _create_api_client_with_user(UserFactory(guardian=GuardianFactory()))
+
+
+@pytest.fixture
+def event():
+    return EventFactory()
+
+
+@pytest.fixture
+def venue():
+    return VenueFactory()
+
+
+@pytest.fixture
+def occurrence():
+    return OccurrenceFactory()
 
 
 def _create_api_client_with_user(user):

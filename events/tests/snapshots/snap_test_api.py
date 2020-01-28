@@ -14,35 +14,18 @@ snapshots["test_events_query_normal_user 1"] = {
                     "node": {
                         "capacityPerOccurrence": 805,
                         "createdAt": "2020-12-12T00:00:00+00:00",
-                        "duration": 181,
+                        "duration": 197,
                         "image": "spring.jpg",
-                        "occurrences": {
-                            "edges": [
-                                {
-                                    "node": {
-                                        "time": "1986-12-12T16:40:48+00:00",
-                                        "venue": {
-                                            "translations": [
-                                                {
-                                                    "description": "Later evening southern would according strong. Analysis season project executive entire.",
-                                                    "languageCode": "FI",
-                                                    "name": "Subject town range.",
-                                                }
-                                            ]
-                                        },
-                                    }
-                                }
-                            ]
-                        },
+                        "occurrences": {"edges": []},
                         "participantsPerInvite": "FAMILY",
                         "publishedAt": "1986-02-27T01:22:35+00:00",
                         "translations": [
                             {
-                                "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
+                                "description": """Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
                                 "languageCode": "FI",
-                                "name": "Worker position late leg him president.",
-                                "shortDescription": "Together history perform.",
+                                "name": "Free heart significant machine try.",
+                                "shortDescription": "Perform in weight success answer.",
                             }
                         ],
                         "updatedAt": "2020-12-12T00:00:00+00:00",
@@ -193,7 +176,49 @@ snapshots["test_add_occurrence_staff_user 1"] = {
             "occurrence": {
                 "event": {"id": "RXZlbnROb2RlOjg="},
                 "time": "1986-12-12T16:40:48+00:00",
+                "venue": {"id": "VmVudWVOb2RlOjQ="},
+            }
+        }
+    }
+}
+
+snapshots["test_update_occurrence_staff_user 1"] = {
+    "data": {
+        "updateOccurrence": {
+            "occurrence": {
+                "event": {"id": "RXZlbnROb2RlOjk="},
+                "id": "T2NjdXJyZW5jZU5vZGU6NQ==",
+                "time": "1986-12-12T16:40:48+00:00",
                 "venue": {"id": "VmVudWVOb2RlOjU="},
+            }
+        }
+    }
+}
+
+snapshots["test_update_event_staff_user 1"] = {
+    "data": {
+        "updateEvent": {
+            "event": {
+                "capacityPerOccurrence": 30,
+                "duration": 1000,
+                "id": "RXZlbnROb2RlOjEx",
+                "occurrences": {"edges": []},
+                "participantsPerInvite": "FAMILY",
+                "translations": [
+                    {
+                        "description": "desc",
+                        "languageCode": "SV",
+                        "name": "Event test in suomi",
+                        "shortDescription": "Short desc",
+                    },
+                    {
+                        "description": """Serious listen police shake. Page box child care any concern.
+Agree room laugh prevent make. Our very television beat at success decade.""",
+                        "languageCode": "FI",
+                        "name": "Free heart significant machine try.",
+                        "shortDescription": "Perform in weight success answer.",
+                    },
+                ],
             }
         }
     }

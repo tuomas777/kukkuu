@@ -126,3 +126,25 @@ snapshots["test_add_venue_staff_user 1"] = {
         }
     }
 }
+
+snapshots["test_update_venue_staff_user 1"] = {
+    "data": {
+        "updateVenue": {
+            "venue": {
+                "id": "VmVudWVOb2RlOjEy",
+                "translations": [
+                    {
+                        "accessibilityInfo": "Accessibility info",
+                        "additionalInfo": "Additional info",
+                        "address": "Address",
+                        "arrivalInstructions": "Arrival instruction",
+                        "description": "Venue description",
+                        "languageCode": "FI",
+                        "name": "Venue name",
+                        "wwwUrl": "www.url.com",
+                    }
+                ],
+            }
+        }
+    }
+}

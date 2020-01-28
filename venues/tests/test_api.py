@@ -1,8 +1,10 @@
+from copy import deepcopy
+
 import pytest
 from graphql_relay import to_global_id
 
 from common.tests.utils import assert_permission_denied
-from events.factories import OccurrenceFactory
+from venues.models import Venue
 
 
 @pytest.fixture(autouse=True)
@@ -124,6 +126,52 @@ ADD_VENUE_VARIABLES = {
     }
 }
 
+UPDATE_VENUE_MUTATION = """
+mutation updateVenue($input: UpdateVenueMutationInput!) {
+  updateVenue(input: $input) {
+    venue {
+      id
+      translations{
+        languageCode
+        name
+        description
+        address
+        accessibilityInfo
+        arrivalInstructions
+        additionalInfo
+        wwwUrl
+      }
+    }
+  }
+}
+"""
+
+UPDATE_VENUE_VARIABLES = {
+    "input": {
+        "id": "",
+        "translations": [
+            {
+                "name": "Venue name",
+                "description": "Venue description",
+                "languageCode": "fi",
+                "address": "Address",
+                "accessibilityInfo": "Accessibility info",
+                "arrivalInstructions": "Arrival instruction",
+                "additionalInfo": "Additional info",
+                "wwwUrl": "www.url.com",
+            }
+        ],
+    }
+}
+
+DELETE_VENUE_MUTATION = """
+mutation DeleteVenue($input: DeleteVenueMutationInput!) {
+  deleteVenue(input: $input) {
+    __typename
+  }
+}
+"""
+
 
 def test_venues_query_unauthenticated(api_client):
     executed = api_client.execute(VENUES_QUERY)
@@ -131,16 +179,13 @@ def test_venues_query_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_venues_query_normal_user(snapshot, user_api_client):
-    OccurrenceFactory()
-
+def test_venues_query_normal_user(snapshot, user_api_client, occurrence):
     executed = user_api_client.execute(VENUES_QUERY)
 
     snapshot.assert_match(executed)
 
 
-def test_venue_query_unauthenticated(api_client):
-    occurrence = OccurrenceFactory()
+def test_venue_query_unauthenticated(api_client, occurrence):
     venue = occurrence.venue
     variables = {"id": to_global_id("VenueNode", venue.id)}
     executed = api_client.execute(VENUE_QUERY, variables=variables)
@@ -148,8 +193,7 @@ def test_venue_query_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_venue_query_normal_user(snapshot, user_api_client):
-    occurrence = OccurrenceFactory()
+def test_venue_query_normal_user(snapshot, user_api_client, occurrence):
     venue = occurrence.venue
     variables = {"id": to_global_id("VenueNode", venue.id)}
     executed = user_api_client.execute(VENUE_QUERY, variables=variables)
@@ -172,3 +216,44 @@ def test_add_venue_staff_user(snapshot, staff_api_client):
         ADD_VENUE_MUTATION, variables=ADD_VENUE_VARIABLES
     )
     snapshot.assert_match(executed)
+
+
+def test_update_venue_permission_denied(api_client, user_api_client):
+    executed = api_client.execute(
+        UPDATE_VENUE_MUTATION, variables=UPDATE_VENUE_VARIABLES
+    )
+    assert_permission_denied(executed)
+
+    executed = user_api_client.execute(
+        UPDATE_VENUE_MUTATION, variables=UPDATE_VENUE_VARIABLES
+    )
+    assert_permission_denied(executed)
+
+
+def test_update_venue_staff_user(snapshot, staff_api_client, venue):
+    venue_variables = deepcopy(UPDATE_VENUE_VARIABLES)
+    venue_variables["input"]["id"] = to_global_id("VenueNode", venue.id)
+    executed = staff_api_client.execute(
+        UPDATE_VENUE_MUTATION, variables=venue_variables
+    )
+    snapshot.assert_match(executed)
+
+
+def test_delete_venue_permission_denied(api_client, user_api_client):
+    executed = api_client.execute(
+        DELETE_VENUE_MUTATION, variables={"input": {"id": ""}}
+    )
+    assert_permission_denied(executed)
+
+    executed = user_api_client.execute(
+        DELETE_VENUE_MUTATION, variables={"input": {"id": ""}}
+    )
+    assert_permission_denied(executed)
+
+
+def test_delete_venue_staff_user(staff_api_client, venue):
+    staff_api_client.execute(
+        DELETE_VENUE_MUTATION,
+        variables={"input": {"id": to_global_id("VenueNode", venue.id)}},
+    )
+    assert Venue.objects.count() == 0
