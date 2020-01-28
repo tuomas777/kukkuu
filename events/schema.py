@@ -3,6 +3,7 @@ from django.apps import apps
 from django.db import transaction
 from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
+from graphene_file_upload.scalars import Upload
 from graphql_jwt.decorators import login_required, staff_member_required
 from graphql_relay import from_global_id
 
@@ -71,6 +72,7 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
         participants_per_invite = graphene.String(required=True)
         capacity_per_occurrence = graphene.Int(required=True)
         published_at = graphene.DateTime()
+        image = Upload()
 
     event = graphene.Field(EventNode)
 
@@ -80,7 +82,6 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **kwargs):
         # TODO: Add validation
         event = Event.objects.create_translatable_object(**kwargs)
-        # TODO: Add support for image upload
         return AddEventMutation(event=event)
 
 

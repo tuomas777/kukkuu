@@ -1,6 +1,6 @@
 import uuid
 
-from django.db import models
+from django.db import models, transaction
 from django.utils.translation import ugettext_lazy as _
 from parler.managers import TranslatableQuerySet as ParlerTranslatableQuerySet
 from parler.models import TranslatableModel as ParlerTranslatableModel
@@ -24,6 +24,7 @@ class UUIDPrimaryKeyModel(models.Model):
 
 
 class TranslatableQuerySet(ParlerTranslatableQuerySet):
+    @transaction.atomic
     def create_translatable_object(self, **kwargs):
         translations = kwargs.pop("translations")
         obj = self.create(**kwargs)
