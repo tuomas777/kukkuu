@@ -199,6 +199,20 @@ def test_submit_children_and_guardian_can_be_done_only_once(guardian_api_client)
     assert "You have already used this mutation." in str(executed["errors"])
 
 
+def test_submit_children_and_guardian_children_limit(user_api_client, settings):
+    variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
+    variables["input"]["children"] = [
+        variables["input"]["children"][0]
+        for _ in range(settings.KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN + 1)
+    ]
+
+    executed = user_api_client.execute(
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables,
+    )
+
+    assert "Too many children." in str(executed["errors"])
+
+
 CHILDREN_QUERY = """
 query Children {
   children {
@@ -397,6 +411,19 @@ def test_add_child_mutation_requires_guardian(user_api_client):
         executed["errors"]
     )
     assert Child.objects.count() == 0
+
+
+def test_add_child_mutation_children_limit(guardian_api_client, settings):
+    ChildWithGuardianFactory.create_batch(
+        settings.KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN,
+        relationship__guardian=guardian_api_client.user.guardian,
+    )
+
+    executed = guardian_api_client.execute(
+        ADD_CHILD_MUTATION, variables=ADD_CHILD_VARIABLES
+    )
+
+    assert "Too many children." in str(executed["errors"])
 
 
 UPDATE_CHILD_MUTATION = """

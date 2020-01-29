@@ -1,4 +1,5 @@
 import graphene
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -113,6 +114,9 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         if not children_data:
             raise KukkuuGraphQLError("At least one child is required.")
 
+        if len(children_data) > settings.KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN:
+            raise KukkuuGraphQLError("Too many children.")
+
         guardian_data = kwargs["guardian"]
         guardian = Guardian.objects.create(
             user=user,
@@ -163,6 +167,12 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
             raise KukkuuGraphQLError(
                 'You need to use "SubmitChildrenAndGuardianMutation" first.'
             )
+
+        if (
+            user.guardian.children.count()
+            >= settings.KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN
+        ):
+            raise KukkuuGraphQLError("Too many children.")
 
         validate_child_data(kwargs)
         user = info.context.user
