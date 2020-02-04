@@ -93,6 +93,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         participants_per_invite = graphene.String()
         capacity_per_occurrence = graphene.Int()
         published_at = graphene.DateTime()
+        image = Upload()
 
         translations = graphene.List(EventTranslationsInput)
         delete_translations = graphene.List(graphene.String)

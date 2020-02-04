@@ -119,6 +119,7 @@ INSTALLED_APPS = [
     "utils",
     "events",
     "venues",
+    "django_cleanup.apps.CleanupConfig",  # This must be included last
 ]
 
 MIDDLEWARE = [

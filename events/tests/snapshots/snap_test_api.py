@@ -187,7 +187,6 @@ snapshots["test_update_occurrence_staff_user 1"] = {
         "updateOccurrence": {
             "occurrence": {
                 "event": {"id": "RXZlbnROb2RlOjk="},
-                "id": "T2NjdXJyZW5jZU5vZGU6NQ==",
                 "time": "1986-12-12T16:40:48+00:00",
                 "venue": {"id": "VmVudWVOb2RlOjU="},
             }
@@ -201,7 +200,6 @@ snapshots["test_update_event_staff_user 1"] = {
             "event": {
                 "capacityPerOccurrence": 30,
                 "duration": 1000,
-                "id": "RXZlbnROb2RlOjEx",
                 "occurrences": {"edges": []},
                 "participantsPerInvite": "FAMILY",
                 "translations": [
