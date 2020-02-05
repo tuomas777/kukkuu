@@ -24,7 +24,7 @@ Whiteview, TN 11309""",
 Page box child care any concern. Defense level church use.""",
                                 "languageCode": "FI",
                                 "name": "Free heart significant machine try.",
-                                "wwwUrl": "http://www.hernandez.net/",
+                                "wwwUrl": "http://www.hernandez.net/"
                             }
                         ],
                     }
@@ -49,7 +49,7 @@ Whiteview, TN 11309""",
 Page box child care any concern. Defense level church use.""",
                     "languageCode": "FI",
                     "name": "Free heart significant machine try.",
-                    "wwwUrl": "http://www.hernandez.net/",
+                    "wwwUrl": "http://www.hernandez.net/"
                 }
             ],
         }
