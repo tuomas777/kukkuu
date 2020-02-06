@@ -2,6 +2,7 @@ from copy import deepcopy
 from typing import Dict
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from graphql_relay import to_global_id
 
 from common.tests.utils import assert_permission_denied
@@ -199,7 +200,6 @@ UPDATE_EVENT_MUTATION = """
 mutation UpdateEvent($input: UpdateEventMutationInput!) {
   updateEvent(input: $input) {
     event {
-      id,
       translations{
         name
         shortDescription
@@ -271,7 +271,6 @@ UPDATE_OCCURRENCE_MUTATION = """
 mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
   updateOccurrence(input: $input) {
     occurrence{
-      id
       event{
         id
       }
@@ -509,3 +508,16 @@ def test_update_event_translations(staff_api_client, event):
     new_translation["languageCode"] = "foo"
     staff_api_client.execute(UPDATE_EVENT_MUTATION, variables=event_variables)
     assert not event.has_translation(new_translation["languageCode"])
+
+
+def test_upload_image_to_event(staff_api_client, snapshot):
+    add_event_variables = deepcopy(ADD_EVENT_VARIABLES)
+    # noinspection PyTypeChecker
+    add_event_variables["input"]["image"] = SimpleUploadedFile(
+        "sample.jpg", content=None, content_type="image/jpeg"
+    )
+
+    staff_api_client.execute(ADD_EVENT_MUTATION, variables=add_event_variables)
+    assert Event.objects.count() == 1
+    event = Event.objects.first()
+    assert event.image

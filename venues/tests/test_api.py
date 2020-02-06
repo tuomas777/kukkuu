@@ -130,7 +130,6 @@ UPDATE_VENUE_MUTATION = """
 mutation updateVenue($input: UpdateVenueMutationInput!) {
   updateVenue(input: $input) {
     venue {
-      id
       translations{
         languageCode
         name
@@ -179,22 +178,20 @@ def test_venues_query_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_venues_query_normal_user(snapshot, user_api_client, occurrence):
+def test_venues_query_normal_user(snapshot, user_api_client, venue):
     executed = user_api_client.execute(VENUES_QUERY)
 
     snapshot.assert_match(executed)
 
 
-def test_venue_query_unauthenticated(api_client, occurrence):
-    venue = occurrence.venue
+def test_venue_query_unauthenticated(api_client, venue):
     variables = {"id": to_global_id("VenueNode", venue.id)}
     executed = api_client.execute(VENUE_QUERY, variables=variables)
 
     assert_permission_denied(executed)
 
 
-def test_venue_query_normal_user(snapshot, user_api_client, occurrence):
-    venue = occurrence.venue
+def test_venue_query_normal_user(snapshot, user_api_client, venue):
     variables = {"id": to_global_id("VenueNode", venue.id)}
     executed = user_api_client.execute(VENUE_QUERY, variables=variables)
 

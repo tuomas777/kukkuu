@@ -8,6 +8,7 @@ aniso8601==7.0.0          # via graphene
 certifi==2019.9.11        # via requests, sentry-sdk
 chardet==3.0.4            # via requests
 django-anymail==7.0.0     # via django-ilmoitin
+django-cleanup==4.0.0
 django-cors-headers==3.1.1
 django-environ==0.4.5
 django-graphql-jwt==0.2.2
