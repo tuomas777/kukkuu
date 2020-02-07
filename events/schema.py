@@ -9,7 +9,10 @@ from graphql_relay import from_global_id
 
 from common.utils import update_object, update_object_with_translations
 from events.models import Event, Occurrence
+from events.notifications import NotificationType
+from events.utils import send_event_notifications_to_guardians
 from kukkuu.exceptions import KukkuuGraphQLError
+from users.models import Guardian
 from venues.models import Venue
 
 EventTranslation = apps.get_model("events", "EventTranslation")
@@ -72,7 +75,6 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
         duration = graphene.Int()
         participants_per_invite = graphene.String(required=True)
         capacity_per_occurrence = graphene.Int(required=True)
-        published_at = graphene.DateTime()
         image = Upload()
 
     event = graphene.Field(EventNode)
@@ -92,9 +94,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         duration = graphene.Int()
         participants_per_invite = graphene.String()
         capacity_per_occurrence = graphene.Int()
-        published_at = graphene.DateTime()
         image = Upload()
-
         translations = graphene.List(EventTranslationsInput)
         delete_translations = graphene.List(graphene.String)
 
@@ -222,6 +222,34 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
         return DeleteOccurrenceMutation()
 
 
+class PublishEventMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        id = graphene.GlobalID(required=True)
+
+    event = graphene.Field(EventNode)
+
+    @classmethod
+    @staff_member_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        # TODO: Add validation
+        event_global_id = kwargs.pop("id")
+        try:
+            event = Event.objects.get(pk=from_global_id(event_global_id)[1])
+            if event.is_published():
+                raise KukkuuGraphQLError("Event is already published")
+            event.publish()
+            # TODO: Send notifications to guardian who belongs to the same project
+            guardians = Guardian.objects.all()
+            send_event_notifications_to_guardians(
+                event, NotificationType.EVENT_PUBLISHED, guardians
+            )
+
+        except Event.DoesNotExist as e:
+            raise KukkuuGraphQLError(e)
+        return PublishEventMutation(event=event)
+
+
 class Query:
     events = DjangoConnectionField(EventNode)
     occurrences = DjangoConnectionField(OccurrenceNode)
@@ -234,6 +262,7 @@ class Mutation:
     add_event = AddEventMutation.Field()
     update_event = UpdateEventMutation.Field()
     delete_event = DeleteEventMutation.Field()
+    publish_event = PublishEventMutation.Field()
 
     add_occurrence = AddOccurrenceMutation.Field()
     update_occurrence = UpdateOccurrenceMutation.Field()
