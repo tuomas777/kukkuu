@@ -232,3 +232,15 @@ snapshots["test_staff_publish_event 1"] = {
         }
     }
 }
+
+snapshots["test_enrol_occurrence 1"] = {
+    "data": {
+        "enrolOccurrence": {
+            "enrolment": {
+                "child": {"firstName": "Alice"},
+                "createdAt": "2020-12-12T00:00:00+00:00",
+                "occurrence": {"id": "T2NjdXJyZW5jZU5vZGU6Nw=="},
+            }
+        }
+    }
+}

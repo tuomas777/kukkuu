@@ -5,9 +5,10 @@ import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from graphql_relay import to_global_id
 
+from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_permission_denied
-from events.factories import EventFactory
-from events.models import Event, Occurrence
+from events.factories import EnrolmentFactory, EventFactory
+from events.models import Enrolment, Event, Occurrence
 
 
 @pytest.fixture(autouse=True)
@@ -313,6 +314,34 @@ mutation DeleteOccurrence($input: DeleteOccurrenceMutationInput!) {
 
 """
 
+ENROL_OCCURRENCE_MUTATION = """
+mutation EnrolOccurrence($input: EnrolOccurrenceMutationInput!) {
+  enrolOccurrence(input: $input) {
+    enrolment{
+      child{
+        firstName
+      }
+      occurrence {
+        id
+      }
+      createdAt
+    }
+  }
+}
+
+"""
+
+ENROL_OCCURRENCE_VARIABLES = {"input": {"occurrenceId": "", "childId": ""}}
+
+UNENROL_OCCURRENCE_MUTATION = """
+mutation UnenrolOccurrence($input: UnenrolOccurrenceMutationInput!) {
+  unenrolOccurrence(input: $input) {
+    __typename
+  }
+}
+
+"""
+
 
 def test_events_query_unauthenticated(api_client):
     executed = api_client.execute(EVENTS_QUERY)
@@ -547,3 +576,98 @@ def test_staff_publish_event(snapshot, staff_api_client, event):
         PUBLISH_EVENT_MUTATION, variables=event_variables
     )
     assert "Event is already published" in str(executed["errors"])
+
+
+def test_enrol_occurrence(api_client, guardian_api_client, snapshot, occurrence):
+    non_authen_executed = api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=ENROL_OCCURRENCE_VARIABLES
+    )
+    assert_permission_denied(non_authen_executed)
+
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user
+    )
+
+    enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    enrolment_variables["input"]["occurrenceId"] = to_global_id(
+        "OccurrenceNode", occurrence.id
+    )
+    enrolment_variables["input"]["childId"] = to_global_id("ChildNode", child.id)
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+    snapshot.assert_match(executed)
+
+
+def test_already_enroled_occurrence(guardian_api_client, snapshot, occurrence):
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user
+    )
+    EnrolmentFactory(child=child, occurrence=occurrence)
+
+    enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    enrolment_variables["input"]["occurrenceId"] = to_global_id(
+        "OccurrenceNode", occurrence.id
+    )
+    enrolment_variables["input"]["childId"] = to_global_id("ChildNode", child.id)
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+
+    assert "Child already joined this event" in str(executed["errors"])
+
+
+def test_enrol_occurrence_not_allowed(guardian_api_client, snapshot, occurrence):
+    random_child = ChildWithGuardianFactory()
+    enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    enrolment_variables["input"]["occurrenceId"] = to_global_id(
+        "OccurrenceNode", occurrence.id
+    )
+    enrolment_variables["input"]["childId"] = to_global_id("ChildNode", random_child.id)
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+    assert "does not exist" in str(executed["errors"])
+
+
+def test_unenrol_occurrence(api_client, user_api_client, snapshot, occurrence):
+    non_authen_executed = api_client.execute(
+        UNENROL_OCCURRENCE_MUTATION, variables=ENROL_OCCURRENCE_VARIABLES
+    )
+    assert_permission_denied(non_authen_executed)
+
+    child = ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
+    EnrolmentFactory(occurrence=occurrence, child=child)
+
+    random_child = ChildWithGuardianFactory()
+    EnrolmentFactory(occurrence=occurrence, child=random_child)
+    assert Enrolment.objects.count() == 2
+    assert child.occurrences.count() == 1
+    assert random_child.occurrences.count() == 1
+
+    unenrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    unenrolment_variables["input"]["occurrenceId"] = to_global_id(
+        "OccurrenceNode", occurrence.id
+    )
+    unenrolment_variables["input"]["childId"] = to_global_id(
+        "ChildNode", random_child.id
+    )
+
+    executed = user_api_client.execute(
+        UNENROL_OCCURRENCE_MUTATION, variables=unenrolment_variables
+    )
+    assert "does not exist" in str(executed["errors"])
+    assert Enrolment.objects.count() == 2
+    assert child.occurrences.count() == 1
+    assert random_child.occurrences.count() == 1
+
+    unenrolment_variables["input"]["childId"] = to_global_id("ChildNode", child.id)
+    user_api_client.execute(
+        UNENROL_OCCURRENCE_MUTATION, variables=unenrolment_variables
+    )
+    assert Enrolment.objects.count() == 1
+    assert child.occurrences.count() == 0
+    assert random_child.occurrences.count() == 1

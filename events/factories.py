@@ -1,7 +1,8 @@
 import factory
 import pytz
 
-from events.models import Event, Occurrence
+from children.factories import ChildFactory
+from events.models import Enrolment, Event, Occurrence
 from venues.factories import VenueFactory
 
 
@@ -27,3 +28,11 @@ class OccurrenceFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Occurrence
+
+
+class EnrolmentFactory(factory.django.DjangoModelFactory):
+    child = factory.SubFactory(ChildFactory)
+    occurrence = factory.SubFactory(OccurrenceFactory)
+
+    class Meta:
+        model = Enrolment

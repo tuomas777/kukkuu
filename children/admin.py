@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from events.models import Enrolment
+
 from .models import Child, Relationship
 
 
@@ -11,6 +13,12 @@ class RelationshipInline(admin.TabularInline):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+class EnrolmentInline(admin.TabularInline):
+    model = Enrolment
+    extra = 1
+    readonly_fields = ("created_at",)
 
 
 @admin.register(Child)
@@ -25,4 +33,4 @@ class ChildAdmin(admin.ModelAdmin):
         "updated_at",
     )
     fields = ("first_name", "last_name", "birthdate", "postal_code")
-    inlines = (RelationshipInline,)
+    inlines = (RelationshipInline, EnrolmentInline)

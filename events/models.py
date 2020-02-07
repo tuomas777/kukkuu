@@ -6,6 +6,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatedFields
 
+from children.models import Child
 from common.models import TimestampedModel, TranslatableModel
 from venues.models import Venue
 
@@ -71,9 +72,45 @@ class Occurrence(TimestampedModel):
         on_delete=models.CASCADE,
     )
 
+    children = models.ManyToManyField(
+        Child,
+        verbose_name=_("children"),
+        related_name="occurrences",
+        through="events.Enrolment",
+        blank=True,
+    )
+
     class Meta:
         verbose_name = _("occurrence")
         verbose_name_plural = _("occurrences")
 
     def __str__(self):
         return f"{self.pk} {self.time}"
+
+
+class Enrolment(models.Model):
+    child = models.ForeignKey(
+        Child,
+        related_name="enrolments",
+        on_delete=models.CASCADE,
+        verbose_name=_("child"),
+    )
+    occurrence = models.ForeignKey(
+        Occurrence,
+        related_name="enrolments",
+        on_delete=models.CASCADE,
+        verbose_name=_("occurrence"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("enrolment")
+        verbose_name_plural = _("enrolments")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["child", "occurrence"], name="unq_child_occurrence"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.pk} {self.child_id}"

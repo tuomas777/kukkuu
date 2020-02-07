@@ -7,8 +7,9 @@ from graphene_file_upload.scalars import Upload
 from graphql_jwt.decorators import login_required, staff_member_required
 from graphql_relay import from_global_id
 
+from children.models import Child
 from common.utils import update_object, update_object_with_translations
-from events.models import Event, Occurrence
+from events.models import Enrolment, Event, Occurrence
 from events.notifications import NotificationType
 from events.utils import send_event_notifications_to_guardians
 from kukkuu.exceptions import KukkuuGraphQLError
@@ -60,6 +61,13 @@ class OccurrenceNode(DjangoObjectType):
     class Meta:
         model = Occurrence
         interfaces = (relay.Node,)
+
+
+class EnrolmentNode(DjangoObjectType):
+    class Meta:
+        model = Enrolment
+        interfaces = (relay.Node,)
+        fields = ("occurrence", "child", "created_at")
 
 
 class EventTranslationsInput(graphene.InputObjectType):
@@ -130,6 +138,63 @@ class DeleteEventMutation(graphene.relay.ClientIDMutation):
         except Event.DoesNotExist as e:
             raise KukkuuGraphQLError(e)
         return DeleteEventMutation()
+
+
+class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        occurrence_id = graphene.GlobalID(
+            required=True, description="Occurrence id " "of event"
+        )
+        child_id = graphene.GlobalID(required=True, description="Guardian's child id")
+
+    enrolment = graphene.Field(EnrolmentNode)
+
+    @classmethod
+    @login_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        occurrence_id = from_global_id(kwargs["occurrence_id"])[1]
+        child_id = from_global_id(kwargs["child_id"])[1]
+        user = info.context.user
+        try:
+            occurrence = Occurrence.objects.get(pk=occurrence_id)
+        except Occurrence.DoesNotExist as e:
+            raise KukkuuGraphQLError(e)
+        try:
+            child = Child.objects.user_can_update(user).get(pk=child_id)
+        except Child.DoesNotExist as e:
+            raise KukkuuGraphQLError(e)
+        if child.occurrences.filter(event=occurrence.event).exists():
+            raise KukkuuGraphQLError("Child already joined this event")
+        enrolment = Enrolment.objects.create(child=child, occurrence=occurrence)
+
+        return EnrolOccurrenceMutation(enrolment=enrolment)
+
+
+class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        occurrence_id = graphene.GlobalID(
+            required=True, description="Occurrence id " "of event"
+        )
+        child_id = graphene.GlobalID(required=True, description="Guardian's child id")
+
+    @classmethod
+    @login_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        occurrence_id = from_global_id(kwargs["occurrence_id"])[1]
+        child_id = from_global_id(kwargs["child_id"])[1]
+        user = info.context.user
+        try:
+            child = Child.objects.user_can_update(user).get(pk=child_id)
+        except Child.DoesNotExist as e:
+            raise KukkuuGraphQLError(e)
+        try:
+            occurrence = child.occurrences.get(pk=occurrence_id)
+            occurrence.children.remove(child)
+        except Occurrence.DoesNotExist as e:
+            raise KukkuuGraphQLError(e)
+        return UnenrolOccurrenceMutation()
 
 
 class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
@@ -267,3 +332,5 @@ class Mutation:
     add_occurrence = AddOccurrenceMutation.Field()
     update_occurrence = UpdateOccurrenceMutation.Field()
     delete_occurrence = DeleteOccurrenceMutation.Field()
+    enrol_occurrence = EnrolOccurrenceMutation.Field()
+    unenrol_occurrence = UnenrolOccurrenceMutation.Field()
