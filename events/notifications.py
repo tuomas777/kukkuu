@@ -16,7 +16,7 @@ class NotificationType:
 notifications.register(NotificationType.EVENT_PUBLISHED, _("event published"))
 notifications.register(NotificationType.OCCURRENCE_ENROLMENT, _("occurrence enrolment"))
 notifications.register(
-    NotificationType.OCCURRENCE_UNENROLMENT, _("occurrence " "unenrolment")
+    NotificationType.OCCURRENCE_UNENROLMENT, _("occurrence unenrolment")
 )
 
 event = EventFactory.build()

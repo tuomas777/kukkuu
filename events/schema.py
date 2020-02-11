@@ -143,7 +143,7 @@ class DeleteEventMutation(graphene.relay.ClientIDMutation):
 class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
         occurrence_id = graphene.GlobalID(
-            required=True, description="Occurrence id " "of event"
+            required=True, description="Occurrence id of event"
         )
         child_id = graphene.GlobalID(required=True, description="Guardian's child id")
 
@@ -166,6 +166,8 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
             raise KukkuuGraphQLError(e)
         if child.occurrences.filter(event=occurrence.event).exists():
             raise KukkuuGraphQLError("Child already joined this event")
+        if occurrence.enrolments.count() >= occurrence.event.capacity_per_occurrence:
+            raise KukkuuGraphQLError("Maximum enrolments created")
         enrolment = Enrolment.objects.create(child=child, occurrence=occurrence)
 
         return EnrolOccurrenceMutation(enrolment=enrolment)

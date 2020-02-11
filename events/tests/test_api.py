@@ -671,3 +671,24 @@ def test_unenrol_occurrence(api_client, user_api_client, snapshot, occurrence):
     assert Enrolment.objects.count() == 1
     assert child.occurrences.count() == 0
     assert random_child.occurrences.count() == 1
+
+
+def test_maximum_enrolment(guardian_api_client, occurrence):
+    max_capactity = occurrence.event.capacity_per_occurrence
+    children = ChildWithGuardianFactory.create_batch(max_capactity)
+    for child in children:
+        EnrolmentFactory(occurrence=occurrence, child=child)
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user
+    )
+
+    enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    enrolment_variables["input"]["occurrenceId"] = to_global_id(
+        "OccurrenceNode", occurrence.id
+    )
+    enrolment_variables["input"]["childId"] = to_global_id("ChildNode", child.id)
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+    assert "Maximum enrolments created" in str(executed["errors"])

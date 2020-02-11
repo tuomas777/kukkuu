@@ -101,7 +101,7 @@ class Enrolment(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_("occurrence"),
     )
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
 
     class Meta:
         verbose_name = _("enrolment")

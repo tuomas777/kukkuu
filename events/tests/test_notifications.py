@@ -37,7 +37,7 @@ def notification_template_occurrence_enrolment_fi():
         body_text="""
         Event FI: {{ occurrence.event }}
         Guardian FI: {{ guardian }}
-        Occurrence: {{ occurrence }}
+        Occurrence: {{ occurrence.time }}
         Child: {{ child }}
 """,
     )
@@ -48,11 +48,11 @@ def notification_template_occurrence_unenrolment_fi():
     return create_notification_template_in_language(
         NotificationType.OCCURRENCE_UNENROLMENT,
         "fi",
-        subject="Occurrence enrolment FI",
+        subject="Occurrence unenrolment FI",
         body_text="""
         Event FI: {{ occurrence.event }}
         Guardian FI: {{ guardian }}
-        Occurrence: {{ occurrence }}
+        Occurrence: {{ occurrence.time }}
         Child: {{ child }}
 """,
     )
