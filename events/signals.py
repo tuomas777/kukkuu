@@ -6,7 +6,7 @@ from events.notifications import NotificationType
 from events.utils import send_event_notifications_to_guardians
 
 
-@receiver(post_save, sender=Enrolment)
+@receiver(post_save, sender=Enrolment, dispatch_uid="send_enrolment_email")
 def send_enrolment_email(instance, created, **kwargs):
     if created:
         guardians = instance.child.guardians.all()
@@ -19,7 +19,7 @@ def send_enrolment_email(instance, created, **kwargs):
         )
 
 
-@receiver(post_delete, sender=Enrolment)
+@receiver(post_delete, sender=Enrolment, dispatch_uid="send_unenrolment_email")
 def send_unenrolment_email(instance, **kwargs):
     guardians = instance.child.guardians.all()
     send_event_notifications_to_guardians(
