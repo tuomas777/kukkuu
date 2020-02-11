@@ -1,0 +1,4 @@
+*       * * * * (source /.env && /usr/local/bin/python /app/manage.py send_mail > /app/var/cron.log 2>&1)
+0,20,40 * * * * (source /.env && /usr/local/bin/python /app/manage.py retry_deferred > /app/var/cron.log 2>&1)
+0 0 * * * (source /.env && /usr/local/bin/python /app/manage.py purge_mail_log 7 > /app/var/cron.log 2>&1)
+# An empty line is required at the end of this file for a valid cron file.
