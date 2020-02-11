@@ -167,7 +167,6 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
             raise KukkuuGraphQLError(
                 'You need to use "SubmitChildrenAndGuardianMutation" first.'
             )
-
         if (
             user.guardian.children.count()
             >= settings.KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN
