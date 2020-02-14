@@ -1,6 +1,7 @@
 import graphene
 from django.apps import apps
 from django.db import transaction
+from django.utils import timezone
 from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 from graphene_file_upload.scalars import Upload
@@ -17,6 +18,15 @@ from users.models import Guardian
 from venues.models import Venue
 
 EventTranslation = apps.get_model("events", "EventTranslation")
+
+
+def validate_enrolment(child, occurrence):
+    if child.occurrences.filter(event=occurrence.event).exists():
+        raise KukkuuGraphQLError("Child already joined this event")
+    if occurrence.enrolments.count() >= occurrence.event.capacity_per_occurrence:
+        raise KukkuuGraphQLError("Maximum enrolments created")
+    if occurrence.time < timezone.now():
+        raise KukkuuGraphQLError("Cannot join occurrence in the past")
 
 
 class EventTranslationType(DjangoObjectType):
@@ -164,10 +174,7 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
             child = Child.objects.user_can_update(user).get(pk=child_id)
         except Child.DoesNotExist as e:
             raise KukkuuGraphQLError(e)
-        if child.occurrences.filter(event=occurrence.event).exists():
-            raise KukkuuGraphQLError("Child already joined this event")
-        if occurrence.enrolments.count() >= occurrence.event.capacity_per_occurrence:
-            raise KukkuuGraphQLError("Maximum enrolments created")
+        validate_enrolment(child, occurrence)
         enrolment = Enrolment.objects.create(child=child, occurrence=occurrence)
 
         return EnrolOccurrenceMutation(enrolment=enrolment)

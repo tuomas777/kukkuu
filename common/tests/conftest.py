@@ -4,6 +4,7 @@ import factory.random
 import pytest
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
+from django.utils import timezone
 from freezegun import freeze_time
 from graphene.test import Client
 
@@ -61,7 +62,7 @@ def venue():
 
 @pytest.fixture
 def occurrence():
-    return OccurrenceFactory()
+    return OccurrenceFactory(time=timezone.now())
 
 
 def _create_api_client_with_user(user):
