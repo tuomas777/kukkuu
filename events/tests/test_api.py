@@ -1,13 +1,16 @@
 from copy import deepcopy
+from datetime import datetime
 from typing import Dict
 
 import pytest
+import pytz
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from graphql_relay import to_global_id
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_permission_denied
-from events.factories import EnrolmentFactory, EventFactory
+from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from events.models import Enrolment, Event, Occurrence
 
 
@@ -692,3 +695,21 @@ def test_maximum_enrolment(guardian_api_client, occurrence):
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
     )
     assert "Maximum enrolments created" in str(executed["errors"])
+
+
+def test_invalid_occurrence_enrolment(guardian_api_client):
+    occurrence = OccurrenceFactory(
+        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+    )
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user
+    )
+    enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    enrolment_variables["input"]["occurrenceId"] = to_global_id(
+        "OccurrenceNode", occurrence.id
+    )
+    enrolment_variables["input"]["childId"] = to_global_id("ChildNode", child.id)
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+    assert "Cannot join occurrence in the past" in str(executed["errors"])
