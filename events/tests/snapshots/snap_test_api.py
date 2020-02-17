@@ -127,7 +127,7 @@ snapshots["test_staff_publish_event 1"] = {
         "publishEvent": {
             "event": {
                 "id": "RXZlbnROb2RlOjE2",
-                "publishedAt": "2020-12-12T02:00:00+02:00",
+                "publishedAt": "2020-12-12T00:00:00+00:00",
             }
         }
     }
