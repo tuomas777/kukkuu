@@ -41,18 +41,20 @@ class ChildNode(DjangoObjectType):
             return None
 
 
+class RelationshipTypeEnum(graphene.Enum):
+    PARENT = "parent"
+    OTHER_GUARDIAN = "other_guardian"
+    OTHER_RELATION = "other_relation"
+    ADVOCATE = "advocate"
+
+
 class RelationshipNode(DjangoObjectType):
     class Meta:
         model = Relationship
         interfaces = (relay.Node,)
         fields = ("type", "child", "guardian")
 
-
-class RelationshipTypeEnum(graphene.Enum):
-    PARENT = "parent"
-    OTHER_GUARDIAN = "other_guardian"
-    OTHER_RELATION = "other_relation"
-    ADVOCATE = "advocate"
+    type = graphene.Field(RelationshipTypeEnum)
 
 
 class RelationshipInput(graphene.InputObjectType):
@@ -167,7 +169,6 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
             raise KukkuuGraphQLError(
                 'You need to use "SubmitChildrenAndGuardianMutation" first.'
             )
-
         if (
             user.guardian.children.count()
             >= settings.KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN

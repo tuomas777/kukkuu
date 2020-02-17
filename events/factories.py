@@ -1,7 +1,8 @@
 import factory
 import pytz
 
-from events.models import Event, Occurrence
+from children.factories import ChildFactory
+from events.models import Enrolment, Event, Occurrence
 from venues.factories import VenueFactory
 
 
@@ -15,7 +16,6 @@ class EventFactory(factory.django.DjangoModelFactory):
         "random_element", elements=[x[0] for x in Event.PARTICIPANT_AMOUNT_CHOICES]
     )
     capacity_per_occurrence = factory.Faker("random_int", max=1000)
-    published_at = factory.Faker("date_time", tzinfo=pytz.timezone("Europe/Helsinki"))
 
     class Meta:
         model = Event
@@ -28,3 +28,11 @@ class OccurrenceFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Occurrence
+
+
+class EnrolmentFactory(factory.django.DjangoModelFactory):
+    child = factory.SubFactory(ChildFactory)
+    occurrence = factory.SubFactory(OccurrenceFactory)
+
+    class Meta:
+        model = Enrolment

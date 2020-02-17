@@ -5,3 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 class EventsConfig(AppConfig):
     name = "events"
     verbose_name = _("events")
+
+    def ready(self):
+        import events.notifications  # noqa
+        import events.signals  # noqa

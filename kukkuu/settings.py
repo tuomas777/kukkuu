@@ -119,6 +119,7 @@ INSTALLED_APPS = [
     "utils",
     "events",
     "venues",
+    "django_cleanup.apps.CleanupConfig",  # This must be included last
 ]
 
 MIDDLEWARE = [
@@ -172,6 +173,7 @@ SITE_ID = 1
 
 PARLER_LANGUAGES = {SITE_ID: ({"code": "fi"}, {"code": "sv"}, {"code": "en"})}
 
+PARLER_SUPPORTED_LANGUAGE_CODES = [x["code"] for x in PARLER_LANGUAGES[SITE_ID]]
 
 GRAPHENE = {
     "SCHEMA": "kukkuu.schema.schema",
