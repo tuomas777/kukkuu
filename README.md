@@ -1,6 +1,16 @@
 # Kukkuu
 
-:baby: Godchildren of culture (kulttuurin kummilapset) API :violin:
+:baby: Culture Kids (kulttuurin kummilapset) API :violin:
+
+[![status](https://travis-ci.com/City-of-Helsinki/kukkuu.svg)](https://github.com/City-of-Helsinki/kukkuu)
+[![codecov](https://codecov.io/gh/City-of-Helsinki/kukkuu/branch/develop/graph/badge.svg)](https://codecov.io/gh/City-of-Helsinki/kukkuu)
+
+## Environments
+Production environment:
+- https://kukkuu-api.prod.hel.ninja/kukkuu/graphql
+
+Testing environment:
+- https://kukkuu.test.kuva.hel.ninja/graphql
 
 ## Development with Docker
 
@@ -35,14 +45,15 @@ Allow user to create test database
 
     sudo -u postgres psql -c "ALTER USER kukkuu CREATEDB;"
 
-### Daily running
+### Daily running, Debugging & API documentation
 
 * Create `.env` file: `touch .env`
 * Set the `DEBUG` environment variable to `1`.
 * Run `python manage.py migrate`
 * Run `python manage.py runserver localhost:8081`
-
-The project is now running at [localhost:8081](http://localhost:8081)
+* The project is now running at [localhost:8081](http://localhost:8081)
+* To view the API documentation, in DEBUG mode visit: http://localhost:8081/graphql and checkout the `Document
+ation Explorer` section 
 
 ## Keeping Python requirements up to date
 
@@ -82,3 +93,11 @@ Or you can use [`pre-commit`](https://pre-commit.com/) to quickly format your co
     * `pre-commit install`
 
 After that, formatting hooks will run against all changed files before committing
+
+## Contact infomation
+
+@tuomas777 @quyenlq
+
+## Issues board
+
+https://helsinkisolutionoffice.atlassian.net/projects/KK/issues/?filter=allissues
