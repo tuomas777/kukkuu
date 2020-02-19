@@ -2,7 +2,7 @@ import graphene
 from django.apps import apps
 from django.db import transaction
 from django.utils import timezone
-from graphene import relay
+from graphene import Connection, relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 from graphene_file_upload.scalars import Upload
 from graphql_jwt.decorators import login_required, staff_member_required
@@ -50,6 +50,11 @@ class EventNode(DjangoObjectType):
     @login_required
     def get_node(cls, info, id):
         return super().get_node(info, id)
+
+
+class EventConnection(Connection):
+    class Meta:
+        node = EventNode
 
 
 class OccurrenceNode(DjangoObjectType):

@@ -214,7 +214,7 @@ mutation UpdateEvent($input: UpdateEventMutationInput!) {
       occurrences{
         edges{
           node{
-            id
+            time
           }
         }
       }
@@ -244,7 +244,6 @@ PUBLISH_EVENT_MUTATION = """
 mutation PublishEvent($input: PublishEventMutationInput!) {
   publishEvent(input: $input) {
     event {
-      id
       publishedAt
     }
   }
@@ -266,12 +265,12 @@ mutation AddOccurrence($input: AddOccurrenceMutationInput!) {
   addOccurrence(input: $input) {
     occurrence{
       event{
-        id,
+        createdAt
       }
       venue {
-        id
+        createdAt
       }
-        time
+      time
     }
   }
 }
@@ -287,12 +286,12 @@ mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
   updateOccurrence(input: $input) {
     occurrence{
       event{
-        id
+        createdAt
       }
       venue {
-        id
+        createdAt
       }
-        time
+      time
     }
   }
 }
@@ -325,7 +324,7 @@ mutation EnrolOccurrence($input: EnrolOccurrenceMutationInput!) {
         firstName
       }
       occurrence {
-        id
+        time
       }
       createdAt
     }

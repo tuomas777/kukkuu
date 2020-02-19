@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.utils import timezone
 from django.utils.timezone import localtime, now
 from django_ilmoitin.utils import send_notification
 from graphene import relay
@@ -13,6 +14,8 @@ from graphql_relay import from_global_id
 
 from children.notifications import NotificationType
 from common.utils import update_object
+from events.models import Event
+from events.schema import EventConnection
 from kukkuu.exceptions import KukkuuGraphQLError
 from users.models import Guardian
 from users.schema import GuardianNode, LanguageEnum
@@ -23,6 +26,9 @@ User = get_user_model()
 
 
 class ChildNode(DjangoObjectType):
+    available_events = relay.ConnectionField(EventConnection)
+    past_events = relay.ConnectionField(EventConnection)
+
     class Meta:
         model = Child
         interfaces = (relay.Node,)
@@ -39,6 +45,16 @@ class ChildNode(DjangoObjectType):
             return cls._meta.model.objects.user_can_view(info.context.user).get(id=id)
         except cls._meta.model.DoesNotExist:
             return None
+
+    def resolve_past_events(self, info, **kwargs):
+        # TODO: Only return events of the same project
+        return Event.objects.filter(occurrences__time__lt=timezone.now())
+
+    def resolve_available_events(self, info, **kwargs):
+        # TODO: Only return events of the same project
+        return Event.objects.filter(occurrences__time__gte=timezone.now()).exclude(
+            occurrences__in=self.occurrences.all()
+        )
 
 
 class RelationshipTypeEnum(graphene.Enum):

@@ -86,9 +86,9 @@ snapshots["test_add_occurrence_staff_user 1"] = {
     "data": {
         "addOccurrence": {
             "occurrence": {
-                "event": {"id": "RXZlbnROb2RlOjg="},
+                "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
                 "time": "1986-12-12T16:40:48+00:00",
-                "venue": {"id": "VmVudWVOb2RlOjQ="},
+                "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
             }
         }
     }
@@ -123,14 +123,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
 }
 
 snapshots["test_staff_publish_event 1"] = {
-    "data": {
-        "publishEvent": {
-            "event": {
-                "id": "RXZlbnROb2RlOjE2",
-                "publishedAt": "2020-12-12T00:00:00+00:00",
-            }
-        }
-    }
+    "data": {"publishEvent": {"event": {"publishedAt": "2020-12-12T00:00:00+00:00"}}}
 }
 
 snapshots["test_occurrences_query_normal_user 1"] = {
@@ -225,9 +218,9 @@ snapshots["test_update_occurrence_staff_user 1"] = {
     "data": {
         "updateOccurrence": {
             "occurrence": {
-                "event": {"id": "RXZlbnROb2RlOjk="},
+                "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
                 "time": "1986-12-12T16:40:48+00:00",
-                "venue": {"id": "VmVudWVOb2RlOjU="},
+                "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
             }
         }
     }
@@ -239,7 +232,7 @@ snapshots["test_enrol_occurrence 1"] = {
             "enrolment": {
                 "child": {"firstName": "Alice"},
                 "createdAt": "2020-12-12T00:00:00+00:00",
-                "occurrence": {"id": "T2NjdXJyZW5jZU5vZGU6Nw=="},
+                "occurrence": {"time": "2020-12-12T00:00:00+00:00"},
             }
         }
     }

@@ -1,13 +1,17 @@
 from copy import deepcopy
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import pytest
+import pytz
+from django.conf import settings
+from django.utils import timezone
 from django.utils.timezone import localtime, now
 from graphene.utils.str_converters import to_snake_case
 from graphql_relay import to_global_id
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_permission_denied
+from events.factories import EnrolmentFactory, OccurrenceFactory
 from users.models import Guardian
 
 from ..models import Child, Relationship
@@ -93,7 +97,6 @@ mutation SubmitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInpu
 }
 """
 
-
 CHILDREN_DATA = [
     {
         "firstName": "Matti",
@@ -110,14 +113,12 @@ CHILDREN_DATA = [
     },
 ]
 
-
 GUARDIAN_DATA = {
     "firstName": "Gulle",
     "lastName": "Guardian",
     "phoneNumber": "777-777777",
     "language": "FI",
 }
-
 
 SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES = {
     "input": {"children": CHILDREN_DATA, "guardian": GUARDIAN_DATA}
@@ -290,6 +291,27 @@ query Child($id: ID!) {
 }
 """
 
+CHILD_EVENTS_QUERY = """
+query Child($id: ID!) {
+  child(id: $id) {
+    availableEvents{
+      edges{
+        node{
+          createdAt
+        }
+      }
+    }
+    pastEvents{
+      edges{
+        node{
+          createdAt
+        }
+      }
+    }
+  }
+}
+"""
+
 
 def test_child_query_unauthenticated(snapshot, api_client):
     child = ChildWithGuardianFactory()
@@ -339,7 +361,6 @@ mutation AddChild($input: AddChildMutationInput!) {
   }
 }
 """
-
 
 ADD_CHILD_VARIABLES = {
     "input": {
@@ -438,7 +459,6 @@ mutation UpdateChild($input: UpdateChildMutationInput!) {
   }
 }
 """
-
 
 UPDATE_CHILD_VARIABLES = {
     "input": {
@@ -552,3 +572,34 @@ def test_delete_child_mutation_wrong_user(snapshot, guardian_api_client):
 
     assert "does not exist" in str(executed["errors"])
     assert Child.objects.count() == 1
+
+
+def test_get_available_events(snapshot, guardian_api_client):
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user
+    )
+    variables = {"id": to_global_id("ChildNode", child.id)}
+    occurrences = OccurrenceFactory.create_batch(3, time=timezone.now())
+    OccurrenceFactory.create_batch(
+        3, time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+    )
+    EnrolmentFactory(child=child, occurrence=occurrences[0])
+    executed = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
+    assert len(executed["data"]["child"]["availableEvents"]["edges"]) == 2
+    snapshot.assert_match(executed)
+
+
+def test_get_past_events(snapshot, guardian_api_client):
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user
+    )
+    variables = {"id": to_global_id("ChildNode", child.id)}
+    OccurrenceFactory.create_batch(3, time=timezone.now())
+    past_occurrences = OccurrenceFactory.create_batch(
+        3, time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+    )
+    EnrolmentFactory(child=child, occurrence=past_occurrences[0])
+    executed = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
+    # Still return enroled events if they are past events
+    assert len(executed["data"]["child"]["pastEvents"]["edges"]) == 3
+    snapshot.assert_match(executed)
