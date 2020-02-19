@@ -1,6 +1,7 @@
 import graphene
 from django.apps import apps
 from django.db import transaction
+from django.db.models import Count
 from django.utils import timezone
 from graphene import Connection, relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
@@ -319,7 +320,9 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
                 raise KukkuuGraphQLError("Event is already published")
             event.publish()
             # TODO: Send notifications to guardian who belongs to the same project
-            guardians = Guardian.objects.all()
+            guardians = Guardian.objects.annotate(
+                children_count=Count("children")
+            ).filter(children_count__gt=0)
             send_event_notifications_to_guardians(
                 event, NotificationType.EVENT_PUBLISHED, guardians
             )
