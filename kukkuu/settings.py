@@ -113,6 +113,7 @@ INSTALLED_APPS = [
     "anymail",
     "mailer",
     "django_ilmoitin",
+    "django_filters",
     # local apps
     "users",
     "children",

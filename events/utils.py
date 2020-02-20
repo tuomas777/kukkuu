@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from django.utils import timezone
 from django_ilmoitin.utils import send_notification
 
 from events.notifications import NotificationType
@@ -30,3 +33,12 @@ def send_event_notifications_to_guardians(
                 context=context,
                 language=guardian.language,
             )
+
+
+def convert_to_localtime_tz(value):
+    dt = datetime.combine(datetime.now().date(), value)
+    if timezone.is_naive(value):
+        # Auto add local timezone to naive time
+        return timezone.make_aware(dt).timetz()
+    else:
+        return timezone.localtime(dt).timetz()
