@@ -20,6 +20,10 @@ query Venues {
         name
         description
         address
+        accessibilityInfo
+        arrivalInstructions
+        additionalInfo
+        wwwUrl
         translations {
           name
           description
@@ -62,6 +66,10 @@ query Venue($id: ID!) {
     name
     description
     address
+    accessibilityInfo
+    arrivalInstructions
+    additionalInfo
+    wwwUrl
     translations{
         name
         description
