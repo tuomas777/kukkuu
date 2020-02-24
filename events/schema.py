@@ -3,6 +3,7 @@ from django.apps import apps
 from django.db import transaction
 from django.db.models import Count
 from django.utils import timezone
+from django.utils.translation import get_language
 from graphene import Connection, relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 from graphene_file_upload.scalars import Upload
@@ -37,6 +38,10 @@ class EventTranslationType(DjangoObjectType):
 
 
 class EventNode(DjangoObjectType):
+    name = graphene.String()
+    description = graphene.String()
+    short_description = graphene.String()
+
     class Meta:
         model = Event
         interfaces = (relay.Node,)
@@ -45,7 +50,8 @@ class EventNode(DjangoObjectType):
     @login_required
     # TODO: For now only logged in users can see events
     def get_queryset(cls, queryset, info):
-        return queryset.order_by("-created_at")
+        lang = get_language()
+        return queryset.order_by("-created_at").language(lang)
 
     @classmethod
     @login_required

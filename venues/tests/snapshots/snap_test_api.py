@@ -12,6 +12,11 @@ snapshots["test_venues_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
+                        "address": """48830 Whitehead Rapid Suite 548
+Whiteview, TN 11309""",
+                        "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
+Page box child care any concern. Defense level church use.""",
+                        "name": "Free heart significant machine try.",
                         "occurrences": {"edges": []},
                         "translations": [
                             {
@@ -37,6 +42,11 @@ Page box child care any concern. Defense level church use.""",
 snapshots["test_venue_query_normal_user 1"] = {
     "data": {
         "venue": {
+            "address": """48830 Whitehead Rapid Suite 548
+Whiteview, TN 11309""",
+            "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
+Page box child care any concern. Defense level church use.""",
+            "name": "Free heart significant machine try.",
             "occurrences": {"edges": []},
             "translations": [
                 {

@@ -30,6 +30,9 @@ query Events {
           shortDescription
           languageCode
         }
+        name
+        description
+        shortDescription
         duration
         image
         participantsPerInvite
@@ -67,6 +70,9 @@ query Event($id:ID!) {
       description
       languageCode
     }
+    name
+    description
+    shortDescription
     image
     participantsPerInvite
     capacityPerOccurrence

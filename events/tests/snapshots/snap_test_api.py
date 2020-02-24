@@ -14,11 +14,15 @@ snapshots["test_events_query_normal_user 1"] = {
                     "node": {
                         "capacityPerOccurrence": 805,
                         "createdAt": "2020-12-12T00:00:00+00:00",
+                        "description": """Serious listen police shake. Page box child care any concern.
+Agree room laugh prevent make. Our very television beat at success decade.""",
                         "duration": 197,
                         "image": "spring.jpg",
+                        "name": "Free heart significant machine try.",
                         "occurrences": {"edges": []},
                         "participantsPerInvite": "FAMILY",
                         "publishedAt": None,
+                        "shortDescription": "Perform in weight success answer.",
                         "translations": [
                             {
                                 "description": """Serious listen police shake. Page box child care any concern.
@@ -41,11 +45,15 @@ snapshots["test_event_query_normal_user 1"] = {
         "event": {
             "capacityPerOccurrence": 805,
             "createdAt": "2020-12-12T00:00:00+00:00",
+            "description": """Serious listen police shake. Page box child care any concern.
+Agree room laugh prevent make. Our very television beat at success decade.""",
             "duration": 197,
             "image": "spring.jpg",
+            "name": "Free heart significant machine try.",
             "occurrences": {"edges": []},
             "participantsPerInvite": "FAMILY",
             "publishedAt": None,
+            "shortDescription": "Perform in weight success answer.",
             "translations": [
                 {
                     "description": """Serious listen police shake. Page box child care any concern.

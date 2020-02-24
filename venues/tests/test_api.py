@@ -17,6 +17,9 @@ query Venues {
   venues {
     edges {
       node {
+        name
+        description
+        address
         translations {
           name
           description
@@ -56,6 +59,9 @@ query Venues {
 VENUE_QUERY = """
 query Venue($id: ID!) {
   venue(id: $id){
+    name
+    description
+    address
     translations{
         name
         description
