@@ -60,6 +60,11 @@ class EventNode(DjangoObjectType):
     def get_node(cls, info, id):
         return super().get_node(info, id)
 
+    def resolve_image(self, info, **kwargs):
+        if self.image:
+            return info.context.build_absolute_uri(self.image.url)
+        return ""
+
 
 class EventConnection(Connection):
     class Meta:

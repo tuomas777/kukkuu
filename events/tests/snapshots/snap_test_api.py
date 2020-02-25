@@ -17,7 +17,7 @@ snapshots["test_events_query_normal_user 1"] = {
                         "description": """Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
                         "duration": 197,
-                        "image": "spring.jpg",
+                        "image": "http://testserver/media/spring.jpg",
                         "name": "Free heart significant machine try.",
                         "occurrences": {"edges": []},
                         "participantsPerInvite": "FAMILY",
@@ -48,7 +48,7 @@ snapshots["test_event_query_normal_user 1"] = {
             "description": """Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
             "duration": 197,
-            "image": "spring.jpg",
+            "image": "http://testserver/media/spring.jpg",
             "name": "Free heart significant machine try.",
             "occurrences": {"edges": []},
             "participantsPerInvite": "FAMILY",
@@ -143,7 +143,7 @@ snapshots["test_occurrences_query_normal_user 1"] = {
                         "event": {
                             "capacityPerOccurrence": 805,
                             "duration": 197,
-                            "image": "spring.jpg",
+                            "image": "http://testserver/media/spring.jpg",
                             "participantsPerInvite": "FAMILY",
                             "publishedAt": None,
                             "translations": [
@@ -187,7 +187,7 @@ snapshots["test_occurrence_query_normal_user 1"] = {
             "event": {
                 "capacityPerOccurrence": 805,
                 "duration": 197,
-                "image": "spring.jpg",
+                "image": "http://testserver/media/spring.jpg",
                 "participantsPerInvite": "FAMILY",
                 "publishedAt": None,
                 "translations": [
