@@ -1,6 +1,7 @@
 import graphene
 from django.apps import apps
 from django.db import transaction
+from django.utils.translation import get_language
 from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 from graphql_jwt.decorators import login_required, staff_member_required
@@ -20,6 +21,14 @@ class VenueTranslationType(DjangoObjectType):
 
 
 class VenueNode(DjangoObjectType):
+    name = graphene.String()
+    description = graphene.String()
+    address = graphene.String()
+    accessibility_info = graphene.String()
+    arrival_instructions = graphene.String()
+    additional_info = graphene.String()
+    www_url = graphene.String()
+
     class Meta:
         model = Venue
         interfaces = (relay.Node,)
@@ -28,7 +37,8 @@ class VenueNode(DjangoObjectType):
     @login_required
     # TODO: For now only logged in users can see venues
     def get_queryset(cls, queryset, info):
-        return queryset.order_by("-created_at")
+        lang = get_language()
+        return queryset.order_by("-created_at").language(lang)
 
     @classmethod
     @login_required

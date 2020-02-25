@@ -6,7 +6,9 @@ import pytest
 import pytz
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils.translation import activate
 from graphql_relay import to_global_id
+from parler.utils.context import switch_language
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_permission_denied
@@ -30,6 +32,9 @@ query Events {
           shortDescription
           languageCode
         }
+        name
+        description
+        shortDescription
         duration
         image
         participantsPerInvite
@@ -67,6 +72,9 @@ query Event($id:ID!) {
       description
       languageCode
     }
+    name
+    description
+    shortDescription
     image
     participantsPerInvite
     capacityPerOccurrence
@@ -712,3 +720,20 @@ def test_invalid_occurrence_enrolment(guardian_api_client):
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
     )
     assert "Cannot join occurrence in the past" in str(executed["errors"])
+
+
+def test_normal_translation_fields(snapshot, user_api_client, event):
+    variables = {"id": to_global_id("EventNode", event.id)}
+    for code in settings.PARLER_SUPPORTED_LANGUAGE_CODES:
+        new_translation = "{} Translation".format(code)
+        with switch_language(event, code):
+            event.name = new_translation
+            event.save()
+        activate(code)
+        executed = user_api_client.execute(EVENT_QUERY, variables=variables)
+        translation = [
+            trans
+            for trans in executed["data"]["event"]["translations"]
+            if trans["languageCode"] == code.upper()
+        ][0]["name"]
+        assert executed["data"]["event"]["name"] == translation
