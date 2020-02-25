@@ -6,12 +6,14 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
+from graphene_django.filter import DjangoFilterConnectionField
 from graphene_file_upload.scalars import Upload
 from graphql_jwt.decorators import login_required, staff_member_required
 from graphql_relay import from_global_id
 
 from children.models import Child
 from common.utils import update_object, update_object_with_translations
+from events.filters import OccurrenceFilter
 from events.models import Enrolment, Event, Occurrence
 from events.notifications import NotificationType
 from events.utils import send_event_notifications_to_guardians
@@ -71,9 +73,8 @@ class OccurrenceNode(DjangoObjectType):
 
     @classmethod
     @login_required
-    # TODO: For now only logged in users can see occurrences
     def get_queryset(cls, queryset, info):
-        return queryset.order_by("-created_at")
+        return queryset.order_by("time")
 
     @classmethod
     @login_required
@@ -83,6 +84,7 @@ class OccurrenceNode(DjangoObjectType):
     class Meta:
         model = Occurrence
         interfaces = (relay.Node,)
+        filterset_class = OccurrenceFilter
 
 
 class EnrolmentNode(DjangoObjectType):
@@ -340,7 +342,7 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
 
 class Query:
     events = DjangoConnectionField(EventNode)
-    occurrences = DjangoConnectionField(OccurrenceNode)
+    occurrences = DjangoFilterConnectionField(OccurrenceNode)
 
     event = relay.Node.Field(EventNode)
     occurrence = relay.Node.Field(OccurrenceNode)

@@ -245,3 +245,25 @@ snapshots["test_enrol_occurrence 1"] = {
         }
     }
 }
+
+snapshots["test_occurrences_filter_by_date 1"] = {
+    "data": {
+        "occurrences": {
+            "edges": [
+                {"node": {"time": "1970-01-02T00:00:00+00:00"}},
+                {"node": {"time": "1970-01-02T00:00:00+00:00"}},
+            ]
+        }
+    }
+}
+
+snapshots["test_occurrences_filter_by_time 1"] = {
+    "data": {
+        "occurrences": {
+            "edges": [
+                {"node": {"time": "1970-01-01T11:00:00+00:00"}},
+                {"node": {"time": "1970-01-02T11:00:00+00:00"}},
+            ]
+        }
+    }
+}

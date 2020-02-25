@@ -3,9 +3,9 @@ from datetime import datetime
 from typing import Dict
 
 import pytest
-import pytz
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 from django.utils.translation import activate
 from graphql_relay import to_global_id
 from parler.utils.context import switch_language
@@ -131,6 +131,18 @@ query Occurrences {
             languageCode
           }
         }
+      }
+    }
+  }
+}
+"""
+
+OCCURRENCES_FILTER_QUERY = """
+query Occurrences($date: Date, $time: Time) {
+  occurrences(date: $date, time: $time) {
+    edges {
+      node {
+        time
       }
     }
   }
@@ -706,7 +718,7 @@ def test_maximum_enrolment(guardian_api_client, occurrence):
 
 def test_invalid_occurrence_enrolment(guardian_api_client):
     occurrence = OccurrenceFactory(
-        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo)
     )
     child = ChildWithGuardianFactory(
         relationship__guardian__user=guardian_api_client.user
@@ -737,3 +749,38 @@ def test_normal_translation_fields(snapshot, user_api_client, event):
             if trans["languageCode"] == code.upper()
         ][0]["name"]
         assert executed["data"]["event"]["name"] == translation
+
+
+def test_occurrences_filter_by_date(user_api_client, snapshot):
+    OccurrenceFactory(time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo))
+    OccurrenceFactory(time=datetime(1970, 1, 2, 0, 0, 0, tzinfo=timezone.now().tzinfo))
+    variables = {"date": "1970-01-02"}
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
+
+    assert len(executed["data"]["occurrences"]["edges"]) == 1
+    OccurrenceFactory(time=datetime(1970, 1, 2, 0, 0, 0, tzinfo=timezone.now().tzinfo))
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
+    assert len(executed["data"]["occurrences"]["edges"]) == 2
+    snapshot.assert_match(executed)
+
+
+def test_occurrences_filter_by_time(user_api_client, snapshot):
+    for i in range(10, 12):
+        OccurrenceFactory(
+            time=datetime(1970, 1, 1, i, 0, 0, tzinfo=timezone.now().tzinfo)
+        )
+        OccurrenceFactory(
+            time=datetime(1970, 1, 2, i + 1, 0, 0, tzinfo=timezone.now().tzinfo)
+        )
+    OccurrenceFactory(time=datetime(1970, 1, 1, 13, 0, 0, tzinfo=timezone.now().tzinfo))
+    variables_1 = {"time": "12:00:00"}
+    variables_2 = {"time": "14:00:00+02:00"}
+    variables_3 = {"time": "11:00:00+00:00"}
+
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables_1)
+    assert len(executed["data"]["occurrences"]["edges"]) == 1
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables_2)
+    assert len(executed["data"]["occurrences"]["edges"]) == 1
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables_3)
+    assert len(executed["data"]["occurrences"]["edges"]) == 2
+    snapshot.assert_match(executed)
