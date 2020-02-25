@@ -75,16 +75,24 @@ class OccurrenceNode(DjangoObjectType):
     venue_id = graphene.GlobalID()
     event_id = graphene.GlobalID()
     time = graphene.DateTime()
+    remaining_capacity = graphene.Int()
 
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        return queryset.order_by("time")
+        return (
+            queryset.annotate(enrolments_count=Count("enrolments"))
+            .select_related("event")
+            .order_by("time")
+        )
 
     @classmethod
     @login_required
     def get_node(cls, info, id):
         return super().get_node(info, id)
+
+    def resolve_remaining_capacity(self, info, **kwargs):
+        return self.event.capacity_per_occurrence - self.enrolments_count
 
     class Meta:
         model = Occurrence
