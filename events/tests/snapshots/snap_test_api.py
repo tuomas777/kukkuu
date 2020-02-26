@@ -156,6 +156,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                                 }
                             ],
                         },
+                        "remainingCapacity": 805,
                         "time": "2020-12-12T00:00:00+00:00",
                         "venue": {
                             "translations": [
@@ -200,6 +201,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                     }
                 ],
             },
+            "remainingCapacity": 805,
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {
                 "translations": [
@@ -264,6 +266,48 @@ snapshots["test_occurrences_filter_by_time 1"] = {
                 {"node": {"time": "1970-01-01T11:00:00+00:00"}},
                 {"node": {"time": "1970-01-02T11:00:00+00:00"}},
             ]
+        }
+    }
+}
+
+snapshots["test_occurrence_available_capacity 1"] = {
+    "data": {
+        "occurrence": {
+            "event": {
+                "capacityPerOccurrence": 805,
+                "duration": 197,
+                "image": "http://testserver/media/spring.jpg",
+                "participantsPerInvite": "FAMILY",
+                "publishedAt": None,
+                "translations": [
+                    {
+                        "description": """Serious listen police shake. Page box child care any concern.
+Agree room laugh prevent make. Our very television beat at success decade.""",
+                        "languageCode": "EN",
+                        "name": "Free heart significant machine try.",
+                        "shortDescription": "Perform in weight success answer.",
+                    }
+                ],
+            },
+            "remainingCapacity": 802,
+            "time": "2020-12-12T00:00:00+00:00",
+            "venue": {
+                "translations": [
+                    {
+                        "accessibilityInfo": "Enjoy office water those notice medical. Already name likely behind mission network. Think significant land especially can quite.",
+                        "additionalInfo": """Prevent pressure point. Voice radio happen color scene.
+Assume training seek full several. Authority develop identify ready.""",
+                        "address": """1449 Hill Squares
+South Zacharyborough, CO 33337""",
+                        "arrivalInstructions": """Last appear experience seven. Throw wrong party wall agency customer clear. Control as receive cup.
+Family around year off. Sense person the probably.""",
+                        "description": "Later evening southern would according strong. Analysis season project executive entire.",
+                        "languageCode": "EN",
+                        "name": "Able process base sing according.",
+                        "wwwUrl": "http://brooks.org/",
+                    }
+                ]
+            },
         }
     }
 }

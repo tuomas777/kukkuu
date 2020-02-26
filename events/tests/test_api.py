@@ -106,6 +106,7 @@ query Occurrences {
     edges {
       node {
         time
+        remainingCapacity
         event {
           translations {
             name
@@ -153,6 +154,7 @@ OCCURRENCE_QUERY = """
 query Occurrence($id: ID!) {
   occurrence(id: $id){
     time
+    remainingCapacity
     event {
       translations {
         name
@@ -783,4 +785,19 @@ def test_occurrences_filter_by_time(user_api_client, snapshot):
     assert len(executed["data"]["occurrences"]["edges"]) == 1
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables_3)
     assert len(executed["data"]["occurrences"]["edges"]) == 2
+    snapshot.assert_match(executed)
+
+
+def test_occurrence_available_capacity(user_api_client, snapshot, occurrence):
+    max_capacity = occurrence.event.capacity_per_occurrence
+    EnrolmentFactory.create_batch(3, occurrence=occurrence)
+    variables = {"id": to_global_id("OccurrenceNode", occurrence.id)}
+    executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
+    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 3
+    e = EnrolmentFactory(occurrence=occurrence)
+    executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
+    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 4
+    e.delete()
+    executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
+    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 3
     snapshot.assert_match(executed)
