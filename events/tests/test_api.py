@@ -45,6 +45,7 @@ query Events {
         occurrences {
           edges {
             node {
+              remainingCapacity
               time
               venue {
                 translations{
@@ -86,6 +87,7 @@ query Event($id:ID!) {
       edges{
         node{
           time
+          remainingCapacity
           venue{
             translations{
               name
@@ -383,6 +385,7 @@ def test_events_query_unauthenticated(api_client):
 
 
 def test_events_query_normal_user(snapshot, user_api_client, event):
+    OccurrenceFactory(event=event)
     executed = user_api_client.execute(EVENTS_QUERY)
 
     snapshot.assert_match(executed)
@@ -396,6 +399,7 @@ def test_event_query_unauthenticated(api_client, event):
 
 
 def test_event_query_normal_user(snapshot, user_api_client, event):
+    OccurrenceFactory(event=event)
     variables = {"id": to_global_id("EventNode", event.id)}
     executed = user_api_client.execute(EVENT_QUERY, variables=variables)
 

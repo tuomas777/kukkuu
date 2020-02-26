@@ -65,6 +65,11 @@ class EventNode(DjangoObjectType):
             return info.context.build_absolute_uri(self.image.url)
         return ""
 
+    def resolve_occurrences(self, info, **kwargs):
+        return self.occurrences.annotate(
+            enrolments_count=Count("enrolments", distinct=True)
+        ).order_by("time")
+
 
 class EventConnection(Connection):
     class Meta:
@@ -80,11 +85,9 @@ class OccurrenceNode(DjangoObjectType):
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        return (
-            queryset.annotate(enrolments_count=Count("enrolments"))
-            .select_related("event")
-            .order_by("time")
-        )
+        return queryset.annotate(
+            enrolments_count=Count("enrolments", distinct=True)
+        ).order_by("time")
 
     @classmethod
     @login_required

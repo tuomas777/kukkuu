@@ -250,15 +250,50 @@ snapshots["test_get_available_events 1"] = {
         "child": {
             "availableEvents": {
                 "edges": [
-                    {"node": {"createdAt": "2020-12-12T00:00:00+00:00"}},
-                    {"node": {"createdAt": "2020-12-12T00:00:00+00:00"}},
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 736}}]
+                            },
+                        }
+                    },
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 697}}]
+                            },
+                        }
+                    },
                 ]
             },
             "pastEvents": {
                 "edges": [
-                    {"node": {"createdAt": "2020-12-12T00:00:00+00:00"}},
-                    {"node": {"createdAt": "2020-12-12T00:00:00+00:00"}},
-                    {"node": {"createdAt": "2020-12-12T00:00:00+00:00"}},
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 502}}]
+                            },
+                        }
+                    },
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 890}}]
+                            },
+                        }
+                    },
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 885}}]
+                            },
+                        }
+                    },
                 ]
             },
         }
@@ -270,16 +305,58 @@ snapshots["test_get_past_events 1"] = {
         "child": {
             "availableEvents": {
                 "edges": [
-                    {"node": {"createdAt": "2020-12-12T00:00:00+00:00"}},
-                    {"node": {"createdAt": "2020-12-12T00:00:00+00:00"}},
-                    {"node": {"createdAt": "2020-12-12T00:00:00+00:00"}},
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 512}}]
+                            },
+                        }
+                    },
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 736}}]
+                            },
+                        }
+                    },
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 697}}]
+                            },
+                        }
+                    },
                 ]
             },
             "pastEvents": {
                 "edges": [
-                    {"node": {"createdAt": "2020-12-12T00:00:00+00:00"}},
-                    {"node": {"createdAt": "2020-12-12T00:00:00+00:00"}},
-                    {"node": {"createdAt": "2020-12-12T00:00:00+00:00"}},
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 501}}]
+                            },
+                        }
+                    },
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 890}}]
+                            },
+                        }
+                    },
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 885}}]
+                            },
+                        }
+                    },
                 ]
             },
         }
