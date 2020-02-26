@@ -106,6 +106,12 @@ class EnrolmentNode(DjangoObjectType):
         interfaces = (relay.Node,)
         fields = ("occurrence", "child", "created_at")
 
+    @classmethod
+    @login_required
+    def get_queryset(cls, queryset, info):
+        # Should only return enrolments of guardian's chilren
+        return queryset.filter(child__guardians__user=info.context.user)
+
 
 class EventTranslationsInput(graphene.InputObjectType):
     name = graphene.String(required=True)
