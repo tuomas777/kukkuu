@@ -89,6 +89,14 @@ query MyProfile {
 }
 """
 
+MY_ADMIN_PROFILE_QUERY = """
+query MyAdminProfle{
+  myAdminProfile{
+    isProjectAdmin
+  }
+}
+"""
+
 
 def test_my_profile_query_unauthenticated(api_client):
     GuardianFactory()
@@ -130,7 +138,6 @@ mutation UpdateMyProfile($input: UpdateMyProfileMutationInput!) {
 }
 """
 
-
 UPDATE_MY_PROFILE_VARIABLES = {
     "input": {
         "firstName": "Updated First Name",
@@ -159,3 +166,15 @@ def test_update_my_profile_mutation(snapshot, user_api_client):
     snapshot.assert_match(executed)
     guardian = Guardian.objects.get(user=user_api_client.user)
     assert_guardian_matches_data(guardian, UPDATE_MY_PROFILE_VARIABLES["input"])
+
+
+def test_my_admin_profile_unauthenticated(api_client):
+    executed = api_client.execute(MY_ADMIN_PROFILE_QUERY)
+    assert_permission_denied(executed)
+
+
+def test_my_admin_profile_authenticated(user_api_client, staff_api_client):
+    executed = user_api_client.execute(MY_ADMIN_PROFILE_QUERY)
+    assert not executed["data"]["myAdminProfile"]["isProjectAdmin"]
+    executed = staff_api_client.execute(MY_ADMIN_PROFILE_QUERY)
+    assert executed["data"]["myAdminProfile"]["isProjectAdmin"]
