@@ -153,6 +153,15 @@ query Occurrences($date: Date, $time: Time) {
 OCCURRENCE_QUERY = """
 query Occurrence($id: ID!) {
   occurrence(id: $id){
+    enrolments{
+        edges{
+          node{
+            child{
+              firstName
+            }
+          }
+        }
+    }
     time
     remainingCapacity
     event {
@@ -800,4 +809,16 @@ def test_occurrence_available_capacity(user_api_client, snapshot, occurrence):
     e.delete()
     executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
     assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 3
+    snapshot.assert_match(executed)
+
+
+def test_enrolment_visibility(guardian_api_client, snapshot, occurrence):
+    EnrolmentFactory.create_batch(3, occurrence=occurrence)
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user
+    )
+    EnrolmentFactory(child=child, occurrence=occurrence)
+    variables = {"id": to_global_id("OccurrenceNode", occurrence.id)}
+    executed = guardian_api_client.execute(OCCURRENCE_QUERY, variables=variables)
+    assert len(executed["data"]["occurrence"]["enrolments"]["edges"]) == 1
     snapshot.assert_match(executed)

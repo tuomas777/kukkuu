@@ -185,6 +185,7 @@ Family around year off. Sense person the probably.""",
 snapshots["test_occurrence_query_normal_user 1"] = {
     "data": {
         "occurrence": {
+            "enrolments": {"edges": []},
             "event": {
                 "capacityPerOccurrence": 805,
                 "duration": 197,
@@ -273,6 +274,7 @@ snapshots["test_occurrences_filter_by_time 1"] = {
 snapshots["test_occurrence_available_capacity 1"] = {
     "data": {
         "occurrence": {
+            "enrolments": {"edges": []},
             "event": {
                 "capacityPerOccurrence": 805,
                 "duration": 197,
@@ -305,6 +307,49 @@ Family around year off. Sense person the probably.""",
                         "languageCode": "EN",
                         "name": "Able process base sing according.",
                         "wwwUrl": "http://brooks.org/",
+                    }
+                ]
+            },
+        }
+    }
+}
+
+snapshots["test_enrolment_visibility 1"] = {
+    "data": {
+        "occurrence": {
+            "enrolments": {"edges": [{"node": {"child": {"firstName": "Richard"}}}]},
+            "event": {
+                "capacityPerOccurrence": 359,
+                "duration": 255,
+                "image": "http://testserver/media/parent.jpg",
+                "participantsPerInvite": "FAMILY",
+                "publishedAt": None,
+                "translations": [
+                    {
+                        "description": """Glass person along age else. Skill down subject town range north skin.
+Watch condition like lay still bar later. Daughter order stay sign discover.""",
+                        "languageCode": "EN",
+                        "name": "Trial western break page box child care. Tv minute defense.",
+                        "shortDescription": "Address prove color effort.",
+                    }
+                ],
+            },
+            "remainingCapacity": 355,
+            "time": "2020-12-12T00:00:00+00:00",
+            "venue": {
+                "translations": [
+                    {
+                        "accessibilityInfo": """Data control as receive. End available avoid girl middle.
+Sense person the probably. Simply state social believe policy. Score think turn argue present.""",
+                        "additionalInfo": "Tough plant traditional after born up always. Return student light a point charge.",
+                        "address": """18274 Justin Skyway
+Patriciashire, WV 03644""",
+                        "arrivalInstructions": "Assume training seek full several. Authority develop identify ready.",
+                        "description": """City sing himself yard. Election stay every something base.
+Final central situation past ready join enjoy. Huge get this success commercial recently from. Name likely behind mission network who.""",
+                        "languageCode": "EN",
+                        "name": "Home memory respond improve office table.",
+                        "wwwUrl": "http://www.smith-woods.com/",
                     }
                 ]
             },
