@@ -1,6 +1,7 @@
 import graphene
 from django.apps import apps
 from django.db import transaction
+from django.db.models import Count
 from django.utils.translation import get_language
 from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
@@ -44,6 +45,15 @@ class VenueNode(DjangoObjectType):
     @login_required
     def get_node(cls, info, id):
         return super().get_node(info, id)
+
+    def resolve_occurrences(self, info, **kwargs):
+        return (
+            self.occurrences.annotate(
+                enrolments_count=Count("enrolments", distinct=True)
+            )
+            .select_related("event")
+            .order_by("time")
+        )
 
 
 class VenueTranslationsInput(graphene.InputObjectType):

@@ -298,6 +298,13 @@ query Child($id: ID!) {
       edges{
         node{
           createdAt
+          occurrences{
+            edges{
+              node{
+                remainingCapacity
+              }
+            }
+          }
         }
       }
     }
@@ -305,6 +312,13 @@ query Child($id: ID!) {
       edges{
         node{
           createdAt
+          occurrences{
+            edges{
+              node{
+                remainingCapacity
+              }
+            }
+          }
         }
       }
     }

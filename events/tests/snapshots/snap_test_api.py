@@ -19,7 +19,25 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                         "duration": 197,
                         "image": "http://testserver/media/spring.jpg",
                         "name": "Free heart significant machine try.",
-                        "occurrences": {"edges": []},
+                        "occurrences": {
+                            "edges": [
+                                {
+                                    "node": {
+                                        "remainingCapacity": 805,
+                                        "time": "1986-02-27T01:22:35+00:00",
+                                        "venue": {
+                                            "translations": [
+                                                {
+                                                    "description": "Later evening southern would according strong. Analysis season project executive entire.",
+                                                    "languageCode": "FI",
+                                                    "name": "Subject town range.",
+                                                }
+                                            ]
+                                        },
+                                    }
+                                }
+                            ]
+                        },
                         "participantsPerInvite": "FAMILY",
                         "publishedAt": None,
                         "shortDescription": "Perform in weight success answer.",
@@ -50,7 +68,25 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
             "duration": 197,
             "image": "http://testserver/media/spring.jpg",
             "name": "Free heart significant machine try.",
-            "occurrences": {"edges": []},
+            "occurrences": {
+                "edges": [
+                    {
+                        "node": {
+                            "remainingCapacity": 805,
+                            "time": "1986-02-27T01:22:35+00:00",
+                            "venue": {
+                                "translations": [
+                                    {
+                                        "description": "Later evening southern would according strong. Analysis season project executive entire.",
+                                        "languageCode": "FI",
+                                        "name": "Subject town range.",
+                                    }
+                                ]
+                            },
+                        }
+                    }
+                ]
+            },
             "participantsPerInvite": "FAMILY",
             "publishedAt": None,
             "shortDescription": "Perform in weight success answer.",
