@@ -42,6 +42,7 @@ env = environ.Env(
     TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX=(str, "kukkuu"),
     TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, True),
     TOKEN_AUTH_AUTHSERVER_URL=(str, ""),
+    ILMOITIN_QUEUE_NOTIFICATIONS=(str, True),
 )
 if os.path.exists(env_file):
     env.read_env(env_file)
@@ -71,6 +72,8 @@ if env("MAIL_MAILGUN_KEY"):
 EMAIL_BACKEND = "mailer.backend.DbBackend"
 MAILER_EMAIL_BACKEND = env.str("MAILER_EMAIL_BACKEND")
 ILMOITIN_TRANSLATED_FROM_EMAIL = env("ILMOITIN_TRANSLATED_FROM_EMAIL")
+ILMOITIN_QUEUE_NOTIFICATIONS = env("ILMOITIN_QUEUE_NOTIFICATIONS")
+
 
 try:
     version = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()

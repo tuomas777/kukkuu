@@ -1,7 +1,9 @@
 #!/bin/bash
-
 set -e
+service cron start
+su - appuser
 
+export > /.env
 if [ -z "$SKIP_DATABASE_CHECK" -o "$SKIP_DATABASE_CHECK" = "0" ]; then
   until nc -z -v -w30 "$DATABASE_HOST" 5432
   do
