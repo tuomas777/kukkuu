@@ -10,6 +10,7 @@ from graphql_relay import from_global_id
 
 from common.utils import update_object_with_translations
 from kukkuu.exceptions import KukkuuGraphQLError
+from users.schema import LanguageEnum
 from venues.models import Venue
 
 VenueTranslation = apps.get_model("venues", "VenueTranslation")
@@ -59,7 +60,7 @@ class VenueNode(DjangoObjectType):
 class VenueTranslationsInput(graphene.InputObjectType):
     name = graphene.String(required=True)
     description = graphene.String()
-    language_code = graphene.String(required=True)
+    language_code = LanguageEnum(required=True)
     address = graphene.String()
     accessibility_info = graphene.String()
     arrival_instructions = graphene.String()
@@ -86,7 +87,7 @@ class UpdateVenueMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.GlobalID(required=True)
         translations = graphene.List(VenueTranslationsInput)
-        delete_translations = graphene.List(graphene.String)
+        delete_translations = graphene.List(LanguageEnum)
 
     venue = graphene.Field(VenueNode)
 

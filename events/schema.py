@@ -19,6 +19,7 @@ from events.notifications import NotificationType
 from events.utils import send_event_notifications_to_guardians
 from kukkuu.exceptions import KukkuuGraphQLError
 from users.models import Guardian
+from users.schema import LanguageEnum
 from venues.models import Venue
 
 EventTranslation = apps.get_model("events", "EventTranslation")
@@ -34,6 +35,8 @@ def validate_enrolment(child, occurrence):
 
 
 class EventTranslationType(DjangoObjectType):
+    language_code = LanguageEnum()
+
     class Meta:
         model = EventTranslation
         exclude = ("id", "master")
@@ -77,9 +80,6 @@ class EventConnection(Connection):
 
 
 class OccurrenceNode(DjangoObjectType):
-    venue_id = graphene.GlobalID()
-    event_id = graphene.GlobalID()
-    time = graphene.DateTime()
     remaining_capacity = graphene.Int()
 
     @classmethod
@@ -112,7 +112,7 @@ class EnrolmentNode(DjangoObjectType):
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        # Should only return enrolments of guardian's chilren
+        # Should only return enrolments of guardian's children
         return queryset.filter(child__guardians__user=info.context.user)
 
 
@@ -120,7 +120,7 @@ class EventTranslationsInput(graphene.InputObjectType):
     name = graphene.String(required=True)
     short_description = graphene.String()
     description = graphene.String()
-    language_code = graphene.String(required=True)
+    language_code = LanguageEnum(required=True)
 
 
 class AddEventMutation(graphene.relay.ClientIDMutation):
@@ -150,7 +150,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         capacity_per_occurrence = graphene.Int()
         image = Upload()
         translations = graphene.List(EventTranslationsInput)
-        delete_translations = graphene.List(graphene.String)
+        delete_translations = graphene.List(LanguageEnum)
 
     event = graphene.Field(EventNode)
 
