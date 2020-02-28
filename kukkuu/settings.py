@@ -20,7 +20,7 @@ else:
 env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, ""),
-    MEDIA_ROOT=(environ.Path(), default_var_root("media")),
+    MEDIA_ROOT=(environ.Path(), environ.Path(checkout_dir("var"))("media")),
     STATIC_ROOT=(environ.Path(), default_var_root("static")),
     MEDIA_URL=(str, "/media/"),
     STATIC_URL=(str, "/static/"),
