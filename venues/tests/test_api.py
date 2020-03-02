@@ -132,7 +132,7 @@ ADD_VENUE_VARIABLES = {
             {
                 "name": "Venue name",
                 "description": "Venue description",
-                "languageCode": "fi",
+                "languageCode": "FI",
                 "address": "Address",
                 "accessibilityInfo": "Accessibility info",
                 "arrivalInstructions": "Arrival instruction",
@@ -169,7 +169,7 @@ UPDATE_VENUE_VARIABLES = {
             {
                 "name": "Venue name",
                 "description": "Venue description",
-                "languageCode": "fi",
+                "languageCode": "FI",
                 "address": "Address",
                 "accessibilityInfo": "Accessibility info",
                 "arrivalInstructions": "Arrival instruction",

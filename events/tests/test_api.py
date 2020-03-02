@@ -222,7 +222,7 @@ ADD_EVENT_VARIABLES = {
                 "name": "Event test",
                 "shortDescription": "Short desc",
                 "description": "desc",
-                "languageCode": "fi",
+                "languageCode": "FI",
             }
         ],
         "duration": 1000,
@@ -264,7 +264,7 @@ UPDATE_EVENT_VARIABLES = {
                 "name": "Event test in suomi",
                 "shortDescription": "Short desc",
                 "description": "desc",
-                "languageCode": "sv",
+                "languageCode": "SV",
             }
         ],
         "duration": 1000,
@@ -570,21 +570,23 @@ def test_update_event_translations(staff_api_client, event):
         "name": "Event name",
         "description": "Event description",
         "shortDescription": "Event short description",
-        "languageCode": "sv",
+        "languageCode": "SV",
     }
     event_variables["input"]["translations"].append(new_translation)
     staff_api_client.execute(UPDATE_EVENT_MUTATION, variables=event_variables)
-    assert event.has_translation(new_translation["languageCode"])
+    assert event.has_translation(new_translation["languageCode"].lower())
 
     # Test delete translation
     event_variables["input"]["deleteTranslations"] = [new_translation["languageCode"]]
     staff_api_client.execute(UPDATE_EVENT_MUTATION, variables=event_variables)
-    assert not event.has_translation(new_translation["languageCode"])
+    assert not event.has_translation(new_translation["languageCode"].lower())
 
     # Test invalid translation
     new_translation["languageCode"] = "foo"
-    staff_api_client.execute(UPDATE_EVENT_MUTATION, variables=event_variables)
-    assert not event.has_translation(new_translation["languageCode"])
+    executed = staff_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=event_variables
+    )
+    assert "got invalid value" in str(executed["errors"])
 
 
 def test_upload_image_to_event(staff_api_client, snapshot):
