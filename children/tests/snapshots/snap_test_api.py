@@ -254,7 +254,7 @@ snapshots["test_get_available_events 1"] = {
                         "node": {
                             "createdAt": "2020-12-12T00:00:00+00:00",
                             "occurrences": {
-                                "edges": [{"node": {"remainingCapacity": 736}}]
+                                "edges": [{"node": {"remainingCapacity": 697}}]
                             },
                         }
                     },
@@ -262,7 +262,7 @@ snapshots["test_get_available_events 1"] = {
                         "node": {
                             "createdAt": "2020-12-12T00:00:00+00:00",
                             "occurrences": {
-                                "edges": [{"node": {"remainingCapacity": 697}}]
+                                "edges": [{"node": {"remainingCapacity": 736}}]
                             },
                         }
                     },
@@ -282,7 +282,7 @@ snapshots["test_get_available_events 1"] = {
                         "node": {
                             "createdAt": "2020-12-12T00:00:00+00:00",
                             "occurrences": {
-                                "edges": [{"node": {"remainingCapacity": 890}}]
+                                "edges": [{"node": {"remainingCapacity": 885}}]
                             },
                         }
                     },
@@ -290,7 +290,7 @@ snapshots["test_get_available_events 1"] = {
                         "node": {
                             "createdAt": "2020-12-12T00:00:00+00:00",
                             "occurrences": {
-                                "edges": [{"node": {"remainingCapacity": 885}}]
+                                "edges": [{"node": {"remainingCapacity": 890}}]
                             },
                         }
                     },
@@ -309,14 +309,6 @@ snapshots["test_get_past_events 1"] = {
                         "node": {
                             "createdAt": "2020-12-12T00:00:00+00:00",
                             "occurrences": {
-                                "edges": [{"node": {"remainingCapacity": 512}}]
-                            },
-                        }
-                    },
-                    {
-                        "node": {
-                            "createdAt": "2020-12-12T00:00:00+00:00",
-                            "occurrences": {
                                 "edges": [{"node": {"remainingCapacity": 736}}]
                             },
                         }
@@ -329,6 +321,14 @@ snapshots["test_get_past_events 1"] = {
                             },
                         }
                     },
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 512}}]
+                            },
+                        }
+                    },
                 ]
             },
             "pastEvents": {
@@ -337,7 +337,7 @@ snapshots["test_get_past_events 1"] = {
                         "node": {
                             "createdAt": "2020-12-12T00:00:00+00:00",
                             "occurrences": {
-                                "edges": [{"node": {"remainingCapacity": 501}}]
+                                "edges": [{"node": {"remainingCapacity": 885}}]
                             },
                         }
                     },
@@ -353,7 +353,7 @@ snapshots["test_get_past_events 1"] = {
                         "node": {
                             "createdAt": "2020-12-12T00:00:00+00:00",
                             "occurrences": {
-                                "edges": [{"node": {"remainingCapacity": 885}}]
+                                "edges": [{"node": {"remainingCapacity": 501}}]
                             },
                         }
                     },
