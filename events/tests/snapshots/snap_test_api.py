@@ -392,3 +392,14 @@ Family around year off. Sense person the probably.""",
         }
     }
 }
+
+snapshots["test_occurrences_filter_by_upcoming 1"] = {
+    "data": {
+        "occurrences": {
+            "edges": [
+                {"node": {"time": "1970-01-01T00:00:00+00:00"}},
+                {"node": {"time": "2020-12-12T00:00:00+00:00"}},
+            ]
+        }
+    }
+}

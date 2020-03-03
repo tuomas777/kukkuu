@@ -58,6 +58,10 @@ class ChildNode(DjangoObjectType):
             .exclude(occurrences__in=self.occurrences.all())
         )
 
+    def resolve_occurrences(self, info, **kwargs):
+        # Use distinct to avoid duplicated rows when querying nested occurrences
+        return self.occurrences.distinct()
+
 
 class RelationshipTypeEnum(graphene.Enum):
     PARENT = "parent"

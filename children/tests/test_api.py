@@ -322,6 +322,13 @@ query Child($id: ID!) {
         }
       }
     }
+    occurrences {
+      edges {
+        node {
+          time
+        }
+      }
+    }
   }
 }
 """
