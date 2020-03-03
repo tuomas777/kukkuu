@@ -17,6 +17,8 @@ VenueTranslation = apps.get_model("venues", "VenueTranslation")
 
 
 class VenueTranslationType(DjangoObjectType):
+    language_code = LanguageEnum(required=True)
+
     class Meta:
         model = VenueTranslation
         exclude = ("id", "master")
