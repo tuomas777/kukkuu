@@ -35,7 +35,7 @@ def validate_enrolment(child, occurrence):
 
 
 class EventTranslationType(DjangoObjectType):
-    language_code = LanguageEnum()
+    language_code = LanguageEnum(required=True)
 
     class Meta:
         model = EventTranslation
