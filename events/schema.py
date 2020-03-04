@@ -56,7 +56,11 @@ class EventNode(DjangoObjectType):
     # TODO: For now only logged in users can see events
     def get_queryset(cls, queryset, info):
         lang = get_language()
-        return queryset.order_by("-created_at").language(lang)
+        return (
+            queryset.user_can_view(info.context.user)
+            .order_by("-created_at")
+            .language(lang)
+        )
 
     @classmethod
     @login_required
@@ -85,9 +89,11 @@ class OccurrenceNode(DjangoObjectType):
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        return queryset.annotate(
-            enrolments_count=Count("enrolments", distinct=True)
-        ).order_by("time")
+        return (
+            queryset.user_can_view(info.context.user)
+            .annotate(enrolments_count=Count("enrolments", distinct=True))
+            .order_by("time")
+        )
 
     @classmethod
     @login_required

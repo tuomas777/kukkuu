@@ -81,7 +81,7 @@ snapshots["test_occurrence_query_normal_user 1"] = {
                 "duration": 197,
                 "image": "http://testserver/media/spring.jpg",
                 "participantsPerInvite": "FAMILY",
-                "publishedAt": None,
+                "publishedAt": "2020-12-12T00:00:00+00:00",
                 "translations": [
                     {
                         "description": """Serious listen police shake. Page box child care any concern.
@@ -170,7 +170,7 @@ snapshots["test_occurrence_available_capacity 1"] = {
                 "duration": 197,
                 "image": "http://testserver/media/spring.jpg",
                 "participantsPerInvite": "FAMILY",
-                "publishedAt": None,
+                "publishedAt": "2020-12-12T00:00:00+00:00",
                 "translations": [
                     {
                         "description": """Serious listen police shake. Page box child care any concern.
@@ -213,7 +213,7 @@ snapshots["test_enrolment_visibility 1"] = {
                 "duration": 255,
                 "image": "http://testserver/media/parent.jpg",
                 "participantsPerInvite": "FAMILY",
-                "publishedAt": None,
+                "publishedAt": "2020-12-12T00:00:00+00:00",
                 "translations": [
                     {
                         "description": """Glass person along age else. Skill down subject town range north skin.
@@ -280,7 +280,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                             ]
                         },
                         "participantsPerInvite": "FAMILY",
-                        "publishedAt": None,
+                        "publishedAt": "2020-12-12T00:00:00+00:00",
                         "shortDescription": "Perform in weight success answer.",
                         "translations": [
                             {
@@ -329,7 +329,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                 ]
             },
             "participantsPerInvite": "FAMILY",
-            "publishedAt": None,
+            "publishedAt": "2020-12-12T00:00:00+00:00",
             "shortDescription": "Perform in weight success answer.",
             "translations": [
                 {
@@ -356,7 +356,7 @@ snapshots["test_occurrences_query_normal_user 1"] = {
                             "duration": 197,
                             "image": "http://testserver/media/spring.jpg",
                             "participantsPerInvite": "FAMILY",
-                            "publishedAt": None,
+                            "publishedAt": "2020-12-12T00:00:00+00:00",
                             "translations": [
                                 {
                                     "description": """Serious listen police shake. Page box child care any concern.

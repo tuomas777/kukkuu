@@ -4,8 +4,16 @@ from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatedFields
 
 from children.models import Child
-from common.models import TimestampedModel, TranslatableModel
+from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
 from venues.models import Venue
+
+
+# This need to be inherited from TranslatableQuerySet instead of default model.QuerySet
+class EventQueryset(TranslatableQuerySet):
+    def user_can_view(self, user):
+        if user.is_staff:
+            return self
+        return self.exclude(published_at=None)
 
 
 class Event(TimestampedModel, TranslatableModel):
@@ -39,6 +47,8 @@ class Event(TimestampedModel, TranslatableModel):
         blank=True, null=True, verbose_name=_("published at")
     )
 
+    objects = EventQueryset.as_manager()
+
     class Meta:
         verbose_name = _("event")
         verbose_name_plural = _("events")
@@ -52,6 +62,13 @@ class Event(TimestampedModel, TranslatableModel):
 
     def is_published(self):
         return bool(self.published_at)
+
+
+class OccurrenceQueryset(models.QuerySet):
+    def user_can_view(self, user):
+        if user.is_staff:
+            return self
+        return self.exclude(event__published_at=None)
 
 
 class Occurrence(TimestampedModel):
@@ -76,6 +93,7 @@ class Occurrence(TimestampedModel):
         through="events.Enrolment",
         blank=True,
     )
+    objects = OccurrenceQueryset.as_manager()
 
     class Meta:
         verbose_name = _("occurrence")

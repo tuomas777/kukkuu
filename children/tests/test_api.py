@@ -600,13 +600,23 @@ def test_get_available_events(snapshot, guardian_api_client):
         relationship__guardian__user=guardian_api_client.user
     )
     variables = {"id": to_global_id("ChildNode", child.id)}
-    occurrences = OccurrenceFactory.create_batch(3, time=timezone.now())
+    # Unpublished occurrences
+    OccurrenceFactory.create(time=timezone.now())
+
+    # Published occurrences
+    occurrence = OccurrenceFactory.create(
+        time=timezone.now(), event__published_at=timezone.now()
+    )
+    OccurrenceFactory.create(time=timezone.now(), event__published_at=timezone.now())
+
+    # Past occurrences
     OccurrenceFactory.create_batch(
         3, time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
     )
-    EnrolmentFactory(child=child, occurrence=occurrences[0])
+
+    EnrolmentFactory(child=child, occurrence=occurrence)
     executed = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
-    assert len(executed["data"]["child"]["availableEvents"]["edges"]) == 2
+    assert len(executed["data"]["child"]["availableEvents"]["edges"]) == 1
     snapshot.assert_match(executed)
 
 
@@ -615,12 +625,27 @@ def test_get_past_events(snapshot, guardian_api_client):
         relationship__guardian__user=guardian_api_client.user
     )
     variables = {"id": to_global_id("ChildNode", child.id)}
-    OccurrenceFactory.create_batch(3, time=timezone.now())
-    past_occurrences = OccurrenceFactory.create_batch(
+    # Unpublished occurrences
+    OccurrenceFactory.create(time=timezone.now())
+
+    # Published occurrences in the past
+    past_occurrence_1 = OccurrenceFactory.create(
+        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)),
+        event__published_at=timezone.now(),
+    )
+    OccurrenceFactory.create(
+        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)),
+        event__published_at=timezone.now(),
+    )
+
+    # Unpublished occurrences in the past
+    OccurrenceFactory.create_batch(
         3, time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
     )
-    EnrolmentFactory(child=child, occurrence=past_occurrences[0])
+
+    EnrolmentFactory(child=child, occurrence=past_occurrence_1)
+
     executed = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
     # Still return enroled events if they are past events
-    assert len(executed["data"]["child"]["pastEvents"]["edges"]) == 3
+    assert len(executed["data"]["child"]["pastEvents"]["edges"]) == 2
     snapshot.assert_match(executed)

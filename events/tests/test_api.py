@@ -603,10 +603,10 @@ def test_upload_image_to_event(staff_api_client, snapshot):
     assert event.image
 
 
-def test_staff_publish_event(snapshot, staff_api_client, event):
-    assert not event.is_published()
+def test_staff_publish_event(snapshot, staff_api_client, unpublished_event):
+    assert not unpublished_event.is_published()
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
-    event_variables["input"]["id"] = to_global_id("EventNode", event.id)
+    event_variables["input"]["id"] = to_global_id("EventNode", unpublished_event.id)
     executed = staff_api_client.execute(
         PUBLISH_EVENT_MUTATION, variables=event_variables
     )
@@ -769,28 +769,38 @@ def test_normal_translation_fields(snapshot, user_api_client, event):
         assert executed["data"]["event"]["name"] == translation
 
 
-def test_occurrences_filter_by_date(user_api_client, snapshot):
-    OccurrenceFactory(time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo))
-    OccurrenceFactory(time=datetime(1970, 1, 2, 0, 0, 0, tzinfo=timezone.now().tzinfo))
+def test_occurrences_filter_by_date(user_api_client, snapshot, event):
+    OccurrenceFactory(
+        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo), event=event
+    )
+    OccurrenceFactory(
+        time=datetime(1970, 1, 2, 0, 0, 0, tzinfo=timezone.now().tzinfo), event=event
+    )
     variables = {"date": "1970-01-02"}
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
 
     assert len(executed["data"]["occurrences"]["edges"]) == 1
-    OccurrenceFactory(time=datetime(1970, 1, 2, 0, 0, 0, tzinfo=timezone.now().tzinfo))
+    OccurrenceFactory(
+        time=datetime(1970, 1, 2, 0, 0, 0, tzinfo=timezone.now().tzinfo), event=event
+    )
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
     assert len(executed["data"]["occurrences"]["edges"]) == 2
     snapshot.assert_match(executed)
 
 
-def test_occurrences_filter_by_time(user_api_client, snapshot):
+def test_occurrences_filter_by_time(user_api_client, snapshot, event):
     for i in range(10, 12):
         OccurrenceFactory(
-            time=datetime(1970, 1, 1, i, 0, 0, tzinfo=timezone.now().tzinfo)
+            time=datetime(1970, 1, 1, i, 0, 0, tzinfo=timezone.now().tzinfo),
+            event=event,
         )
         OccurrenceFactory(
-            time=datetime(1970, 1, 2, i + 1, 0, 0, tzinfo=timezone.now().tzinfo)
+            time=datetime(1970, 1, 2, i + 1, 0, 0, tzinfo=timezone.now().tzinfo),
+            event=event,
         )
-    OccurrenceFactory(time=datetime(1970, 1, 1, 13, 0, 0, tzinfo=timezone.now().tzinfo))
+    OccurrenceFactory(
+        time=datetime(1970, 1, 1, 13, 0, 0, tzinfo=timezone.now().tzinfo), event=event
+    )
     variables_1 = {"time": "12:00:00"}
     variables_2 = {"time": "14:00:00+02:00"}
     variables_3 = {"time": "11:00:00+00:00"}
@@ -804,9 +814,11 @@ def test_occurrences_filter_by_time(user_api_client, snapshot):
     snapshot.assert_match(executed)
 
 
-def test_occurrences_filter_by_upcoming(user_api_client, snapshot):
-    OccurrenceFactory(time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo))
-    OccurrenceFactory(time=timezone.now())
+def test_occurrences_filter_by_upcoming(user_api_client, snapshot, event):
+    OccurrenceFactory(
+        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo), event=event
+    )
+    OccurrenceFactory(time=timezone.now(), event=event)
     variables = {"upcoming": True}
 
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
