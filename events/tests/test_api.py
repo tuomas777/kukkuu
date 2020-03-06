@@ -141,8 +141,8 @@ query Occurrences {
 """
 
 OCCURRENCES_FILTER_QUERY = """
-query Occurrences($date: Date, $time: Time) {
-  occurrences(date: $date, time: $time) {
+query Occurrences($date: Date, $time: Time, $upcoming: Boolean) {
+  occurrences(date: $date, time: $time, upcoming: $upcoming) {
     edges {
       node {
         time
@@ -799,6 +799,19 @@ def test_occurrences_filter_by_time(user_api_client, snapshot):
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables_2)
     assert len(executed["data"]["occurrences"]["edges"]) == 1
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables_3)
+    assert len(executed["data"]["occurrences"]["edges"]) == 2
+    snapshot.assert_match(executed)
+
+
+def test_occurrences_filter_by_upcoming(user_api_client, snapshot):
+    OccurrenceFactory(time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo))
+    OccurrenceFactory(time=timezone.now())
+    variables = {"upcoming": True}
+
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
+    assert len(executed["data"]["occurrences"]["edges"]) == 1
+    variables = {"upcoming": False}
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
     assert len(executed["data"]["occurrences"]["edges"]) == 2
     snapshot.assert_match(executed)
 

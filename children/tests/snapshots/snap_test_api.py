@@ -268,6 +268,7 @@ snapshots["test_get_available_events 1"] = {
                     },
                 ]
             },
+            "occurrences": {"edges": [{"node": {"time": "2020-12-12T00:00:00+00:00"}}]},
             "pastEvents": {
                 "edges": [
                     {
@@ -331,6 +332,7 @@ snapshots["test_get_past_events 1"] = {
                     },
                 ]
             },
+            "occurrences": {"edges": [{"node": {"time": "1969-12-31T22:20:00+00:00"}}]},
             "pastEvents": {
                 "edges": [
                     {
