@@ -43,7 +43,14 @@ env = environ.Env(
     TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, True),
     TOKEN_AUTH_AUTHSERVER_URL=(str, ""),
     ILMOITIN_QUEUE_NOTIFICATIONS=(str, False),
+    DEFAULT_FILE_STORAGE=(str, "django.core.files.storage.FileSystemStorage"),
+    GS_BUCKET_NAME=(str, ""),
+    GOOGLE_APPLICATION_CREDENTIALS=(str, ""),
+    AZURE_ACCOUNT_NAME=(str, ""),
+    AZURE_ACCOUNT_KEY=(str, ""),
+    AZURE_CONTAINER=(str, ""),
 )
+
 if os.path.exists(env_file):
     env.read_env(env_file)
 
@@ -74,7 +81,6 @@ MAILER_EMAIL_BACKEND = env.str("MAILER_EMAIL_BACKEND")
 ILMOITIN_TRANSLATED_FROM_EMAIL = env("ILMOITIN_TRANSLATED_FROM_EMAIL")
 ILMOITIN_QUEUE_NOTIFICATIONS = env("ILMOITIN_QUEUE_NOTIFICATIONS")
 
-
 try:
     version = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
 except Exception:
@@ -91,6 +97,17 @@ MEDIA_ROOT = env("MEDIA_ROOT")
 STATIC_ROOT = env("STATIC_ROOT")
 MEDIA_URL = env.str("MEDIA_URL")
 STATIC_URL = env.str("STATIC_URL")
+
+# For staging env, we use Google Cloud Storage
+DEFAULT_FILE_STORAGE = env("DEFAULT_FILE_STORAGE")
+if DEFAULT_FILE_STORAGE == "storages.backends.gcloud.GoogleCloudStorage":
+    GS_BUCKET_NAME = env("GS_BUCKET_NAME")
+    GOOGLE_APPLICATION_CREDENTIALS = env("GOOGLE_APPLICATION_CREDENTIALS")
+# For prod, it's Azure Storage
+elif DEFAULT_FILE_STORAGE == "storages.backends.azure_storage.AzureStorage":
+    AZURE_ACCOUNT_NAME = env("AZURE_ACCOUNT_NAME")
+    AZURE_ACCOUNT_KEY = env("AZURE_ACCOUNT_KEY")
+    AZURE_CONTAINER = env("AZURE_CONTAINER")
 
 ROOT_URLCONF = "kukkuu.urls"
 WSGI_APPLICATION = "kukkuu.wsgi.application"
