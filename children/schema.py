@@ -48,8 +48,10 @@ class ChildNode(DjangoObjectType):
 
     def resolve_past_events(self, info, **kwargs):
         # TODO: Only return events of the same project
-        return Event.objects.user_can_view(info.context.user).filter(
-            occurrences__time__lt=timezone.now()
+        return (
+            Event.objects.user_can_view(info.context.user)
+            .exclude(occurrences__time__gte=timezone.now())
+            .distinct()
         )
 
     def resolve_available_events(self, info, **kwargs):
