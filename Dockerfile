@@ -18,6 +18,8 @@ RUN apt-install.sh \
     && pip install --no-cache-dir  -r /app/requirements-prod.txt \
     && apt-cleanup.sh build-essential
 
+# Create var folder to store cronjob log
+RUN mkdir -p /app/var/
 RUN crontab -u appuser /app/crontab
 
 COPY --chown=appuser:appuser docker-entrypoint.sh /entrypoint/docker-entrypoint.sh
