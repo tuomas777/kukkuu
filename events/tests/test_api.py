@@ -392,6 +392,14 @@ def test_events_query_normal_user(snapshot, user_api_client, event):
     snapshot.assert_match(executed)
 
 
+def test_events_query_staff_user(snapshot, staff_api_client, event, unpublished_event):
+    OccurrenceFactory(event=event)
+    OccurrenceFactory(event=unpublished_event)
+    executed = staff_api_client.execute(EVENTS_QUERY)
+
+    snapshot.assert_match(executed)
+
+
 def test_event_query_unauthenticated(api_client, event):
     variables = {"id": to_global_id("EventNode", event.id)}
     executed = api_client.execute(EVENT_QUERY, variables=variables)
@@ -413,8 +421,18 @@ def test_occurrences_query_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_occurrences_query_normal_user(snapshot, user_api_client, occurrence):
+def test_occurrences_query_normal_user(
+    snapshot, user_api_client, occurrence, unpublished_occurrence
+):
     executed = user_api_client.execute(OCCURRENCES_QUERY)
+
+    snapshot.assert_match(executed)
+
+
+def test_occurrences_query_staff_user(
+    snapshot, staff_api_client, occurrence, unpublished_occurrence
+):
+    executed = staff_api_client.execute(OCCURRENCES_QUERY)
 
     snapshot.assert_match(executed)
 
@@ -830,9 +848,11 @@ def test_occurrences_filter_by_upcoming(user_api_client, snapshot, event):
     snapshot.assert_match(executed)
 
 
-def test_occurrences_filter_by_venue(user_api_client, snapshot):
-    occurrences = OccurrenceFactory.create_batch(2, venue=VenueFactory())
-    another_occurrences = OccurrenceFactory.create_batch(3, venue=VenueFactory())
+def test_occurrences_filter_by_venue(user_api_client, snapshot, event):
+    occurrences = OccurrenceFactory.create_batch(2, venue=VenueFactory(), event=event)
+    another_occurrences = OccurrenceFactory.create_batch(
+        3, venue=VenueFactory(), event=event
+    )
 
     variables = {"venueId": to_global_id("VenueNode", occurrences[0].venue.id)}
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)

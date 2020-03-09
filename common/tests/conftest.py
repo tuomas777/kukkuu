@@ -72,6 +72,11 @@ def occurrence():
     )
 
 
+@pytest.fixture
+def unpublished_occurrence():
+    return OccurrenceFactory(time=timezone.now(), event=EventFactory())
+
+
 def _create_api_client_with_user(user):
     request = RequestFactory().post("/graphql")
     request.user = user

@@ -277,18 +277,10 @@ snapshots["test_get_past_events 1"] = {
                         "node": {
                             "createdAt": "2020-12-12T00:00:00+00:00",
                             "occurrences": {
-                                "edges": [{"node": {"remainingCapacity": 697}}]
+                                "edges": [{"node": {"remainingCapacity": 729}}]
                             },
                         }
-                    },
-                    {
-                        "node": {
-                            "createdAt": "2020-12-12T00:00:00+00:00",
-                            "occurrences": {
-                                "edges": [{"node": {"remainingCapacity": 735}}]
-                            },
-                        }
-                    },
+                    }
                 ]
             },
         }
