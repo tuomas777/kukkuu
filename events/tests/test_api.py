@@ -14,6 +14,7 @@ from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_permission_denied
 from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from events.models import Enrolment, Event, Occurrence
+from venues.factories import VenueFactory
 
 
 @pytest.fixture(autouse=True)
@@ -141,8 +142,8 @@ query Occurrences {
 """
 
 OCCURRENCES_FILTER_QUERY = """
-query Occurrences($date: Date, $time: Time, $upcoming: Boolean) {
-  occurrences(date: $date, time: $time, upcoming: $upcoming) {
+query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String) {
+  occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId) {
     edges {
       node {
         time
@@ -813,6 +814,22 @@ def test_occurrences_filter_by_upcoming(user_api_client, snapshot):
     variables = {"upcoming": False}
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
     assert len(executed["data"]["occurrences"]["edges"]) == 2
+
+    snapshot.assert_match(executed)
+
+
+def test_occurrences_filter_by_venue(user_api_client, snapshot):
+    occurrences = OccurrenceFactory.create_batch(2, venue=VenueFactory())
+    another_occurrences = OccurrenceFactory.create_batch(3, venue=VenueFactory())
+
+    variables = {"venueId": to_global_id("VenueNode", occurrences[0].venue.id)}
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
+    assert len(executed["data"]["occurrences"]["edges"]) == len(occurrences)
+
+    variables = {"venueId": to_global_id("VenueNode", another_occurrences[0].venue.id)}
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
+    assert len(executed["data"]["occurrences"]["edges"]) == len(another_occurrences)
+
     snapshot.assert_match(executed)
 
 

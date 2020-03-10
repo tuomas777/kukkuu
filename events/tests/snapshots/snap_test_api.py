@@ -403,3 +403,15 @@ snapshots["test_occurrences_filter_by_upcoming 1"] = {
         }
     }
 }
+
+snapshots["test_occurrences_filter_by_venue 1"] = {
+    "data": {
+        "occurrences": {
+            "edges": [
+                {"node": {"time": "1979-09-06T12:02:19+00:00"}},
+                {"node": {"time": "2016-07-22T13:33:38+00:00"}},
+                {"node": {"time": "2019-04-01T18:42:35+00:00"}},
+            ]
+        }
+    }
+}
