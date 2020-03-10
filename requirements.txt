@@ -5,6 +5,7 @@
 #    pip-compile requirements.in
 #
 aniso8601==7.0.0          # via graphene
+cachetools==4.0.0         # via google-auth
 certifi==2019.9.11        # via requests, sentry-sdk
 chardet==3.0.4            # via requests
 django-anymail==7.0.0     # via django-ilmoitin
@@ -17,6 +18,7 @@ django-helusers==0.5.6
 django-ilmoitin==0.4.0
 django-mailer==2.0        # via django-ilmoitin
 django-parler==1.9.2
+django-storages[google]==1.9.1
 django==2.2.10
 djangorestframework==3.10.3  # via drf-oidc-auth
 drf-oidc-auth==0.9        # via django-helusers
@@ -24,6 +26,12 @@ ecdsa==0.13.3             # via python-jose
 factory-boy==2.12.0
 faker==2.0.4              # via factory-boy
 future==0.17.1            # via pyjwkest, python-jose
+google-api-core==1.16.0   # via google-cloud-core
+google-auth==1.11.2       # via google-api-core, google-cloud-storage
+google-cloud-core==1.3.0  # via google-cloud-storage
+google-cloud-storage==1.26.0  # via django-storages
+google-resumable-media==0.5.0  # via google-cloud-storage
+googleapis-common-protos==1.51.0  # via google-api-core
 graphene-django==2.6.0
 graphene-file-upload==1.2.2
 graphene==2.1.8           # via graphene-django
@@ -35,20 +43,25 @@ lockfile==0.12.2          # via django-mailer
 markupsafe==1.1.1         # via jinja2
 pillow==7.0.0
 promise==2.2.1            # via graphene-django, graphql-core, graphql-relay
+protobuf==3.11.3          # via google-api-core, googleapis-common-protos
 psycopg2==2.8.4
-pyasn1==0.4.7             # via rsa
+pyasn1-modules==0.2.8     # via google-auth
+pyasn1==0.4.7             # via pyasn1-modules, rsa
 pycryptodomex==3.9.0      # via pyjwkest
 pyjwkest==1.4.2           # via drf-oidc-auth
 pyjwt==1.7.1              # via django-graphql-jwt
 python-dateutil==2.8.1    # via faker
 python-jose==3.0.1        # via django-helusers
-pytz==2019.3              # via django
-requests==2.22.0          # via django-anymail, django-helusers, pyjwkest
-rsa==4.0                  # via python-jose
+pytz==2019.3              # via django, google-api-core
+requests==2.22.0          # via django-anymail, django-helusers, google-api-core, pyjwkest
+rsa==4.0                  # via google-auth, python-jose
 rx==1.6.1                 # via graphql-core
 sentry-sdk==0.12.3
 singledispatch==3.4.0.3   # via graphene-django
-six==1.12.0               # via django-anymail, django-mailer, faker, graphene, graphene-django, graphene-file-upload, graphql-core, graphql-relay, promise, pyjwkest, python-dateutil, python-jose, singledispatch
+six==1.12.0               # via django-anymail, django-mailer, faker, google-api-core, google-auth, google-resumable-media, graphene, graphene-django, graphene-file-upload, graphql-core, graphql-relay, promise, protobuf, pyjwkest, python-dateutil, python-jose, singledispatch
 sqlparse==0.3.0           # via django
 text-unidecode==1.3       # via faker
 urllib3==1.25.6           # via requests, sentry-sdk
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools
