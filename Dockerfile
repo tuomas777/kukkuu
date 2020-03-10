@@ -5,22 +5,16 @@ RUN mkdir /entrypoint
 
 COPY --chown=appuser:appuser requirements.txt /app/requirements.txt
 COPY --chown=appuser:appuser requirements-prod.txt /app/requirements-prod.txt
-COPY --chown=appuser:appuser crontab /app/crontab
 
 RUN apt-install.sh \
         git \
         netcat \
         libpq-dev \
         build-essential \
-        cron \
     && pip install -U pip \
     && pip install --no-cache-dir -r /app/requirements.txt \
     && pip install --no-cache-dir  -r /app/requirements-prod.txt \
     && apt-cleanup.sh build-essential
-
-# Create var folder to store cronjob log
-RUN mkdir -p /app/var/
-RUN crontab -u appuser /app/crontab
 
 COPY --chown=appuser:appuser docker-entrypoint.sh /entrypoint/docker-entrypoint.sh
 ENTRYPOINT ["/entrypoint/docker-entrypoint.sh"]
@@ -39,6 +33,7 @@ ENV DEV_SERVER=1
 
 COPY --chown=appuser:appuser . /app/
 
+USER appuser
 EXPOSE 8081/tcp
 
 # ==============================
@@ -49,4 +44,5 @@ COPY --chown=appuser:appuser . /app/
 
 RUN SECRET_KEY="only-used-for-collectstatic" python manage.py collectstatic
 
+USER appuser
 EXPOSE 8000/tcp
