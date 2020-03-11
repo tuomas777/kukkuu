@@ -4,7 +4,6 @@ import pytest
 from graphql_relay import to_global_id
 
 from common.tests.utils import assert_permission_denied
-from events.factories import OccurrenceFactory
 from venues.models import Venue
 
 
@@ -196,7 +195,6 @@ def test_venues_query_unauthenticated(api_client):
 
 
 def test_venues_query_normal_user(snapshot, user_api_client, venue):
-    OccurrenceFactory(venue=venue)
     executed = user_api_client.execute(VENUES_QUERY)
 
     snapshot.assert_match(executed)
@@ -210,7 +208,6 @@ def test_venue_query_unauthenticated(api_client, venue):
 
 
 def test_venue_query_normal_user(snapshot, user_api_client, venue):
-    OccurrenceFactory(venue=venue)
     variables = {"id": to_global_id("VenueNode", venue.id)}
     executed = user_api_client.execute(VENUE_QUERY, variables=variables)
 

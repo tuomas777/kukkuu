@@ -20,32 +20,7 @@ Whiteview, TN 11309""",
                         "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
 Page box child care any concern. Defense level church use.""",
                         "name": "Free heart significant machine try.",
-                        "occurrences": {
-                            "edges": [
-                                {
-                                    "node": {
-                                        "event": {
-                                            "capacityPerOccurrence": 712,
-                                            "duration": 300,
-                                            "image": "http://testserver/media/hand.jpg",
-                                            "participantsPerInvite": "CHILD_AND_GUARDIAN",
-                                            "publishedAt": None,
-                                            "translations": [
-                                                {
-                                                    "description": """Leg simple various be various. College able physical almost. Audience actually send address attorney candidate. Rock tough plant traditional.
-Build natural middle however.""",
-                                                    "languageCode": "EN",
-                                                    "name": "Think turn argue present. Spend prevent pressure point exist.",
-                                                    "shortDescription": "Others not authority develop identify ready.",
-                                                }
-                                            ],
-                                        },
-                                        "remainingCapacity": 712,
-                                        "time": "1984-07-02T07:57:10+00:00",
-                                    }
-                                }
-                            ]
-                        },
+                        "occurrences": {"edges": []},
                         "translations": [
                             {
                                 "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
@@ -79,32 +54,7 @@ Whiteview, TN 11309""",
             "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
 Page box child care any concern. Defense level church use.""",
             "name": "Free heart significant machine try.",
-            "occurrences": {
-                "edges": [
-                    {
-                        "node": {
-                            "event": {
-                                "capacityPerOccurrence": 712,
-                                "duration": 300,
-                                "image": "http://testserver/media/hand.jpg",
-                                "participantsPerInvite": "CHILD_AND_GUARDIAN",
-                                "publishedAt": None,
-                                "translations": [
-                                    {
-                                        "description": """Leg simple various be various. College able physical almost. Audience actually send address attorney candidate. Rock tough plant traditional.
-Build natural middle however.""",
-                                        "languageCode": "EN",
-                                        "name": "Think turn argue present. Spend prevent pressure point exist.",
-                                        "shortDescription": "Others not authority develop identify ready.",
-                                    }
-                                ],
-                            },
-                            "remainingCapacity": 712,
-                            "time": "1984-07-02T07:57:10+00:00",
-                        }
-                    }
-                ]
-            },
+            "occurrences": {"edges": []},
             "translations": [
                 {
                     "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",

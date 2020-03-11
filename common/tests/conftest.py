@@ -52,6 +52,11 @@ def guardian_api_client():
 
 @pytest.fixture
 def event():
+    return EventFactory(published_at=timezone.now())
+
+
+@pytest.fixture
+def unpublished_event():
     return EventFactory()
 
 
@@ -62,7 +67,14 @@ def venue():
 
 @pytest.fixture
 def occurrence():
-    return OccurrenceFactory(time=timezone.now())
+    return OccurrenceFactory(
+        time=timezone.now(), event=EventFactory(published_at=timezone.now())
+    )
+
+
+@pytest.fixture
+def unpublished_occurrence():
+    return OccurrenceFactory(time=timezone.now(), event=EventFactory())
 
 
 def _create_api_client_with_user(user):

@@ -60,12 +60,15 @@ def notification_template_occurrence_unenrolment_fi():
 
 @pytest.mark.django_db
 def test_event_publish_notification(
-    snapshot, staff_api_client, notification_template_event_published_fi, event
+    snapshot,
+    staff_api_client,
+    notification_template_event_published_fi,
+    unpublished_event,
 ):
     GuardianFactory(language="fi")
     children = ChildWithGuardianFactory.create_batch(3)
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
-    event_variables["input"]["id"] = to_global_id("EventNode", event.id)
+    event_variables["input"]["id"] = to_global_id("EventNode", unpublished_event.id)
     staff_api_client.execute(PUBLISH_EVENT_MUTATION, variables=event_variables)
     assert len(mail.outbox) == len(children)
 
