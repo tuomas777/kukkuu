@@ -1,11 +1,6 @@
-## 0.1.0 - 29 Jan 2020
-### Added
-- API for signup/login and query my profile
-- Send notifications when signed up successfully
-- API to query, add, update and remove children
-- API to query, add, update and remove events
-- API to query, add, update and remove occurrences
-- API to query, add, update and remove venues
+<!-- REMINDER: While updating changelog, also remember to update
+the version in kukkuu/__init.py__ -->
+
 
 ## [0.2.0] - 17 Feb 2020
 ### Added
@@ -19,6 +14,17 @@
 - Update API to support nested fields update/delete
 ### Fixed
 - Fix API queries to use RelationshipTypeEnum like mutations do
+
+
+
+## 0.1.0 - 29 Jan 2020
+### Added
+- API for signup/login and query my profile
+- Send notifications when signed up successfully
+- API to query, add, update and remove children
+- API to query, add, update and remove events
+- API to query, add, update and remove occurrences
+- API to query, add, update and remove venues
 
 
 
