@@ -46,6 +46,7 @@ env = environ.Env(
     DEFAULT_FILE_STORAGE=(str, "django.core.files.storage.FileSystemStorage"),
     GS_BUCKET_NAME=(str, ""),
     GOOGLE_APPLICATION_CREDENTIALS=(str, ""),
+    GS_DEFAULT_ACL=(str, "publicRead"),
     AZURE_ACCOUNT_NAME=(str, ""),
     AZURE_ACCOUNT_KEY=(str, ""),
     AZURE_CONTAINER=(str, ""),
@@ -103,6 +104,7 @@ DEFAULT_FILE_STORAGE = env("DEFAULT_FILE_STORAGE")
 if DEFAULT_FILE_STORAGE == "storages.backends.gcloud.GoogleCloudStorage":
     GS_BUCKET_NAME = env("GS_BUCKET_NAME")
     GOOGLE_APPLICATION_CREDENTIALS = env("GOOGLE_APPLICATION_CREDENTIALS")
+    GS_DEFAULT_ACL = env("GS_DEFAULT_ACL")
 # For prod, it's Azure Storage
 elif DEFAULT_FILE_STORAGE == "storages.backends.azure_storage.AzureStorage":
     AZURE_ACCOUNT_NAME = env("AZURE_ACCOUNT_NAME")
