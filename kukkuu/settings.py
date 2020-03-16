@@ -83,13 +83,13 @@ ILMOITIN_TRANSLATED_FROM_EMAIL = env("ILMOITIN_TRANSLATED_FROM_EMAIL")
 ILMOITIN_QUEUE_NOTIFICATIONS = env("ILMOITIN_QUEUE_NOTIFICATIONS")
 
 try:
-    version = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
+    REVISION = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
 except Exception:
-    version = "n/a"
+    REVISION = "n/a"
 
 sentry_sdk.init(
     dsn=env.str("SENTRY_DSN"),
-    release=version,
+    release=REVISION,
     environment=env("SENTRY_ENVIRONMENT"),
     integrations=[DjangoIntegration()],
 )
