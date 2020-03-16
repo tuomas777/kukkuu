@@ -13,11 +13,13 @@ snapshots["test_add_event_staff_user 1"] = {
                 "capacityPerOccurrence": 30,
                 "duration": 1000,
                 "image": "",
+                "imageAltText": "Image alt text",
                 "participantsPerInvite": "FAMILY",
                 "publishedAt": None,
                 "translations": [
                     {
                         "description": "desc",
+                        "imageAltText": "Image alt text",
                         "languageCode": "FI",
                         "name": "Event test",
                         "shortDescription": "Short desc",
@@ -46,11 +48,14 @@ snapshots["test_update_event_staff_user 1"] = {
             "event": {
                 "capacityPerOccurrence": 30,
                 "duration": 1000,
+                "image": "http://testserver/media/spring.jpg",
+                "imageAltText": "",
                 "occurrences": {"edges": []},
                 "participantsPerInvite": "FAMILY",
                 "translations": [
                     {
                         "description": "desc",
+                        "imageAltText": "Image alt text",
                         "languageCode": "SV",
                         "name": "Event test in suomi",
                         "shortDescription": "Short desc",
@@ -58,6 +63,7 @@ snapshots["test_update_event_staff_user 1"] = {
                     {
                         "description": """Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
+                        "imageAltText": "",
                         "languageCode": "FI",
                         "name": "Free heart significant machine try.",
                         "shortDescription": "Perform in weight success answer.",
@@ -259,6 +265,7 @@ snapshots["test_events_query_normal_user 1"] = {
 Agree room laugh prevent make. Our very television beat at success decade.""",
                         "duration": 197,
                         "image": "http://testserver/media/spring.jpg",
+                        "imageAltText": "",
                         "name": "Free heart significant machine try.",
                         "occurrences": {
                             "edges": [
@@ -286,6 +293,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                             {
                                 "description": """Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
+                                "imageAltText": "",
                                 "languageCode": "FI",
                                 "name": "Free heart significant machine try.",
                                 "shortDescription": "Perform in weight success answer.",
@@ -308,6 +316,7 @@ snapshots["test_event_query_normal_user 1"] = {
 Agree room laugh prevent make. Our very television beat at success decade.""",
             "duration": 197,
             "image": "http://testserver/media/spring.jpg",
+            "imageAltText": "",
             "name": "Free heart significant machine try.",
             "occurrences": {
                 "edges": [
@@ -335,6 +344,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                 {
                     "description": """Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
+                    "imageAltText": "",
                     "languageCode": "FI",
                     "name": "Free heart significant machine try.",
                     "shortDescription": "Perform in weight success answer.",
@@ -416,6 +426,7 @@ snapshots["test_events_query_staff_user 1"] = {
 Agree room laugh prevent make. Our very television beat at success decade.""",
                         "duration": 197,
                         "image": "http://testserver/media/spring.jpg",
+                        "imageAltText": "",
                         "name": "Free heart significant machine try.",
                         "occurrences": {
                             "edges": [
@@ -443,6 +454,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                             {
                                 "description": """Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
+                                "imageAltText": "",
                                 "languageCode": "FI",
                                 "name": "Free heart significant machine try.",
                                 "shortDescription": "Perform in weight success answer.",
@@ -459,6 +471,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
 If his their best. Election stay every something base.""",
                         "duration": 42,
                         "image": "http://testserver/media/think.jpg",
+                        "imageAltText": "",
                         "name": "Able process base sing according.",
                         "occurrences": {
                             "edges": [
@@ -487,6 +500,7 @@ Conference thing much like test.""",
                             {
                                 "description": """Wonder everything pay parent theory go home. Book and interesting sit future dream party. Truth list pressure stage history.
 If his their best. Election stay every something base.""",
+                                "imageAltText": "",
                                 "languageCode": "FI",
                                 "name": "Able process base sing according.",
                                 "shortDescription": "Later evening southern would according strong.",

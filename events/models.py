@@ -30,6 +30,9 @@ class Event(TimestampedModel, TranslatableModel):
             verbose_name=_("short description"), blank=True
         ),
         description=models.TextField(verbose_name=_("description"), blank=True),
+        image_alt_text=models.CharField(
+            verbose_name=_("image alt text"), blank=True, max_length=255
+        ),
     )
     image = models.ImageField(blank=True, verbose_name=_("image"))
     participants_per_invite = models.CharField(
