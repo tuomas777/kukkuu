@@ -25,7 +25,7 @@ class Event(TimestampedModel, TranslatableModel):
     )
 
     translations = TranslatedFields(
-        name=models.CharField(verbose_name=_("name"), max_length=255),
+        name=models.CharField(verbose_name=_("name"), max_length=255, blank=True),
         short_description=models.TextField(
             verbose_name=_("short description"), blank=True
         ),

@@ -7,7 +7,7 @@ from common.models import TimestampedModel, TranslatableModel
 
 class Venue(TimestampedModel, TranslatableModel):
     translations = TranslatedFields(
-        name=models.CharField(verbose_name=_("name"), max_length=255),
+        name=models.CharField(verbose_name=_("name"), max_length=255, blank=True),
         description=models.TextField(verbose_name=_("description"), blank=True),
         address=models.CharField(
             verbose_name=_("address"), max_length=1000, blank=True
