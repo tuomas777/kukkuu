@@ -31,6 +31,7 @@ query Events {
           name
           description
           shortDescription
+          imageAltText
           languageCode
         }
         name
@@ -38,6 +39,7 @@ query Events {
         shortDescription
         duration
         image
+        imageAltText
         participantsPerInvite
         capacityPerOccurrence
         publishedAt
@@ -72,12 +74,14 @@ query Event($id:ID!) {
       name
       shortDescription
       description
+      imageAltText
       languageCode
     }
     name
     description
     shortDescription
     image
+    imageAltText
     participantsPerInvite
     capacityPerOccurrence
     publishedAt
@@ -204,10 +208,12 @@ mutation AddEvent($input: AddEventMutationInput!) {
         languageCode
         name
         description
+        imageAltText
         shortDescription
       }
       duration
       image
+      imageAltText
       participantsPerInvite
       capacityPerOccurrence
       publishedAt
@@ -223,6 +229,7 @@ ADD_EVENT_VARIABLES = {
                 "name": "Event test",
                 "shortDescription": "Short desc",
                 "description": "desc",
+                "imageAltText": "Image alt text",
                 "languageCode": "FI",
             }
         ],
@@ -240,8 +247,11 @@ mutation UpdateEvent($input: UpdateEventMutationInput!) {
         name
         shortDescription
         description
+        imageAltText
         languageCode
       }
+      image
+      imageAltText
       participantsPerInvite
       capacityPerOccurrence
       duration
@@ -265,6 +275,7 @@ UPDATE_EVENT_VARIABLES = {
                 "name": "Event test in suomi",
                 "shortDescription": "Short desc",
                 "description": "desc",
+                "imageAltText": "Image alt text",
                 "languageCode": "SV",
             }
         ],

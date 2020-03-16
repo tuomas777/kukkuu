@@ -46,6 +46,7 @@ class EventNode(DjangoObjectType):
     name = graphene.String()
     description = graphene.String()
     short_description = graphene.String()
+    image_alt_text = graphene.String()
 
     class Meta:
         model = Event
@@ -126,6 +127,7 @@ class EventTranslationsInput(graphene.InputObjectType):
     name = graphene.String(required=True)
     short_description = graphene.String()
     description = graphene.String()
+    image_alt_text = graphene.String()
     language_code = LanguageEnum(required=True)
 
 
