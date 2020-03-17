@@ -47,6 +47,7 @@ env = environ.Env(
     GS_BUCKET_NAME=(str, ""),
     GOOGLE_APPLICATION_CREDENTIALS=(str, ""),
     GS_DEFAULT_ACL=(str, "publicRead"),
+    GS_FILE_OVERWRITE=(bool, False),
     AZURE_ACCOUNT_NAME=(str, ""),
     AZURE_ACCOUNT_KEY=(str, ""),
     AZURE_CONTAINER=(str, ""),
@@ -105,6 +106,7 @@ if DEFAULT_FILE_STORAGE == "storages.backends.gcloud.GoogleCloudStorage":
     GS_BUCKET_NAME = env("GS_BUCKET_NAME")
     GOOGLE_APPLICATION_CREDENTIALS = env("GOOGLE_APPLICATION_CREDENTIALS")
     GS_DEFAULT_ACL = env("GS_DEFAULT_ACL")
+    GS_FILE_OVERWRITE = env("GS_FILE_OVERWRITE")
 # For prod, it's Azure Storage
 elif DEFAULT_FILE_STORAGE == "storages.backends.azure_storage.AzureStorage":
     AZURE_ACCOUNT_NAME = env("AZURE_ACCOUNT_NAME")
