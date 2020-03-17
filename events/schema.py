@@ -124,7 +124,7 @@ class EnrolmentNode(DjangoObjectType):
 
 
 class EventTranslationsInput(graphene.InputObjectType):
-    name = graphene.String(required=True)
+    name = graphene.String()
     short_description = graphene.String()
     description = graphene.String()
     image_alt_text = graphene.String()
