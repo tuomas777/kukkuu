@@ -11,9 +11,17 @@ from graphql_relay import to_global_id
 from parler.utils.context import switch_language
 
 from children.factories import ChildWithGuardianFactory
-from common.tests.utils import assert_permission_denied
+from common.tests.utils import assert_match_error_code, assert_permission_denied
 from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from events.models import Enrolment, Event, Occurrence
+from kukkuu.consts import (
+    CHILD_ALREADY_JOINED_EVENT_ERROR,
+    EVENT_ALREADY_PUBLISHED_ERROR,
+    GENERAL_ERROR,
+    OBJECT_DOES_NOT_EXIST_ERROR,
+    OCCURRENCE_IS_FULL_ERROR,
+    PAST_OCCURRENCE_ERROR,
+)
 from venues.factories import VenueFactory
 
 
@@ -615,7 +623,10 @@ def test_update_event_translations(staff_api_client, event):
     executed = staff_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
     )
-    assert "got invalid value" in str(executed["errors"])
+
+    # GraphQL input error for missing/invalid required fields
+    assert_match_error_code(executed, GENERAL_ERROR)
+    assert "languageCode" in str(executed["errors"])
 
 
 def test_upload_image_to_event(staff_api_client, snapshot):
@@ -643,7 +654,8 @@ def test_staff_publish_event(snapshot, staff_api_client, unpublished_event):
     executed = staff_api_client.execute(
         PUBLISH_EVENT_MUTATION, variables=event_variables
     )
-    assert "Event is already published" in str(executed["errors"])
+
+    assert_match_error_code(executed, EVENT_ALREADY_PUBLISHED_ERROR)
 
 
 def test_enrol_occurrence(api_client, guardian_api_client, snapshot, occurrence):
@@ -684,7 +696,7 @@ def test_already_enroled_occurrence(guardian_api_client, snapshot, occurrence):
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
     )
 
-    assert "Child already joined this event" in str(executed["errors"])
+    assert_match_error_code(executed, CHILD_ALREADY_JOINED_EVENT_ERROR)
 
 
 def test_enrol_occurrence_not_allowed(guardian_api_client, snapshot, occurrence):
@@ -698,7 +710,7 @@ def test_enrol_occurrence_not_allowed(guardian_api_client, snapshot, occurrence)
     executed = guardian_api_client.execute(
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
     )
-    assert "does not exist" in str(executed["errors"])
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
 
 
 def test_unenrol_occurrence(api_client, user_api_client, snapshot, occurrence):
@@ -727,7 +739,7 @@ def test_unenrol_occurrence(api_client, user_api_client, snapshot, occurrence):
     executed = user_api_client.execute(
         UNENROL_OCCURRENCE_MUTATION, variables=unenrolment_variables
     )
-    assert "does not exist" in str(executed["errors"])
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
     assert Enrolment.objects.count() == 2
     assert child.occurrences.count() == 1
     assert random_child.occurrences.count() == 1
@@ -759,7 +771,8 @@ def test_maximum_enrolment(guardian_api_client, occurrence):
     executed = guardian_api_client.execute(
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
     )
-    assert "Maximum enrolments created" in str(executed["errors"])
+
+    assert_match_error_code(executed, OCCURRENCE_IS_FULL_ERROR)
 
 
 def test_invalid_occurrence_enrolment(guardian_api_client):
@@ -777,7 +790,8 @@ def test_invalid_occurrence_enrolment(guardian_api_client):
     executed = guardian_api_client.execute(
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
     )
-    assert "Cannot join occurrence in the past" in str(executed["errors"])
+
+    assert_match_error_code(executed, PAST_OCCURRENCE_ERROR)
 
 
 def test_normal_translation_fields(snapshot, user_api_client, event):

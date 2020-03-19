@@ -10,6 +10,7 @@ from graphene.test import Client
 
 from events.factories import EventFactory, OccurrenceFactory
 from kukkuu.schema import schema
+from kukkuu.views import SentryGraphQLView
 from users.factories import GuardianFactory, UserFactory
 from venues.factories import VenueFactory
 
@@ -80,6 +81,8 @@ def unpublished_occurrence():
 def _create_api_client_with_user(user):
     request = RequestFactory().post("/graphql")
     request.user = user
-    client = Client(schema, context=request)
+    client = Client(
+        schema, context=request, format_error=SentryGraphQLView.format_error
+    )
     client.user = user
     return client
