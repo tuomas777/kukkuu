@@ -9,7 +9,7 @@ from graphql_jwt.decorators import login_required, staff_member_required
 from graphql_relay import from_global_id
 
 from common.utils import update_object_with_translations
-from kukkuu.exceptions import KukkuuGraphQLError
+from kukkuu.exceptions import ObjectDoesNotExistError
 from users.schema import LanguageEnum
 from venues.models import Venue
 
@@ -105,7 +105,7 @@ class UpdateVenueMutation(graphene.relay.ClientIDMutation):
             venue = Venue.objects.get(pk=from_global_id(venue_global_id)[1])
             update_object_with_translations(venue, kwargs)
         except Venue.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
         return UpdateVenueMutation(venue=venue)
 
 
@@ -123,7 +123,7 @@ class DeleteVenueMutation(graphene.relay.ClientIDMutation):
             venue = Venue.objects.get(pk=venue_id)
             venue.delete()
         except Venue.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
         return DeleteVenueMutation()
 
 

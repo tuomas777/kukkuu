@@ -16,7 +16,12 @@ from children.notifications import NotificationType
 from common.utils import update_object
 from events.models import Event
 from events.schema import EventConnection
-from kukkuu.exceptions import KukkuuGraphQLError
+from kukkuu.exceptions import (
+    ApiUsageError,
+    DataValidationError,
+    MaxNumberOfChildrenPerGuardianError,
+    ObjectDoesNotExistError,
+)
 from users.models import Guardian
 from users.schema import GuardianNode, LanguageEnum
 
@@ -108,14 +113,14 @@ def validate_child_data(child_data):
         try:
             postal_code_validator(child_data["postal_code"])
         except ValidationError as e:
-            raise KukkuuGraphQLError(e.message)
+            raise DataValidationError(e.message)
     # TODO temporarily hard-coded until further specs are figured out
     if "birthdate" in child_data:
         if (
             child_data["birthdate"].year != 2020
             or child_data["birthdate"] > localtime(now()).date()
         ):
-            raise KukkuuGraphQLError("Illegal birthdate.")
+            raise DataValidationError("Illegal birthdate.")
     return child_data
 
 
@@ -137,14 +142,14 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         if hasattr(user, "guardian"):
-            raise KukkuuGraphQLError("You have already used this mutation.")
+            raise ApiUsageError("You have already used this mutation.")
 
         children_data = kwargs["children"]
         if not children_data:
-            raise KukkuuGraphQLError("At least one child is required.")
+            raise ApiUsageError("At least one child is required.")
 
         if len(children_data) > settings.KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN:
-            raise KukkuuGraphQLError("Too many children.")
+            raise MaxNumberOfChildrenPerGuardianError("Too many children.")
 
         guardian_data = kwargs["guardian"]
         guardian = Guardian.objects.create(
@@ -193,14 +198,14 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         if not hasattr(user, "guardian"):
-            raise KukkuuGraphQLError(
+            raise ApiUsageError(
                 'You need to use "SubmitChildrenAndGuardianMutation" first.'
             )
         if (
             user.guardian.children.count()
             >= settings.KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN
         ):
-            raise KukkuuGraphQLError("Too many children.")
+            raise MaxNumberOfChildrenPerGuardianError("Too many children.")
 
         validate_child_data(kwargs)
         user = info.context.user
@@ -238,7 +243,7 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
                 pk=from_global_id(child_global_id)[1]
             )
         except Child.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
 
         try:
             relationship = child.relationships.get(guardian__user=user)
@@ -266,7 +271,7 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
                 pk=from_global_id(kwargs["id"])[1]
             )
         except Child.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
 
         child.delete()
 

@@ -8,7 +8,7 @@ from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 
 from common.utils import update_object
-from kukkuu.exceptions import KukkuuGraphQLError
+from kukkuu.exceptions import ObjectDoesNotExistError
 
 from .models import Guardian
 
@@ -67,7 +67,7 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         try:
             guardian = user.guardian
         except Guardian.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
 
         update_object(guardian, kwargs)
 
