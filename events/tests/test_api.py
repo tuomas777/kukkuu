@@ -16,8 +16,10 @@ from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from events.models import Enrolment, Event, Occurrence
 from kukkuu.consts import (
     CHILD_ALREADY_JOINED_EVENT_ERROR,
+    DELETE_DEFAULT_TRANSLATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
     GENERAL_ERROR,
+    MISSING_DEFAULT_TRANSLATION_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
     OCCURRENCE_IS_FULL_ERROR,
     PAST_OCCURRENCE_ERROR,
@@ -921,7 +923,7 @@ def test_required_translation(staff_api_client, snapshot):
     variable = deepcopy(ADD_EVENT_VARIABLES)
     variable["input"]["translations"][0]["languageCode"] = "SV"
     executed = staff_api_client.execute(ADD_EVENT_MUTATION, variables=variable)
-    assert "without default translation" in str(executed["errors"])
+    assert_match_error_code(executed, MISSING_DEFAULT_TRANSLATION_ERROR)
     variable["input"]["translations"][0]["languageCode"] = "FI"
     executed = staff_api_client.execute(ADD_EVENT_MUTATION, variables=variable)
     snapshot.assert_match(executed)
@@ -936,4 +938,4 @@ def test_required_translation(staff_api_client, snapshot):
     executed = staff_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
     )
-    assert "Cannot delete default" in str(executed["errors"])
+    assert_match_error_code(executed, DELETE_DEFAULT_TRANSLATION_ERROR)

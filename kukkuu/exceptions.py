@@ -38,3 +38,11 @@ class EventAlreadyPublishedError(KukkuuGraphQLError):
 
 class ObjectDoesNotExistError(KukkuuGraphQLError):
     """Object does not exist"""
+
+
+class MissingDefaultTranslationError(KukkuuGraphQLError):
+    """Missing default translation for translatable object"""
+
+
+class DeleteDefaultTranslationError(KukkuuGraphQLError):
+    """Cannot delete default language translation"""

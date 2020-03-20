@@ -8,7 +8,10 @@ from parler.models import TranslatableModel as ParlerTranslatableModel
 from parler.utils.context import switch_language
 
 from common.utils import update_object
-from kukkuu.exceptions import KukkuuGraphQLError
+from kukkuu.exceptions import (
+    DeleteDefaultTranslationError,
+    MissingDefaultTranslationError,
+)
 
 
 class TimestampedModel(models.Model):
@@ -65,8 +68,12 @@ class TranslatableModel(ParlerTranslatableModel):
             if not has_default_translation:
                 has_default_translation = language_code == settings.LANGUAGE_CODE
         if not has_default_translation:
-            raise KukkuuGraphQLError("Cannot create object without default translation")
+            raise MissingDefaultTranslationError(
+                "Cannot create object without default translation"
+            )
         if translations_to_delete:
             if settings.LANGUAGE_CODE in translations_to_delete:
-                raise KukkuuGraphQLError("Cannot delete default language code")
+                raise DeleteDefaultTranslationError(
+                    "Cannot delete default language code"
+                )
             self.delete_translations(translations_to_delete)
