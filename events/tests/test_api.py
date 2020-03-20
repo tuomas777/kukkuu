@@ -590,7 +590,6 @@ def test_delete_event_staff_user(staff_api_client, event):
 
 
 def test_update_event_translations(staff_api_client, event):
-    event = EventFactory()
     assert event.translations.count() == 1
     event_variables = deepcopy(UPDATE_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", event.id)
@@ -901,3 +900,26 @@ def test_enrolment_visibility(guardian_api_client, snapshot, occurrence):
     executed = guardian_api_client.execute(OCCURRENCE_QUERY, variables=variables)
     assert len(executed["data"]["occurrence"]["enrolments"]["edges"]) == 1
     snapshot.assert_match(executed)
+
+
+def test_required_translation(staff_api_client, snapshot):
+    # Finnish translation required when creating event
+    variable = deepcopy(ADD_EVENT_VARIABLES)
+    variable["input"]["translations"][0]["languageCode"] = "SV"
+    executed = staff_api_client.execute(ADD_EVENT_MUTATION, variables=variable)
+    assert "without default translation" in str(executed["errors"])
+    variable["input"]["translations"][0]["languageCode"] = "FI"
+    executed = staff_api_client.execute(ADD_EVENT_MUTATION, variables=variable)
+    snapshot.assert_match(executed)
+
+    # Test delete default translation
+    event = EventFactory()
+    if not event.has_translation("fi"):
+        event.create_translation(language_code="fi", **{"name": "Finnish translation"})
+    event_variables = deepcopy(UPDATE_EVENT_VARIABLES)
+    event_variables["input"]["deleteTranslations"] = ["FI"]
+    event_variables["input"]["id"] = to_global_id("EventNode", event.id)
+    executed = staff_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=event_variables
+    )
+    assert "Cannot delete default" in str(executed["errors"])

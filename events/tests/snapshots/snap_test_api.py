@@ -613,3 +613,27 @@ snapshots["test_occurrences_filter_by_venue 1"] = {
         }
     }
 }
+
+snapshots["test_required_translation 1"] = {
+    "data": {
+        "addEvent": {
+            "event": {
+                "capacityPerOccurrence": 30,
+                "duration": 1000,
+                "image": "",
+                "imageAltText": "Image alt text",
+                "participantsPerInvite": "FAMILY",
+                "publishedAt": None,
+                "translations": [
+                    {
+                        "description": "desc",
+                        "imageAltText": "Image alt text",
+                        "languageCode": "FI",
+                        "name": "Event test",
+                        "shortDescription": "Short desc",
+                    }
+                ],
+            }
+        }
+    }
+}
