@@ -10,8 +10,15 @@ from graphene.utils.str_converters import to_snake_case
 from graphql_relay import to_global_id
 
 from children.factories import ChildWithGuardianFactory
-from common.tests.utils import assert_permission_denied
+from common.tests.utils import assert_match_error_code, assert_permission_denied
 from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
+from kukkuu.consts import (
+    API_USAGE_ERROR,
+    DATA_VALIDATION_ERROR,
+    GENERAL_ERROR,
+    MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR,
+    OBJECT_DOES_NOT_EXIST_ERROR,
+)
 from users.models import Guardian
 
 from ..models import Child, Relationship
@@ -162,6 +169,7 @@ def test_submit_children_and_guardian_one_child_required(snapshot, user_api_clie
         SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
     )
 
+    assert_match_error_code(executed, API_USAGE_ERROR)
     assert "At least one child is required." in str(executed["errors"])
 
 
@@ -175,6 +183,7 @@ def test_submit_children_and_guardian_postal_code_validation(
         SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
     )
 
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
     assert "Postal code must be 5 digits" in str(executed["errors"])
 
 
@@ -188,6 +197,7 @@ def test_submit_children_and_guardian_birthdate_validation(
         SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
     )
 
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
     assert "Illegal birthdate." in str(executed["errors"])
 
 
@@ -197,6 +207,7 @@ def test_submit_children_and_guardian_can_be_done_only_once(guardian_api_client)
         variables=SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES,
     )
 
+    assert_match_error_code(executed, API_USAGE_ERROR)
     assert "You have already used this mutation." in str(executed["errors"])
 
 
@@ -211,6 +222,7 @@ def test_submit_children_and_guardian_children_limit(user_api_client, settings):
         SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables,
     )
 
+    assert_match_error_code(executed, MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR)
     assert "Too many children." in str(executed["errors"])
 
 
@@ -417,6 +429,8 @@ def test_add_child_mutation_birthdate_required(guardian_api_client):
     variables["input"].pop("birthdate")
     executed = guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
 
+    # GraphQL input error for missing required fields
+    assert_match_error_code(executed, GENERAL_ERROR)
     assert "birthdate" in str(executed["errors"])
     assert Child.objects.count() == 0
 
@@ -429,6 +443,7 @@ def test_add_child_mutation_postal_code_validation(
 
     executed = guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
 
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
     assert "Postal code must be 5 digits" in str(executed["errors"])
     assert Child.objects.count() == 0
 
@@ -440,7 +455,7 @@ def test_add_child_mutation_birthdate_validation(
     variables["input"]["birthdate"] = illegal_birthdate
 
     executed = guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
-
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
     assert "Illegal birthdate." in str(executed["errors"])
 
 
@@ -448,7 +463,7 @@ def test_add_child_mutation_requires_guardian(user_api_client):
     executed = user_api_client.execute(
         ADD_CHILD_MUTATION, variables=ADD_CHILD_VARIABLES
     )
-
+    assert_match_error_code(executed, API_USAGE_ERROR)
     assert 'You need to use "SubmitChildrenAndGuardianMutation" first.' in str(
         executed["errors"]
     )
@@ -465,7 +480,7 @@ def test_add_child_mutation_children_limit(guardian_api_client, settings):
         ADD_CHILD_MUTATION, variables=ADD_CHILD_VARIABLES
     )
 
-    assert "Too many children." in str(executed["errors"])
+    assert_match_error_code(executed, MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR)
 
 
 UPDATE_CHILD_MUTATION = """
@@ -533,7 +548,7 @@ def test_update_child_mutation_wrong_user(user_api_client):
 
     executed = user_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
 
-    assert "does not exist" in str(executed["errors"])
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
 
 
 def test_update_child_mutation_postal_code_validation(
@@ -591,7 +606,7 @@ def test_delete_child_mutation_wrong_user(snapshot, guardian_api_client):
 
     executed = guardian_api_client.execute(DELETE_CHILD_MUTATION, variables=variables)
 
-    assert "does not exist" in str(executed["errors"])
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
     assert Child.objects.count() == 1
 
 
