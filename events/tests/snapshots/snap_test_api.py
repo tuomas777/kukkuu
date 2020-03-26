@@ -642,3 +642,14 @@ snapshots["test_required_translation 1"] = {
         }
     }
 }
+
+snapshots["test_occurrences_filter_by_language 1"] = {
+    "data": {
+        "occurrences": {
+            "edges": [
+                {"node": {"time": "1970-01-05T18:13:40+00:00"}},
+                {"node": {"time": "1990-03-28T12:56:55+00:00"}},
+            ]
+        }
+    }
+}
