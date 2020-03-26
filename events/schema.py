@@ -92,6 +92,7 @@ class EventConnection(Connection):
 
 class OccurrenceNode(DjangoObjectType):
     remaining_capacity = graphene.Int()
+    occurrence_language = LanguageEnum(required=True)
 
     @classmethod
     @login_required
@@ -261,6 +262,7 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
         time = graphene.DateTime(required=True)
         event_id = graphene.GlobalID(required=True)
         venue_id = graphene.GlobalID(required=True)
+        occurrence_language = LanguageEnum()
 
     occurrence = graphene.Field(OccurrenceNode)
 
@@ -293,6 +295,7 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
         time = graphene.DateTime()
         event_id = graphene.GlobalID()
         venue_id = graphene.GlobalID()
+        occurrence_language = LanguageEnum()
 
     occurrence = graphene.Field(OccurrenceNode)
 

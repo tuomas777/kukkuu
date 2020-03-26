@@ -181,6 +181,7 @@ query Occurrence($id: ID!) {
     }
     time
     remainingCapacity
+    occurrenceLanguage
     event {
       translations {
         name
@@ -326,6 +327,7 @@ mutation AddOccurrence($input: AddOccurrenceMutationInput!) {
         createdAt
       }
       time
+      occurrenceLanguage
     }
   }
 }
@@ -347,6 +349,7 @@ mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
         createdAt
       }
       time
+      occurrenceLanguage
     }
   }
 }
@@ -359,6 +362,7 @@ UPDATE_OCCURRENCE_VARIABLES = {
         "eventId": "",
         "venueId": "",
         "time": "1986-12-12T16:40:48+00:00",
+        "occurrenceLanguage": "SV",
     }
 }
 

@@ -35,6 +35,7 @@ snapshots["test_add_occurrence_staff_user 1"] = {
         "addOccurrence": {
             "occurrence": {
                 "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
+                "occurrenceLanguage": "FI",
                 "time": "1986-12-12T16:40:48+00:00",
                 "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
             }
@@ -98,6 +99,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                     }
                 ],
             },
+            "occurrenceLanguage": "FI",
             "remainingCapacity": 50,
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {
@@ -126,6 +128,7 @@ snapshots["test_update_occurrence_staff_user 1"] = {
         "updateOccurrence": {
             "occurrence": {
                 "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
+                "occurrenceLanguage": "SV",
                 "time": "1986-12-12T16:40:48+00:00",
                 "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
             }
@@ -187,6 +190,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                     }
                 ],
             },
+            "occurrenceLanguage": "FI",
             "remainingCapacity": 47,
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {
@@ -230,6 +234,7 @@ Watch condition like lay still bar later. Daughter order stay sign discover.""",
                     }
                 ],
             },
+            "occurrenceLanguage": "FI",
             "remainingCapacity": 18,
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {

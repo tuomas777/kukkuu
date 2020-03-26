@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -95,6 +96,12 @@ class Occurrence(TimestampedModel):
         related_name="occurrences",
         through="events.Enrolment",
         blank=True,
+    )
+    occurrence_language = models.CharField(
+        max_length=10,
+        choices=settings.LANGUAGES,
+        verbose_name=_("occurrence language"),
+        default=settings.LANGUAGES[0][0],
     )
     objects = OccurrenceQueryset.as_manager()
 
