@@ -21,7 +21,7 @@ LanguageEnum = graphene.Enum(
 
 
 class GuardianNode(DjangoObjectType):
-    language = LanguageEnum()
+    language = LanguageEnum(required=True)
     email = graphene.String()
 
     class Meta:
