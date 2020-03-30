@@ -6,6 +6,8 @@ django-helusers
 django-ilmoitin
 django-parler
 django-cleanup
+django-filter
+django-storages[google, azure]
 factory-boy
 graphene-django
 graphene-file-upload

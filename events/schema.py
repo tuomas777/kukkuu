@@ -1,20 +1,31 @@
 import graphene
 from django.apps import apps
 from django.db import transaction
+from django.db.models import Count
 from django.utils import timezone
-from graphene import relay
+from django.utils.translation import get_language
+from graphene import Connection, relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
+from graphene_django.filter import DjangoFilterConnectionField
 from graphene_file_upload.scalars import Upload
 from graphql_jwt.decorators import login_required, staff_member_required
 from graphql_relay import from_global_id
 
 from children.models import Child
 from common.utils import update_object, update_object_with_translations
+from events.filters import OccurrenceFilter
 from events.models import Enrolment, Event, Occurrence
 from events.notifications import NotificationType
 from events.utils import send_event_notifications_to_guardians
-from kukkuu.exceptions import KukkuuGraphQLError
+from kukkuu.exceptions import (
+    ChildAlreadyJoinedEventError,
+    EventAlreadyPublishedError,
+    ObjectDoesNotExistError,
+    OccurrenceIsFullError,
+    PastOccurrenceError,
+)
 from users.models import Guardian
+from users.schema import LanguageEnum
 from venues.models import Venue
 
 EventTranslation = apps.get_model("events", "EventTranslation")
@@ -22,20 +33,27 @@ EventTranslation = apps.get_model("events", "EventTranslation")
 
 def validate_enrolment(child, occurrence):
     if child.occurrences.filter(event=occurrence.event).exists():
-        raise KukkuuGraphQLError("Child already joined this event")
+        raise ChildAlreadyJoinedEventError("Child already joined this event")
     if occurrence.enrolments.count() >= occurrence.event.capacity_per_occurrence:
-        raise KukkuuGraphQLError("Maximum enrolments created")
+        raise OccurrenceIsFullError("Maximum enrolments created")
     if occurrence.time < timezone.now():
-        raise KukkuuGraphQLError("Cannot join occurrence in the past")
+        raise PastOccurrenceError("Cannot join occurrence in the past")
 
 
 class EventTranslationType(DjangoObjectType):
+    language_code = LanguageEnum(required=True)
+
     class Meta:
         model = EventTranslation
         exclude = ("id", "master")
 
 
 class EventNode(DjangoObjectType):
+    name = graphene.String()
+    description = graphene.String()
+    short_description = graphene.String()
+    image_alt_text = graphene.String()
+
     class Meta:
         model = Event
         interfaces = (relay.Node,)
@@ -44,33 +62,58 @@ class EventNode(DjangoObjectType):
     @login_required
     # TODO: For now only logged in users can see events
     def get_queryset(cls, queryset, info):
-        return queryset.order_by("-created_at")
+        lang = get_language()
+        return (
+            queryset.user_can_view(info.context.user)
+            .order_by("-created_at")
+            .language(lang)
+        )
 
     @classmethod
     @login_required
     def get_node(cls, info, id):
         return super().get_node(info, id)
+
+    def resolve_image(self, info, **kwargs):
+        if self.image:
+            return info.context.build_absolute_uri(self.image.url)
+        return ""
+
+    def resolve_occurrences(self, info, **kwargs):
+        return self.occurrences.annotate(
+            enrolments_count=Count("enrolments", distinct=True)
+        ).order_by("time")
+
+
+class EventConnection(Connection):
+    class Meta:
+        node = EventNode
 
 
 class OccurrenceNode(DjangoObjectType):
-    venue_id = graphene.GlobalID()
-    event_id = graphene.GlobalID()
-    time = graphene.DateTime()
+    remaining_capacity = graphene.Int()
 
     @classmethod
     @login_required
-    # TODO: For now only logged in users can see occurrences
     def get_queryset(cls, queryset, info):
-        return queryset.order_by("-created_at")
+        return (
+            queryset.user_can_view(info.context.user)
+            .annotate(enrolments_count=Count("enrolments", distinct=True))
+            .order_by("time")
+        )
 
     @classmethod
     @login_required
     def get_node(cls, info, id):
         return super().get_node(info, id)
+
+    def resolve_remaining_capacity(self, info, **kwargs):
+        return self.event.capacity_per_occurrence - self.enrolments_count
 
     class Meta:
         model = Occurrence
         interfaces = (relay.Node,)
+        filterset_class = OccurrenceFilter
 
 
 class EnrolmentNode(DjangoObjectType):
@@ -79,12 +122,19 @@ class EnrolmentNode(DjangoObjectType):
         interfaces = (relay.Node,)
         fields = ("occurrence", "child", "created_at")
 
+    @classmethod
+    @login_required
+    def get_queryset(cls, queryset, info):
+        # Should only return enrolments of guardian's children
+        return queryset.filter(child__guardians__user=info.context.user)
+
 
 class EventTranslationsInput(graphene.InputObjectType):
-    name = graphene.String(required=True)
+    name = graphene.String()
     short_description = graphene.String()
     description = graphene.String()
-    language_code = graphene.String(required=True)
+    image_alt_text = graphene.String()
+    language_code = LanguageEnum(required=True)
 
 
 class AddEventMutation(graphene.relay.ClientIDMutation):
@@ -114,7 +164,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         capacity_per_occurrence = graphene.Int()
         image = Upload()
         translations = graphene.List(EventTranslationsInput)
-        delete_translations = graphene.List(graphene.String)
+        delete_translations = graphene.List(LanguageEnum)
 
     event = graphene.Field(EventNode)
 
@@ -128,7 +178,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
             event = Event.objects.get(pk=from_global_id(event_global_id)[1])
             update_object_with_translations(event, kwargs)
         except Event.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
         return UpdateEventMutation(event=event)
 
 
@@ -146,7 +196,7 @@ class DeleteEventMutation(graphene.relay.ClientIDMutation):
             event = Event.objects.get(pk=event_id)
             event.delete()
         except Event.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
         return DeleteEventMutation()
 
 
@@ -169,11 +219,11 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
         try:
             occurrence = Occurrence.objects.get(pk=occurrence_id)
         except Occurrence.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
         try:
             child = Child.objects.user_can_update(user).get(pk=child_id)
         except Child.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
         validate_enrolment(child, occurrence)
         enrolment = Enrolment.objects.create(child=child, occurrence=occurrence)
 
@@ -197,12 +247,12 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
         try:
             child = Child.objects.user_can_update(user).get(pk=child_id)
         except Child.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
         try:
             occurrence = child.occurrences.get(pk=occurrence_id)
             occurrence.children.remove(child)
         except Occurrence.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
         return UnenrolOccurrenceMutation()
 
 
@@ -224,14 +274,14 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
             Event.objects.get(pk=event_id)
             kwargs["event_id"] = event_id
         except Event.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
 
         venue_id = from_global_id(kwargs["venue_id"])[1]
         try:
             Venue.objects.get(pk=venue_id)
             kwargs["venue_id"] = venue_id
         except Venue.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
 
         occurrence = Occurrence.objects.create(**kwargs)
         return AddOccurrenceMutation(occurrence=occurrence)
@@ -256,7 +306,7 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
             occurrence = Occurrence.objects.get(pk=occurrence_id)
             kwargs["id"] = occurrence_id
         except Occurrence.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
 
         if kwargs.get("event_id", None):
             event_id = from_global_id(kwargs["event_id"])[1]
@@ -264,7 +314,7 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
                 Event.objects.get(pk=event_id)
                 kwargs["event_id"] = event_id
             except Event.DoesNotExist as e:
-                raise KukkuuGraphQLError(e)
+                raise ObjectDoesNotExistError(e)
 
         if kwargs.get("venue_id", None):
             venue_id = from_global_id(kwargs["venue_id"])[1]
@@ -272,7 +322,7 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
                 Venue.objects.get(pk=venue_id)
                 kwargs["venue_id"] = venue_id
             except Venue.DoesNotExist as e:
-                raise KukkuuGraphQLError(e)
+                raise ObjectDoesNotExistError(e)
 
         update_object(occurrence, kwargs)
         return UpdateOccurrenceMutation(occurrence=occurrence)
@@ -292,7 +342,7 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
             occurrence = Occurrence.objects.get(pk=occurrence_id)
             occurrence.delete()
         except Occurrence.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
         return DeleteOccurrenceMutation()
 
 
@@ -311,22 +361,24 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
         try:
             event = Event.objects.get(pk=from_global_id(event_global_id)[1])
             if event.is_published():
-                raise KukkuuGraphQLError("Event is already published")
+                raise EventAlreadyPublishedError("Event is already published")
             event.publish()
             # TODO: Send notifications to guardian who belongs to the same project
-            guardians = Guardian.objects.all()
+            guardians = Guardian.objects.annotate(
+                children_count=Count("children")
+            ).filter(children_count__gt=0)
             send_event_notifications_to_guardians(
                 event, NotificationType.EVENT_PUBLISHED, guardians
             )
 
         except Event.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
         return PublishEventMutation(event=event)
 
 
 class Query:
     events = DjangoConnectionField(EventNode)
-    occurrences = DjangoConnectionField(OccurrenceNode)
+    occurrences = DjangoFilterConnectionField(OccurrenceNode)
 
     event = relay.Node.Field(EventNode)
     occurrence = relay.Node.Field(OccurrenceNode)

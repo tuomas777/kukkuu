@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -e
 
 if [ -z "$SKIP_DATABASE_CHECK" -o "$SKIP_DATABASE_CHECK" = "0" ]; then

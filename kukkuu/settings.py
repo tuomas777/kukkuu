@@ -20,7 +20,7 @@ else:
 env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, ""),
-    MEDIA_ROOT=(environ.Path(), default_var_root("media")),
+    MEDIA_ROOT=(environ.Path(), environ.Path(checkout_dir("var"))("media")),
     STATIC_ROOT=(environ.Path(), default_var_root("static")),
     MEDIA_URL=(str, "/media/"),
     STATIC_URL=(str, "/static/"),
@@ -42,7 +42,17 @@ env = environ.Env(
     TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX=(str, "kukkuu"),
     TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, True),
     TOKEN_AUTH_AUTHSERVER_URL=(str, ""),
+    ILMOITIN_QUEUE_NOTIFICATIONS=(bool, False),
+    DEFAULT_FILE_STORAGE=(str, "django.core.files.storage.FileSystemStorage"),
+    GS_BUCKET_NAME=(str, ""),
+    GOOGLE_APPLICATION_CREDENTIALS=(str, ""),
+    GS_DEFAULT_ACL=(str, "publicRead"),
+    GS_FILE_OVERWRITE=(bool, False),
+    AZURE_ACCOUNT_NAME=(str, ""),
+    AZURE_ACCOUNT_KEY=(str, ""),
+    AZURE_CONTAINER=(str, ""),
 )
+
 if os.path.exists(env_file):
     env.read_env(env_file)
 
@@ -71,15 +81,16 @@ if env("MAIL_MAILGUN_KEY"):
 EMAIL_BACKEND = "mailer.backend.DbBackend"
 MAILER_EMAIL_BACKEND = env.str("MAILER_EMAIL_BACKEND")
 ILMOITIN_TRANSLATED_FROM_EMAIL = env("ILMOITIN_TRANSLATED_FROM_EMAIL")
+ILMOITIN_QUEUE_NOTIFICATIONS = env("ILMOITIN_QUEUE_NOTIFICATIONS")
 
 try:
-    version = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
+    REVISION = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
 except Exception:
-    version = "n/a"
+    REVISION = "n/a"
 
 sentry_sdk.init(
     dsn=env.str("SENTRY_DSN"),
-    release=version,
+    release=REVISION,
     environment=env("SENTRY_ENVIRONMENT"),
     integrations=[DjangoIntegration()],
 )
@@ -88,6 +99,19 @@ MEDIA_ROOT = env("MEDIA_ROOT")
 STATIC_ROOT = env("STATIC_ROOT")
 MEDIA_URL = env.str("MEDIA_URL")
 STATIC_URL = env.str("STATIC_URL")
+
+# For staging env, we use Google Cloud Storage
+DEFAULT_FILE_STORAGE = env("DEFAULT_FILE_STORAGE")
+if DEFAULT_FILE_STORAGE == "storages.backends.gcloud.GoogleCloudStorage":
+    GS_BUCKET_NAME = env("GS_BUCKET_NAME")
+    GOOGLE_APPLICATION_CREDENTIALS = env("GOOGLE_APPLICATION_CREDENTIALS")
+    GS_DEFAULT_ACL = env("GS_DEFAULT_ACL")
+    GS_FILE_OVERWRITE = env("GS_FILE_OVERWRITE")
+# For prod, it's Azure Storage
+elif DEFAULT_FILE_STORAGE == "storages.backends.azure_storage.AzureStorage":
+    AZURE_ACCOUNT_NAME = env("AZURE_ACCOUNT_NAME")
+    AZURE_ACCOUNT_KEY = env("AZURE_ACCOUNT_KEY")
+    AZURE_CONTAINER = env("AZURE_CONTAINER")
 
 ROOT_URLCONF = "kukkuu.urls"
 WSGI_APPLICATION = "kukkuu.wsgi.application"
@@ -113,6 +137,7 @@ INSTALLED_APPS = [
     "anymail",
     "mailer",
     "django_ilmoitin",
+    "django_filters",
     # local apps
     "users",
     "children",

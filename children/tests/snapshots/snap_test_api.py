@@ -244,3 +244,45 @@ snapshots["test_update_child_mutation_should_have_no_required_fields 1"] = {
         }
     }
 }
+
+snapshots["test_get_available_events 1"] = {
+    "data": {
+        "child": {
+            "availableEvents": {
+                "edges": [
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 4}}]
+                            },
+                        }
+                    }
+                ]
+            },
+            "occurrences": {"edges": [{"node": {"time": "2020-12-12T00:00:00+00:00"}}]},
+            "pastEvents": {"edges": []},
+        }
+    }
+}
+
+snapshots["test_get_past_events 1"] = {
+    "data": {
+        "child": {
+            "availableEvents": {"edges": []},
+            "occurrences": {"edges": [{"node": {"time": "1969-12-31T22:20:00+00:00"}}]},
+            "pastEvents": {
+                "edges": [
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [{"node": {"remainingCapacity": 5}}]
+                            },
+                        }
+                    }
+                ]
+            },
+        }
+    }
+}

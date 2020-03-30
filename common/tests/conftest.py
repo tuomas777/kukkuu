@@ -10,6 +10,7 @@ from graphene.test import Client
 
 from events.factories import EventFactory, OccurrenceFactory
 from kukkuu.schema import schema
+from kukkuu.views import SentryGraphQLView
 from users.factories import GuardianFactory, UserFactory
 from venues.factories import VenueFactory
 
@@ -52,6 +53,11 @@ def guardian_api_client():
 
 @pytest.fixture
 def event():
+    return EventFactory(published_at=timezone.now())
+
+
+@pytest.fixture
+def unpublished_event():
     return EventFactory()
 
 
@@ -62,12 +68,21 @@ def venue():
 
 @pytest.fixture
 def occurrence():
-    return OccurrenceFactory(time=timezone.now())
+    return OccurrenceFactory(
+        time=timezone.now(), event=EventFactory(published_at=timezone.now())
+    )
+
+
+@pytest.fixture
+def unpublished_occurrence():
+    return OccurrenceFactory(time=timezone.now(), event=EventFactory())
 
 
 def _create_api_client_with_user(user):
     request = RequestFactory().post("/graphql")
     request.user = user
-    client = Client(schema, context=request)
+    client = Client(
+        schema, context=request, format_error=SentryGraphQLView.format_error
+    )
     client.user = user
     return client

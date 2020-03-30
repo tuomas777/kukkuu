@@ -17,6 +17,14 @@ query Venues {
   venues {
     edges {
       node {
+        name
+        description
+        address
+        accessibilityInfo
+        arrivalInstructions
+        additionalInfo
+        wcAndFacilities
+        wwwUrl
         translations {
           name
           description
@@ -31,6 +39,7 @@ query Venues {
           edges {
             node {
               time
+              remainingCapacity
               event {
                 translations {
                     name
@@ -56,6 +65,14 @@ query Venues {
 VENUE_QUERY = """
 query Venue($id: ID!) {
   venue(id: $id){
+    name
+    description
+    address
+    accessibilityInfo
+    arrivalInstructions
+    additionalInfo
+    wcAndFacilities
+    wwwUrl
     translations{
         name
         description
@@ -63,6 +80,7 @@ query Venue($id: ID!) {
         accessibilityInfo
         arrivalInstructions
         additionalInfo
+        wcAndFacilities
         wwwUrl
         languageCode
     }
@@ -70,6 +88,7 @@ query Venue($id: ID!) {
       edges{
         node{
           time
+          remainingCapacity
           event {
               translations {
                 name
@@ -102,6 +121,7 @@ mutation AddVenue($input: AddVenueMutationInput!) {
         accessibilityInfo
         arrivalInstructions
         additionalInfo
+        wcAndFacilities
         wwwUrl
       }
     }
@@ -115,11 +135,12 @@ ADD_VENUE_VARIABLES = {
             {
                 "name": "Venue name",
                 "description": "Venue description",
-                "languageCode": "fi",
+                "languageCode": "FI",
                 "address": "Address",
                 "accessibilityInfo": "Accessibility info",
                 "arrivalInstructions": "Arrival instruction",
                 "additionalInfo": "Additional info",
+                "wcAndFacilities": "WC & Facilities",
                 "wwwUrl": "www.url.com",
             }
         ],
@@ -138,6 +159,7 @@ mutation updateVenue($input: UpdateVenueMutationInput!) {
         accessibilityInfo
         arrivalInstructions
         additionalInfo
+        wcAndFacilities
         wwwUrl
       }
     }
@@ -152,11 +174,12 @@ UPDATE_VENUE_VARIABLES = {
             {
                 "name": "Venue name",
                 "description": "Venue description",
-                "languageCode": "fi",
+                "languageCode": "FI",
                 "address": "Address",
                 "accessibilityInfo": "Accessibility info",
                 "arrivalInstructions": "Arrival instruction",
                 "additionalInfo": "Additional info",
+                "wcAndFacilities": "WC & Facilities",
                 "wwwUrl": "www.url.com",
             }
         ],

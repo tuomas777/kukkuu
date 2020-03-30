@@ -8,7 +8,7 @@ from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 
 from common.utils import update_object
-from kukkuu.exceptions import KukkuuGraphQLError
+from kukkuu.exceptions import ObjectDoesNotExistError
 
 from .models import Guardian
 
@@ -21,7 +21,7 @@ LanguageEnum = graphene.Enum(
 
 
 class GuardianNode(DjangoObjectType):
-    language = LanguageEnum()
+    language = LanguageEnum(required=True)
     email = graphene.String()
 
     class Meta:
@@ -34,6 +34,19 @@ class GuardianNode(DjangoObjectType):
 
     def resolve_email(self, info, **kwargs):
         return self.user.email
+
+
+class AdminNode(DjangoObjectType):
+    is_project_admin = graphene.Boolean()
+
+    class Meta:
+        model = User
+        interfaces = (relay.Node,)
+        fields = ("is_project_admin",)
+
+    def resolve_is_project_admin(self, info, **kwargs):
+        # TODO: Update this when Project is available
+        return self.is_staff
 
 
 class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
@@ -54,7 +67,7 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         try:
             guardian = user.guardian
         except Guardian.DoesNotExist as e:
-            raise KukkuuGraphQLError(e)
+            raise ObjectDoesNotExistError(e)
 
         update_object(guardian, kwargs)
 
@@ -64,6 +77,7 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
 class Query:
     guardians = DjangoConnectionField(GuardianNode)
     my_profile = graphene.Field(GuardianNode)
+    my_admin_profile = graphene.Field(AdminNode)
 
     @staticmethod
     @login_required
@@ -74,6 +88,11 @@ class Query:
     @login_required
     def resolve_my_profile(parent, info, **kwargs):
         return Guardian.objects.filter(user=info.context.user).first()
+
+    @staticmethod
+    @login_required
+    def resolve_my_admin_profile(parent, info, **kwargs):
+        return info.context.user
 
 
 class Mutation:
