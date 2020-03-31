@@ -399,7 +399,12 @@ ENROL_OCCURRENCE_VARIABLES = {"input": {"occurrenceId": "", "childId": ""}}
 UNENROL_OCCURRENCE_MUTATION = """
 mutation UnenrolOccurrence($input: UnenrolOccurrenceMutationInput!) {
   unenrolOccurrence(input: $input) {
-    __typename
+    occurrence{
+        time
+    }
+    child{
+        firstName
+    }
   }
 }
 
@@ -753,12 +758,13 @@ def test_unenrol_occurrence(api_client, user_api_client, snapshot, occurrence):
     assert random_child.occurrences.count() == 1
 
     unenrolment_variables["input"]["childId"] = to_global_id("ChildNode", child.id)
-    user_api_client.execute(
+    executed = user_api_client.execute(
         UNENROL_OCCURRENCE_MUTATION, variables=unenrolment_variables
     )
     assert Enrolment.objects.count() == 1
     assert child.occurrences.count() == 0
     assert random_child.occurrences.count() == 1
+    snapshot.assert_match(executed)
 
 
 def test_maximum_enrolment(guardian_api_client, occurrence):

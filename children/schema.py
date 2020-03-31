@@ -15,7 +15,6 @@ from graphql_relay import from_global_id
 from children.notifications import NotificationType
 from common.utils import update_object
 from events.models import Event
-from events.schema import EventConnection
 from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
@@ -31,8 +30,8 @@ User = get_user_model()
 
 
 class ChildNode(DjangoObjectType):
-    available_events = relay.ConnectionField(EventConnection)
-    past_events = relay.ConnectionField(EventConnection)
+    available_events = relay.ConnectionField("events.schema.EventConnection")
+    past_events = relay.ConnectionField("events.schema.EventConnection")
 
     class Meta:
         model = Child
