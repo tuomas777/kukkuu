@@ -156,8 +156,10 @@ query Occurrences {
 """
 
 OCCURRENCES_FILTER_QUERY = """
-query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String) {
-  occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId) {
+query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String,
+$occurrenceLanguage: String) {
+  occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId,
+  occurrenceLanguage: $occurrenceLanguage) {
     edges {
       node {
         time
@@ -181,6 +183,7 @@ query Occurrence($id: ID!) {
     }
     time
     remainingCapacity
+    occurrenceLanguage
     event {
       translations {
         name
@@ -326,6 +329,7 @@ mutation AddOccurrence($input: AddOccurrenceMutationInput!) {
         createdAt
       }
       time
+      occurrenceLanguage
     }
   }
 }
@@ -347,6 +351,7 @@ mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
         createdAt
       }
       time
+      occurrenceLanguage
     }
   }
 }
@@ -359,6 +364,7 @@ UPDATE_OCCURRENCE_VARIABLES = {
         "eventId": "",
         "venueId": "",
         "time": "1986-12-12T16:40:48+00:00",
+        "occurrenceLanguage": "SV",
     }
 }
 
@@ -887,6 +893,23 @@ def test_occurrences_filter_by_venue(user_api_client, snapshot, event):
     variables = {"venueId": to_global_id("VenueNode", another_occurrences[0].venue.id)}
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
     assert len(executed["data"]["occurrences"]["edges"]) == len(another_occurrences)
+
+    snapshot.assert_match(executed)
+
+
+def test_occurrences_filter_by_language(user_api_client, snapshot, event):
+    occurrences = OccurrenceFactory.create_batch(2, venue=VenueFactory(), event=event)
+    sv_occurrences = OccurrenceFactory.create_batch(
+        2, venue=VenueFactory(), event=event, occurrence_language="sv"
+    )
+
+    variables = {"occurrenceLanguage": "FI"}
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
+    assert len(executed["data"]["occurrences"]["edges"]) == len(occurrences)
+
+    variables = {"occurrenceLanguage": "SV"}
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
+    assert len(executed["data"]["occurrences"]["edges"]) == len(sv_occurrences)
 
     snapshot.assert_match(executed)
 
