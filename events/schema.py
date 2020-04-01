@@ -160,7 +160,7 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
 
 class UpdateEventMutation(graphene.relay.ClientIDMutation):
     class Input:
-        id = graphene.GlobalID(required=True)
+        id = graphene.GlobalID()
         duration = graphene.Int()
         participants_per_invite = graphene.String()
         capacity_per_occurrence = graphene.Int()
@@ -204,10 +204,8 @@ class DeleteEventMutation(graphene.relay.ClientIDMutation):
 
 class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
-        occurrence_id = graphene.GlobalID(
-            required=True, description="Occurrence id of event"
-        )
-        child_id = graphene.GlobalID(required=True, description="Guardian's child id")
+        occurrence_id = graphene.GlobalID(description="Occurrence id of event")
+        child_id = graphene.GlobalID(description="Guardian's child id")
 
     enrolment = graphene.Field(EnrolmentNode)
 
@@ -234,10 +232,8 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
 
 class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
-        occurrence_id = graphene.GlobalID(
-            required=True, description="Occurrence id " "of event"
-        )
-        child_id = graphene.GlobalID(required=True, description="Guardian's child id")
+        occurrence_id = graphene.GlobalID(description="Occurrence id of event")
+        child_id = graphene.GlobalID(description="Guardian's child id")
 
     occurrence = graphene.Field(OccurrenceNode)
     child = graphene.Field(ChildNode)
@@ -264,8 +260,8 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
 class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
         time = graphene.DateTime(required=True)
-        event_id = graphene.GlobalID(required=True)
-        venue_id = graphene.GlobalID(required=True)
+        event_id = graphene.GlobalID()
+        venue_id = graphene.GlobalID()
         occurrence_language = LanguageEnum()
 
     occurrence = graphene.Field(OccurrenceNode)
@@ -295,10 +291,10 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
 
 class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
-        id = graphene.GlobalID(required=True)
+        id = graphene.GlobalID()
         time = graphene.DateTime()
-        event_id = graphene.GlobalID()
-        venue_id = graphene.GlobalID()
+        event_id = graphene.GlobalID(required=False)
+        venue_id = graphene.GlobalID(required=False)
         occurrence_language = LanguageEnum()
 
     occurrence = graphene.Field(OccurrenceNode)
@@ -337,7 +333,7 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
 
 class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
-        id = graphene.GlobalID(required=True)
+        id = graphene.GlobalID()
 
     @classmethod
     @staff_member_required
@@ -355,7 +351,7 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
 
 class PublishEventMutation(graphene.relay.ClientIDMutation):
     class Input:
-        id = graphene.GlobalID(required=True)
+        id = graphene.GlobalID()
 
     event = graphene.Field(EventNode)
 
