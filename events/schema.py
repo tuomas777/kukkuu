@@ -12,6 +12,7 @@ from graphql_jwt.decorators import login_required, staff_member_required
 from graphql_relay import from_global_id
 
 from children.models import Child
+from children.schema import ChildNode
 from common.utils import update_object, update_object_with_translations
 from events.filters import OccurrenceFilter
 from events.models import Enrolment, Event, Occurrence
@@ -238,6 +239,9 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
         )
         child_id = graphene.GlobalID(required=True, description="Guardian's child id")
 
+    occurrence = graphene.Field(OccurrenceNode)
+    child = graphene.Field(ChildNode)
+
     @classmethod
     @login_required
     @transaction.atomic
@@ -254,7 +258,7 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
             occurrence.children.remove(child)
         except Occurrence.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
-        return UnenrolOccurrenceMutation()
+        return UnenrolOccurrenceMutation(child=child, occurrence=occurrence)
 
 
 class AddOccurrenceMutation(graphene.relay.ClientIDMutation):

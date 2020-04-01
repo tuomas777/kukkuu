@@ -653,3 +653,12 @@ snapshots["test_occurrences_filter_by_language 1"] = {
         }
     }
 }
+
+snapshots["test_unenrol_occurrence 1"] = {
+    "data": {
+        "unenrolOccurrence": {
+            "child": {"firstName": "Alice"},
+            "occurrence": {"time": "2020-12-12T00:00:00+00:00"},
+        }
+    }
+}
