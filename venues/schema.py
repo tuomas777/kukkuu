@@ -89,7 +89,7 @@ class AddVenueMutation(graphene.relay.ClientIDMutation):
 
 class UpdateVenueMutation(graphene.relay.ClientIDMutation):
     class Input:
-        id = graphene.GlobalID(required=True)
+        id = graphene.GlobalID()
         translations = graphene.List(VenueTranslationsInput)
         delete_translations = graphene.List(LanguageEnum)
 
