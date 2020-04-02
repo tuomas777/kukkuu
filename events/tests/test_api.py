@@ -16,6 +16,7 @@ from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from events.models import Enrolment, Event, Occurrence
 from kukkuu.consts import (
     CHILD_ALREADY_JOINED_EVENT_ERROR,
+    DATA_VALIDATION_ERROR,
     DELETE_DEFAULT_TRANSLATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
     GENERAL_ERROR,
@@ -968,3 +969,19 @@ def test_required_translation(staff_api_client, snapshot):
         UPDATE_EVENT_MUTATION, variables=event_variables
     )
     assert_match_error_code(executed, DELETE_DEFAULT_TRANSLATION_ERROR)
+
+
+def test_update_field_with_null_value(staff_api_client):
+    event = EventFactory()
+    # To make sure event has Finnish translation and bypass the language validation
+    if not event.has_translation("fi"):
+        event.create_translation(language_code="fi", **{"name": "Finnish translation"})
+    event_variables = deepcopy(UPDATE_EVENT_VARIABLES)
+    event_variables["input"]["id"] = to_global_id("EventNode", event.id)
+    # Null value for not-nullable field
+    event_variables["input"]["participantsPerInvite"] = None
+    executed = staff_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=event_variables
+    )
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert "cannot be null" in str(executed["errors"])

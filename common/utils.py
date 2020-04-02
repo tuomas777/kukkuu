@@ -1,6 +1,7 @@
 from django.db import transaction
 
 from kukkuu import __version__
+from kukkuu.exceptions import DataValidationError
 from kukkuu.settings import REVISION
 
 
@@ -8,6 +9,8 @@ def update_object(obj, data):
     if not data:
         return
     for k, v in data.items():
+        if v is None and not obj.__class__._meta.get_field(k).null:
+            raise DataValidationError(f"{k} cannot be null.")
         setattr(obj, k, v)
     obj.save()
 
