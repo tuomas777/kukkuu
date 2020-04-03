@@ -45,7 +45,7 @@ env = environ.Env(
     ILMOITIN_QUEUE_NOTIFICATIONS=(bool, False),
     DEFAULT_FILE_STORAGE=(str, "django.core.files.storage.FileSystemStorage"),
     GS_BUCKET_NAME=(str, ""),
-    GOOGLE_APPLICATION_CREDENTIALS=(str, ""),
+    STAGING_GCS_BUCKET_CREDENTIALS=(str, ""),
     GS_DEFAULT_ACL=(str, "publicRead"),
     GS_FILE_OVERWRITE=(bool, False),
     AZURE_ACCOUNT_NAME=(str, ""),
@@ -104,7 +104,7 @@ STATIC_URL = env.str("STATIC_URL")
 DEFAULT_FILE_STORAGE = env("DEFAULT_FILE_STORAGE")
 if DEFAULT_FILE_STORAGE == "storages.backends.gcloud.GoogleCloudStorage":
     GS_BUCKET_NAME = env("GS_BUCKET_NAME")
-    GOOGLE_APPLICATION_CREDENTIALS = env("GOOGLE_APPLICATION_CREDENTIALS")
+    GOOGLE_APPLICATION_CREDENTIALS = env("STAGING_GCS_BUCKET_CREDENTIALS")
     GS_DEFAULT_ACL = env("GS_DEFAULT_ACL")
     GS_FILE_OVERWRITE = env("GS_FILE_OVERWRITE")
 # For prod, it's Azure Storage
