@@ -22,11 +22,6 @@ review:
     K8S_SECRET_CORS_ORIGIN_ALLOW_ALL: 1
 
 staging:
-  script:
-    # This is a temporary fix for gitlab issue where file variable doesn't load correctly
-    # See more: https://gitlab.com/gitlab-org/gitlab/-/issues/29407
-    - export K8S_FILE_SECRET_GOOGLE_APPLICATION_CREDENTIALS=${STORAGE_BUCKET_STAGING_CREDENTIALS}
-    - devops deploy_application --track staging
   # By default the staging environment is created from the master-branch.
   # Here we define that it should be created from the branch called "develop" instead.
   only:
@@ -46,6 +41,7 @@ staging:
     K8S_SECRET_MAILER_EMAIL_BACKEND: "anymail.backends.mailgun.EmailBackend"
     K8S_SECRET_DEFAULT_FROM_EMAIL: "no-reply@hel.ninja"
     K8S_SECRET_DEFAULT_FILE_STORAGE: "storages.backends.gcloud.GoogleCloudStorage"
+    K8S_FILE_SECRET_GOOGLE_APPLICATION_CREDENTIALS: "$STAGING_GCS_BUCKET_CREDENTIALS"
     K8S_SECRET_GS_BUCKET_NAME: "$STORAGE_BUCKET_STAGING_NAME"
     K8S_SECRET_SENTRY_DSN: "$GL_SENTRY_DNS"
     K8S_SECRET_SENTRY_ENVIRONMENT: "test"
