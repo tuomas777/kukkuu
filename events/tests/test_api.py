@@ -17,7 +17,6 @@ from events.models import Enrolment, Event, Occurrence
 from kukkuu.consts import (
     CHILD_ALREADY_JOINED_EVENT_ERROR,
     DATA_VALIDATION_ERROR,
-    DELETE_DEFAULT_TRANSLATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
     GENERAL_ERROR,
     MISSING_DEFAULT_TRANSLATION_ERROR,
@@ -290,8 +289,15 @@ UPDATE_EVENT_VARIABLES = {
                 "shortDescription": "Short desc",
                 "description": "desc",
                 "imageAltText": "Image alt text",
+                "languageCode": "FI",
+            },
+            {
+                "name": "Event test in swedish",
+                "shortDescription": "Short desc",
+                "description": "desc",
+                "imageAltText": "Image alt text",
                 "languageCode": "SV",
-            }
+            },
         ],
         "duration": 1000,
         "participantsPerInvite": "FAMILY",
@@ -627,11 +633,6 @@ def test_update_event_translations(staff_api_client, event):
     staff_api_client.execute(UPDATE_EVENT_MUTATION, variables=event_variables)
     assert event.has_translation(new_translation["languageCode"].lower())
 
-    # Test delete translation
-    event_variables["input"]["deleteTranslations"] = [new_translation["languageCode"]]
-    staff_api_client.execute(UPDATE_EVENT_MUTATION, variables=event_variables)
-    assert not event.has_translation(new_translation["languageCode"].lower())
-
     # Test invalid translation
     new_translation["languageCode"] = "foo"
     executed = staff_api_client.execute(
@@ -962,13 +963,28 @@ def test_required_translation(staff_api_client, snapshot):
     event = EventFactory()
     if not event.has_translation("fi"):
         event.create_translation(language_code="fi", **{"name": "Finnish translation"})
-    event_variables = deepcopy(UPDATE_EVENT_VARIABLES)
-    event_variables["input"]["deleteTranslations"] = ["FI"]
+    event_variables = {
+        "input": {
+            "id": "",
+            "translations": [
+                {
+                    "name": "Event test in swedish",
+                    "shortDescription": "Short desc",
+                    "description": "desc",
+                    "imageAltText": "Image alt text",
+                    "languageCode": "SV",
+                }
+            ],
+            "duration": 1000,
+            "participantsPerInvite": "FAMILY",
+            "capacityPerOccurrence": 30,
+        }
+    }
     event_variables["input"]["id"] = to_global_id("EventNode", event.id)
     executed = staff_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
     )
-    assert_match_error_code(executed, DELETE_DEFAULT_TRANSLATION_ERROR)
+    assert_match_error_code(executed, MISSING_DEFAULT_TRANSLATION_ERROR)
 
 
 def test_update_field_with_null_value(staff_api_client):

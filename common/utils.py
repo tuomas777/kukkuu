@@ -18,12 +18,8 @@ def update_object(obj, data):
 @transaction.atomic
 def update_object_with_translations(model, model_data):
     translations_input = model_data.pop("translations", None)
-    delete_translations_input = model_data.pop("delete_translations", None)
-
-    if translations_input or delete_translations_input:
-        model.create_or_update_translations(
-            translations_input, delete_translations_input
-        )
+    if translations_input:
+        model.create_or_update_translations(translations_input)
     update_object(model, model_data)
 
 
