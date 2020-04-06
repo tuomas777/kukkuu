@@ -145,6 +145,7 @@ INSTALLED_APPS = [
     "users",
     "children",
     "utils",
+    "projects",
     "events",
     "venues",
     "django_cleanup.apps.CleanupConfig",  # This must be included last

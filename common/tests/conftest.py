@@ -7,7 +7,9 @@ from django.test import RequestFactory
 from django.utils import timezone
 from freezegun import freeze_time
 from graphene.test import Client
+from projects.models import Project
 
+from children.factories import ChildWithGuardianFactory
 from events.factories import EventFactory, OccurrenceFactory
 from kukkuu.schema import schema
 from kukkuu.views import SentryGraphQLView
@@ -24,6 +26,11 @@ def setup_test_environment(settings):
     with freeze_time("2020-12-12"):
         yield
     shutil.rmtree("test_media", ignore_errors=True)
+
+
+@pytest.fixture
+def project():
+    return Project.objects.get_or_create(year=2020)[0]
 
 
 @pytest.fixture
@@ -52,30 +59,40 @@ def guardian_api_client():
 
 
 @pytest.fixture
-def event():
-    return EventFactory(published_at=timezone.now())
+def child_with_random_guardian(project):
+    return ChildWithGuardianFactory(project=project)
 
 
 @pytest.fixture
-def unpublished_event():
-    return EventFactory()
-
-
-@pytest.fixture
-def venue():
-    return VenueFactory()
-
-
-@pytest.fixture
-def occurrence():
-    return OccurrenceFactory(
-        time=timezone.now(), event=EventFactory(published_at=timezone.now())
+def child_with_user_guardian(guardian_api_client, project):
+    return ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user, project=project
     )
 
 
 @pytest.fixture
-def unpublished_occurrence():
-    return OccurrenceFactory(time=timezone.now(), event=EventFactory())
+def event(project):
+    return EventFactory(published_at=timezone.now(), project=project)
+
+
+@pytest.fixture
+def unpublished_event(project):
+    return EventFactory(project=project)
+
+
+@pytest.fixture
+def venue(project):
+    return VenueFactory(project=project)
+
+
+@pytest.fixture
+def occurrence(venue, event):
+    return OccurrenceFactory(time=timezone.now(), venue=venue, event=event)
+
+
+@pytest.fixture
+def unpublished_occurrence(venue, unpublished_event):
+    return OccurrenceFactory(time=timezone.now(), venue=venue, event=unpublished_event)
 
 
 def _create_api_client_with_user(user):

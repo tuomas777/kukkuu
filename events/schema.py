@@ -10,6 +10,7 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphene_file_upload.scalars import Upload
 from graphql_jwt.decorators import login_required, staff_member_required
 from graphql_relay import from_global_id
+from projects.models import Project
 
 from children.models import Child
 from children.schema import ChildNode
@@ -21,6 +22,7 @@ from events.utils import send_event_notifications_to_guardians
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
     EventAlreadyPublishedError,
+    IneligibleOccurrenceEnrolment,
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
     PastOccurrenceError,
@@ -33,6 +35,10 @@ EventTranslation = apps.get_model("events", "EventTranslation")
 
 
 def validate_enrolment(child, occurrence):
+    if child.project != occurrence.event.project:
+        raise IneligibleOccurrenceEnrolment(
+            "Child does not belong to the project event"
+        )
     if child.occurrences.filter(event=occurrence.event).exists():
         raise ChildAlreadyJoinedEventError("Child already joined this event")
     if occurrence.enrolments.count() >= occurrence.event.capacity_per_occurrence:
@@ -152,6 +158,7 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
         participants_per_invite = EventParticipantsPerInvite(required=True)
         capacity_per_occurrence = graphene.Int(required=True)
         image = Upload()
+        project_id = graphene.GlobalID()
 
     event = graphene.Field(EventNode)
 
@@ -160,6 +167,12 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         # TODO: Add validation
+        project_global_id = kwargs.pop("project_id")
+        try:
+            project = Project.objects.get(pk=from_global_id(project_global_id)[1])
+            kwargs["project_id"] = project.id
+        except Project.DoesNotExist as e:
+            raise ObjectDoesNotExistError(e)
         event = Event.objects.create_translatable_object(**kwargs)
         return AddEventMutation(event=event)
 
@@ -172,6 +185,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         capacity_per_occurrence = graphene.Int()
         image = Upload()
         translations = graphene.List(EventTranslationsInput)
+        project_id = graphene.GlobalID(required=False)
 
     event = graphene.Field(EventNode)
 
@@ -180,6 +194,13 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         # TODO: Add validation
+        project_global_id = kwargs.pop("project_id", None)
+        if project_global_id:
+            try:
+                project = Project.objects.get(pk=from_global_id(project_global_id)[1])
+                kwargs["project_id"] = project.id
+            except Project.DoesNotExist as e:
+                raise ObjectDoesNotExistError(e)
         event_global_id = kwargs.pop("id")
         try:
             event = Event.objects.get(pk=from_global_id(event_global_id)[1])
@@ -371,10 +392,12 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
             if event.is_published():
                 raise EventAlreadyPublishedError("Event is already published")
             event.publish()
-            # TODO: Send notifications to guardian who belongs to the same project
-            guardians = Guardian.objects.annotate(
-                children_count=Count("children")
-            ).filter(children_count__gt=0)
+            guardians = (
+                Guardian.objects.filter(children__project=event.project)
+                .distinct()
+                .annotate(children_count=Count("children"))
+                .filter(children_count__gt=0)
+            )
             send_event_notifications_to_guardians(
                 event, NotificationType.EVENT_PUBLISHED, guardians
             )

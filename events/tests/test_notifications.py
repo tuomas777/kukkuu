@@ -64,9 +64,10 @@ def test_event_publish_notification(
     staff_api_client,
     notification_template_event_published_fi,
     unpublished_event,
+    project,
 ):
     GuardianFactory(language="fi")
-    children = ChildWithGuardianFactory.create_batch(3)
+    children = ChildWithGuardianFactory.create_batch(3, project=project)
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", unpublished_event.id)
     staff_api_client.execute(PUBLISH_EVENT_MUTATION, variables=event_variables)
@@ -80,8 +81,11 @@ def test_occurrence_enrolment_notifications(
     notification_template_occurrence_unenrolment_fi,
     notification_template_occurrence_enrolment_fi,
     occurrence,
+    project,
 ):
-    child = ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=user_api_client.user, project=project
+    )
     Enrolment.objects.create(child=child, occurrence=occurrence)
     occurrence.children.remove(child)
     assert len(mail.outbox) == 2

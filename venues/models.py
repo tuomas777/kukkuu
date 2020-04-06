@@ -24,6 +24,12 @@ class Venue(TimestampedModel, TranslatableModel):
         ),
         www_url=models.URLField(verbose_name=_("url"), blank=True),
     )
+    project = models.ForeignKey(
+        "projects.Project",
+        verbose_name=_("project"),
+        related_name="venues",
+        on_delete=models.CASCADE,
+    )
 
     class Meta:
         verbose_name = _("venue")

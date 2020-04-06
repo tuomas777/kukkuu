@@ -42,3 +42,7 @@ class ObjectDoesNotExistError(KukkuuGraphQLError):
 
 class MissingDefaultTranslationError(KukkuuGraphQLError):
     """Missing default translation for translatable object"""
+
+
+class IneligibleOccurrenceEnrolment(KukkuuGraphQLError):
+    """Ineligible to enrol event"""

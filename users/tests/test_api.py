@@ -47,18 +47,26 @@ def test_guardians_query_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_guardians_query_normal_user(snapshot, user_api_client):
-    GuardianFactory(relationships__count=1)
-    GuardianFactory(user=user_api_client.user, relationships__count=1)
+def test_guardians_query_normal_user(snapshot, user_api_client, project):
+    GuardianFactory(relationships__count=1, relationships__child__project=project)
+    GuardianFactory(
+        user=user_api_client.user,
+        relationships__count=1,
+        relationships__child__project=project,
+    )
 
     executed = user_api_client.execute(GUARDIANS_QUERY)
 
     snapshot.assert_match(executed)
 
 
-def test_guardians_query_staff_user(snapshot, staff_api_client):
-    GuardianFactory(relationships__count=1)
-    GuardianFactory(user=staff_api_client.user, relationships__count=1)
+def test_guardians_query_staff_user(snapshot, staff_api_client, project):
+    GuardianFactory(relationships__count=1, relationships__child__project=project)
+    GuardianFactory(
+        user=staff_api_client.user,
+        relationships__count=1,
+        relationships__child__project=project,
+    )
 
     executed = staff_api_client.execute(GUARDIANS_QUERY)
 
@@ -107,10 +115,14 @@ def test_my_profile_query_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_my_profile_query(snapshot, user_api_client):
+def test_my_profile_query(snapshot, user_api_client, project):
     GuardianFactory()
-    GuardianFactory(user=user_api_client.user, relationships__count=1)
-    GuardianFactory(relationships__count=1)
+    GuardianFactory(
+        user=user_api_client.user,
+        relationships__count=1,
+        relationships__child__project=project,
+    )
+    GuardianFactory(relationships__count=1, relationships__child__project=project)
 
     executed = user_api_client.execute(MY_PROFILE_QUERY)
 

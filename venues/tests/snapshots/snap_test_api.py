@@ -58,6 +58,7 @@ Whiteview, TN 11309""",
 Page box child care any concern. Defense level church use.""",
             "name": "Free heart significant machine try.",
             "occurrences": {"edges": []},
+            "project": {"year": 2020},
             "translations": [
                 {
                     "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
@@ -87,6 +88,7 @@ snapshots["test_add_venue_staff_user 1"] = {
     "data": {
         "addVenue": {
             "venue": {
+                "project": {"year": 2020},
                 "translations": [
                     {
                         "accessibilityInfo": "Accessibility info",
@@ -99,7 +101,7 @@ snapshots["test_add_venue_staff_user 1"] = {
                         "wcAndFacilities": "WC & Facilities",
                         "wwwUrl": "www.url.com",
                     }
-                ]
+                ],
             }
         }
     }
@@ -109,6 +111,7 @@ snapshots["test_update_venue_staff_user 1"] = {
     "data": {
         "updateVenue": {
             "venue": {
+                "project": {"year": 2020},
                 "translations": [
                     {
                         "accessibilityInfo": "Accessibility info",
@@ -121,7 +124,7 @@ snapshots["test_update_venue_staff_user 1"] = {
                         "wcAndFacilities": "WC & Facilities",
                         "wwwUrl": "www.url.com",
                     }
-                ]
+                ],
             }
         }
     }

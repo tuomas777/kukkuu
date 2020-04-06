@@ -51,6 +51,13 @@ class Event(TimestampedModel, TranslatableModel):
         blank=True, null=True, verbose_name=_("published at")
     )
 
+    project = models.ForeignKey(
+        "projects.Project",
+        verbose_name=_("project"),
+        related_name="events",
+        on_delete=models.CASCADE,
+    )
+
     objects = EventQueryset.as_manager()
 
     class Meta:

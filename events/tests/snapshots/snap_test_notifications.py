@@ -8,13 +8,13 @@ snapshots = Snapshot()
 
 snapshots["test_occurrence_enrolment_notifications 1"] = [
     """kukkuu@example.com|['mperez@cox.com']|Occurrence enrolment FI|
-        Event FI: Free heart significant machine try.
-        Guardian FI: Victoria Moon
+        Event FI: Up always sport return. Light a point charge stand store.
+        Guardian FI: Kathryn Scott
         Occurrence: 2020-12-12 00:00:00+00:00
-        Child: Alice Hobbs (2020-03-28)""",
+        Child: Jessica Sanders (2020-09-25)""",
     """kukkuu@example.com|['mperez@cox.com']|Occurrence unenrolment FI|
-        Event FI: Free heart significant machine try.
-        Guardian FI: Victoria Moon
+        Event FI: Up always sport return. Light a point charge stand store.
+        Guardian FI: Kathryn Scott
         Occurrence: 2020-12-12 00:00:00+00:00
-        Child: Alice Hobbs (2020-03-28)""",
+        Child: Jessica Sanders (2020-09-25)""",
 ]

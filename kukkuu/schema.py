@@ -1,4 +1,5 @@
 import graphene
+import projects.schema
 
 import children.schema
 import events.schema
@@ -19,6 +20,7 @@ class Mutation(
 class Query(
     children.schema.Query,
     users.schema.Query,
+    projects.schema.Query,
     events.schema.Query,
     venues.schema.Query,
     graphene.ObjectType,

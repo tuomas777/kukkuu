@@ -9,6 +9,7 @@ from kukkuu.consts import (
     DATA_VALIDATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
     GENERAL_ERROR,
+    INELIGIBLE_OCCURRENCE_ENROLMENT,
     MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR,
     MISSING_DEFAULT_TRANSLATION_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
@@ -21,6 +22,7 @@ from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
     DataValidationError,
     EventAlreadyPublishedError,
+    IneligibleOccurrenceEnrolment,
     KukkuuGraphQLError,
     MaxNumberOfChildrenPerGuardianError,
     MissingDefaultTranslationError,
@@ -45,6 +47,7 @@ error_codes_kukkuu = {
     OccurrenceIsFullError: OCCURRENCE_IS_FULL_ERROR,
     EventAlreadyPublishedError: EVENT_ALREADY_PUBLISHED_ERROR,
     MissingDefaultTranslationError: MISSING_DEFAULT_TRANSLATION_ERROR,
+    IneligibleOccurrenceEnrolment: INELIGIBLE_OCCURRENCE_ENROLMENT,
 }
 
 sentry_ignored_errors = (
