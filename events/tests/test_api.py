@@ -247,7 +247,7 @@ ADD_EVENT_VARIABLES = {
             }
         ],
         "duration": 1000,
-        "participantsPerInvite": "family",
+        "participantsPerInvite": "FAMILY",
         "capacityPerOccurrence": 30,
     }
 }
@@ -293,7 +293,7 @@ UPDATE_EVENT_VARIABLES = {
             }
         ],
         "duration": 1000,
-        "participantsPerInvite": "family",
+        "participantsPerInvite": "FAMILY",
         "capacityPerOccurrence": 30,
     }
 }

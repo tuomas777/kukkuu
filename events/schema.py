@@ -41,6 +41,11 @@ def validate_enrolment(child, occurrence):
         raise PastOccurrenceError("Cannot join occurrence in the past")
 
 
+class EventParticipantsPerInvite(graphene.Enum):
+    CHILD_AND_GUARDIAN = "child_and_guardian"
+    FAMILY = "family"
+
+
 class EventTranslationType(DjangoObjectType):
     language_code = LanguageEnum(required=True)
 
@@ -54,6 +59,7 @@ class EventNode(DjangoObjectType):
     description = graphene.String()
     short_description = graphene.String()
     image_alt_text = graphene.String()
+    participants_per_invite = EventParticipantsPerInvite(required=True)
 
     class Meta:
         model = Event
@@ -143,7 +149,7 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
     class Input:
         translations = graphene.List(EventTranslationsInput)
         duration = graphene.Int()
-        participants_per_invite = graphene.String(required=True)
+        participants_per_invite = EventParticipantsPerInvite(required=True)
         capacity_per_occurrence = graphene.Int(required=True)
         image = Upload()
 
@@ -162,7 +168,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.GlobalID()
         duration = graphene.Int()
-        participants_per_invite = graphene.String()
+        participants_per_invite = EventParticipantsPerInvite()
         capacity_per_occurrence = graphene.Int()
         image = Upload()
         translations = graphene.List(EventTranslationsInput)
