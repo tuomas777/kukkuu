@@ -5,13 +5,8 @@ from django.db import models, transaction
 from django.utils.translation import ugettext_lazy as _
 from parler.managers import TranslatableQuerySet as ParlerTranslatableQuerySet
 from parler.models import TranslatableModel as ParlerTranslatableModel
-from parler.utils.context import switch_language
 
-from common.utils import update_object
-from kukkuu.exceptions import (
-    DeleteDefaultTranslationError,
-    MissingDefaultTranslationError,
-)
+from kukkuu.exceptions import MissingDefaultTranslationError
 
 
 class TimestampedModel(models.Model):
@@ -47,33 +42,18 @@ class TranslatableModel(ParlerTranslatableModel):
         abstract = True
 
     @transaction.atomic
-    def delete_translations(self, language_codes):
-        for code in language_codes:
-            self.delete_translation(code)
-
-    @transaction.atomic
-    def create_or_update_translations(
-        self, translations=None, translations_to_delete=None
-    ):
-        has_default_translation = self.has_translation(settings.LANGUAGE_CODE)
+    def create_or_update_translations(self, translations):
+        if settings.LANGUAGE_CODE not in [
+            translation["language_code"] for translation in translations
+        ]:
+            raise MissingDefaultTranslationError("Default translation is missing")
+        self.clear_translations()
         for translation in translations:
             language_code = translation.pop("language_code")
             if language_code not in settings.PARLER_SUPPORTED_LANGUAGE_CODES:
                 continue
-            if self.has_translation(language_code):
-                with switch_language(self, language_code):
-                    update_object(self, translation)
-            else:
-                self.create_translation(language_code=language_code, **translation)
-            if not has_default_translation:
-                has_default_translation = language_code == settings.LANGUAGE_CODE
-        if not has_default_translation:
-            raise MissingDefaultTranslationError(
-                "Cannot create object without default translation"
-            )
-        if translations_to_delete:
-            if settings.LANGUAGE_CODE in translations_to_delete:
-                raise DeleteDefaultTranslationError(
-                    "Cannot delete default language code"
-                )
-            self.delete_translations(translations_to_delete)
+            self.create_translation(language_code=language_code, **translation)
+
+    def clear_translations(self):
+        for code in self.get_available_languages():
+            self.delete_translation(code)

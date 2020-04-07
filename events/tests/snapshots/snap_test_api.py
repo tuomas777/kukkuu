@@ -50,7 +50,7 @@ snapshots["test_update_event_staff_user 1"] = {
                 "capacityPerOccurrence": 30,
                 "duration": 1000,
                 "image": "http://testserver/media/spring.jpg",
-                "imageAltText": "",
+                "imageAltText": "Image alt text",
                 "occurrences": {"edges": []},
                 "participantsPerInvite": "FAMILY",
                 "translations": [
@@ -58,16 +58,15 @@ snapshots["test_update_event_staff_user 1"] = {
                         "description": "desc",
                         "imageAltText": "Image alt text",
                         "languageCode": "SV",
-                        "name": "Event test in suomi",
+                        "name": "Event test in swedish",
                         "shortDescription": "Short desc",
                     },
                     {
-                        "description": """Serious listen police shake. Page box child care any concern.
-Agree room laugh prevent make. Our very television beat at success decade.""",
-                        "imageAltText": "",
+                        "description": "desc",
+                        "imageAltText": "Image alt text",
                         "languageCode": "FI",
-                        "name": "Free heart significant machine try.",
-                        "shortDescription": "Perform in weight success answer.",
+                        "name": "Event test in suomi",
+                        "shortDescription": "Short desc",
                     },
                 ],
             }

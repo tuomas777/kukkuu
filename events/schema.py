@@ -172,7 +172,6 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         capacity_per_occurrence = graphene.Int()
         image = Upload()
         translations = graphene.List(EventTranslationsInput)
-        delete_translations = graphene.List(LanguageEnum)
 
     event = graphene.Field(EventNode)
 
