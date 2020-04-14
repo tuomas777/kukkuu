@@ -13,7 +13,14 @@ admin.site.index_title = " ".join([ugettext("Kukkuu backend"), get_api_version()
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("graphql", csrf_exempt(SentryGraphQLView.as_view(graphiql=settings.DEBUG))),
+    path(
+        "graphql",
+        csrf_exempt(
+            SentryGraphQLView.as_view(
+                graphiql=settings.ENABLE_GRAPHIQL or settings.DEBUG
+            )
+        ),
+    ),
 ]
 
 
