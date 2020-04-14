@@ -51,6 +51,7 @@ env = environ.Env(
     AZURE_ACCOUNT_NAME=(str, ""),
     AZURE_ACCOUNT_KEY=(str, ""),
     AZURE_CONTAINER=(str, ""),
+    ENABLE_GRAPHIQL=(bool, False),
 )
 
 if os.path.exists(env_file):
@@ -122,6 +123,8 @@ TIME_ZONE = "Europe/Helsinki"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
+# Set to True to enable GraphiQL interface, this will overriden to True if DEBUG=True
+ENABLE_GRAPHIQL = env("ENABLE_GRAPHIQL")
 
 INSTALLED_APPS = [
     "helusers",
