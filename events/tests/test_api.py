@@ -26,6 +26,9 @@ from kukkuu.consts import (
     OCCURRENCE_IS_FULL_ERROR,
     PAST_OCCURRENCE_ERROR,
 )
+from kukkuu.exceptions import QueryTooDeepError
+from kukkuu.schema import schema
+from kukkuu.views import DepthAnalysisBackend
 from venues.factories import VenueFactory
 
 
@@ -1077,3 +1080,29 @@ def test_child_enrol_occurence_from_different_project(
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
     )
     assert_match_error_code(executed, INELIGIBLE_OCCURRENCE_ENROLMENT)
+
+
+def test_api_query_depth(snapshot, guardian_api_client, event):
+    # Depth 6
+    query = """
+    query Events {
+      events {
+        edges {
+          node {
+            project{
+              events{
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+    """
+    backend = DepthAnalysisBackend(max_depth=5)
+    with pytest.raises(QueryTooDeepError):
+        backend.document_from_string(schema=schema, document_string=query)
+
+    backend = DepthAnalysisBackend(max_depth=6)
+    document = backend.document_from_string(schema=schema, document_string=query)
+    assert document is not None

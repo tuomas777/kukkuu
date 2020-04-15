@@ -212,7 +212,7 @@ GRAPHENE = {
 GRAPHQL_JWT = {"JWT_AUTH_HEADER_PREFIX": "Bearer"}
 
 KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN = 100
-
+KUKKUU_QUERY_MAX_DEPTH = 12
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
