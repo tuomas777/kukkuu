@@ -43,6 +43,13 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
         blank=True,
     )
 
+    project = models.ForeignKey(
+        "projects.Project",
+        verbose_name=_("project"),
+        related_name="children",
+        on_delete=models.PROTECT,
+    )
+
     objects = ChildQuerySet.as_manager()
 
     class Meta:

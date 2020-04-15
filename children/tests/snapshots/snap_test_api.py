@@ -38,61 +38,6 @@ snapshots["test_children_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "birthdate": "2020-03-01",
-                        "firstName": "Jason",
-                        "lastName": "Owens",
-                        "postalCode": "70898",
-                        "relationships": {
-                            "edges": [
-                                {
-                                    "node": {
-                                        "guardian": {
-                                            "email": "mperez@cox.com",
-                                            "firstName": "Selena",
-                                            "lastName": "Roy",
-                                            "phoneNumber": "123-447-4468",
-                                        },
-                                        "type": "OTHER_RELATION",
-                                    }
-                                }
-                            ]
-                        },
-                    }
-                }
-            ]
-        }
-    }
-}
-
-snapshots["test_children_query_staff_user 1"] = {
-    "data": {
-        "children": {
-            "edges": [
-                {
-                    "node": {
-                        "birthdate": "2020-03-01",
-                        "firstName": "Jason",
-                        "lastName": "Owens",
-                        "postalCode": "70898",
-                        "relationships": {
-                            "edges": [
-                                {
-                                    "node": {
-                                        "guardian": {
-                                            "email": "mperez@cox.com",
-                                            "firstName": "Selena",
-                                            "lastName": "Roy",
-                                            "phoneNumber": "123-447-4468",
-                                        },
-                                        "type": "OTHER_RELATION",
-                                    }
-                                }
-                            ]
-                        },
-                    }
-                },
-                {
-                    "node": {
                         "birthdate": "2020-09-07",
                         "firstName": "John",
                         "lastName": "Terrell",
@@ -102,18 +47,18 @@ snapshots["test_children_query_staff_user 1"] = {
                                 {
                                     "node": {
                                         "guardian": {
-                                            "email": "kelly76@allen.com",
-                                            "firstName": "Ashley",
-                                            "lastName": "Castillo",
-                                            "phoneNumber": "(117)159-1023x202",
+                                            "email": "mperez@cox.com",
+                                            "firstName": "Gregory",
+                                            "lastName": "Cross",
+                                            "phoneNumber": "750-649-7638x0346",
                                         },
-                                        "type": "OTHER_RELATION",
+                                        "type": "OTHER_GUARDIAN",
                                     }
                                 }
                             ]
                         },
                     }
-                },
+                }
             ]
         }
     }
@@ -245,6 +190,61 @@ snapshots["test_update_child_mutation_should_have_no_required_fields 1"] = {
     }
 }
 
+snapshots["test_children_query_staff_user 1"] = {
+    "data": {
+        "children": {
+            "edges": [
+                {
+                    "node": {
+                        "birthdate": "2020-03-01",
+                        "firstName": "Jason",
+                        "lastName": "Owens",
+                        "postalCode": "70898",
+                        "relationships": {
+                            "edges": [
+                                {
+                                    "node": {
+                                        "guardian": {
+                                            "email": "mperez@cox.com",
+                                            "firstName": "Selena",
+                                            "lastName": "Roy",
+                                            "phoneNumber": "123-447-4468",
+                                        },
+                                        "type": "OTHER_RELATION",
+                                    }
+                                }
+                            ]
+                        },
+                    }
+                },
+                {
+                    "node": {
+                        "birthdate": "2020-09-07",
+                        "firstName": "John",
+                        "lastName": "Terrell",
+                        "postalCode": "77671",
+                        "relationships": {
+                            "edges": [
+                                {
+                                    "node": {
+                                        "guardian": {
+                                            "email": "kelly76@allen.com",
+                                            "firstName": "Ashley",
+                                            "lastName": "Castillo",
+                                            "phoneNumber": "(117)159-1023x202",
+                                        },
+                                        "type": "OTHER_RELATION",
+                                    }
+                                }
+                            ]
+                        },
+                    }
+                },
+            ]
+        }
+    }
+}
+
 snapshots["test_get_available_events 1"] = {
     "data": {
         "child": {
@@ -254,7 +254,7 @@ snapshots["test_get_available_events 1"] = {
                         "node": {
                             "createdAt": "2020-12-12T00:00:00+00:00",
                             "occurrences": {
-                                "edges": [{"node": {"remainingCapacity": 4}}]
+                                "edges": [{"node": {"remainingCapacity": 0}}]
                             },
                         }
                     }
@@ -277,7 +277,7 @@ snapshots["test_get_past_events 1"] = {
                         "node": {
                             "createdAt": "2020-12-12T00:00:00+00:00",
                             "occurrences": {
-                                "edges": [{"node": {"remainingCapacity": 5}}]
+                                "edges": [{"node": {"remainingCapacity": 0}}]
                             },
                         }
                     }

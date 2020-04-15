@@ -11,10 +11,10 @@ from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
+from projects.models import Project
 
 from children.notifications import NotificationType
 from common.utils import update_object
-from events.models import Event
 from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
@@ -51,17 +51,15 @@ class ChildNode(DjangoObjectType):
             return None
 
     def resolve_past_events(self, info, **kwargs):
-        # TODO: Only return events of the same project
         return (
-            Event.objects.user_can_view(info.context.user)
+            self.project.events.user_can_view(info.context.user)
             .exclude(occurrences__time__gte=timezone.now())
             .distinct()
         )
 
     def resolve_available_events(self, info, **kwargs):
-        # TODO: Only return events of the same project
         return (
-            Event.objects.user_can_view(info.context.user)
+            self.project.events.user_can_view(info.context.user)
             .filter(occurrences__time__gte=timezone.now())
             .distinct()
             .exclude(occurrences__in=self.occurrences.all())
@@ -115,9 +113,10 @@ def validate_child_data(child_data):
             raise DataValidationError(e.message)
     # TODO temporarily hard-coded until further specs are figured out
     if "birthdate" in child_data:
+        birth_year = child_data["birthdate"].year
         if (
-            child_data["birthdate"].year != 2020
-            or child_data["birthdate"] > localtime(now()).date()
+            child_data["birthdate"] > localtime(now()).date()
+            or not Project.objects.filter(year=birth_year).exists()
         ):
             raise DataValidationError("Illegal birthdate.")
     return child_data
@@ -163,7 +162,9 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         for child_data in children_data:
             validate_child_data(child_data)
             relationship_data = child_data.pop("relationship", {})
-
+            child_data["project_id"] = Project.objects.get(
+                year=child_data["birthdate"].year
+            ).pk
             child = Child.objects.create(**child_data)
             Relationship.objects.create(
                 type=relationship_data.get("type"), child=child, guardian=guardian
@@ -207,6 +208,7 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
             raise MaxNumberOfChildrenPerGuardianError("Too many children.")
 
         validate_child_data(kwargs)
+        kwargs["project_id"] = Project.objects.get(year=kwargs["birthdate"].year).pk
         user = info.context.user
         relationship_data = kwargs.pop("relationship", {})
 

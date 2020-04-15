@@ -1,4 +1,5 @@
 import factory
+from projects.factories import ProjectFactory
 
 from venues.models import Venue
 
@@ -12,6 +13,7 @@ class VenueFactory(factory.django.DjangoModelFactory):
     additional_info = factory.Faker("text")
     wc_and_facilities = factory.Faker("text")
     www_url = factory.Faker("url")
+    project = factory.SubFactory(ProjectFactory)
 
     class Meta:
         model = Venue

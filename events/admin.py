@@ -32,10 +32,11 @@ class EventAdmin(TranslatableAdmin):
     actions = ["publish"]
 
     def publish(self, request, queryset):
-        # TODO: Send notifications to guardian who belongs to the same project
-        guardians = Guardian.objects.all()
         for obj in queryset:
             obj.publish()
+            guardians = Guardian.objects.filter(
+                children__project=obj.project
+            ).distinct()
             send_event_notifications_to_guardians(
                 obj, NotificationType.EVENT_PUBLISHED, guardians
             )
