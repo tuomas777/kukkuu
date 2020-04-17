@@ -1,6 +1,14 @@
 import sentry_sdk
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from graphene_file_upload.django import FileUploadGraphQLView
+from graphql.backend.core import GraphQLCoreBackend
+from graphql.language.ast import (
+    Field,
+    FragmentDefinition,
+    FragmentSpread,
+    InlineFragment,
+    OperationDefinition,
+)
 from graphql_jwt.exceptions import PermissionDenied as JwtPermissionDenied
 
 from kukkuu.consts import (
@@ -16,6 +24,7 @@ from kukkuu.consts import (
     OCCURRENCE_IS_FULL_ERROR,
     PAST_OCCURRENCE_ERROR,
     PERMISSION_DENIED_ERROR,
+    QUERY_TOO_DEEP_ERROR,
 )
 from kukkuu.exceptions import (
     ApiUsageError,
@@ -29,6 +38,7 @@ from kukkuu.exceptions import (
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
     PastOccurrenceError,
+    QueryTooDeepError,
 )
 
 error_codes_shared = {
@@ -38,6 +48,7 @@ error_codes_shared = {
     PermissionDenied: PERMISSION_DENIED_ERROR,
     ApiUsageError: API_USAGE_ERROR,
     DataValidationError: DATA_VALIDATION_ERROR,
+    QueryTooDeepError: QUERY_TOO_DEEP_ERROR,
 }
 
 error_codes_kukkuu = {
@@ -57,6 +68,83 @@ sentry_ignored_errors = (
 )
 
 error_codes = {**error_codes_shared, **error_codes_kukkuu}
+
+
+def get_fragments(definitions):
+    return {
+        definition.name.value: definition
+        for definition in definitions
+        if isinstance(definition, FragmentDefinition)
+    }
+
+
+def get_queries_and_mutations(definitions):
+    return [
+        definition
+        for definition in definitions
+        if isinstance(definition, OperationDefinition)
+    ]
+
+
+def measure_depth(node, fragments):
+    if isinstance(node, FragmentSpread):
+        fragment = fragments.get(node.name.value)
+        return measure_depth(node=fragment, fragments=fragments)
+
+    elif isinstance(node, Field):
+        if node.name.value.lower() in ["__schema", "__introspection"]:
+            return 0
+
+        if not node.selection_set:
+            return 1
+
+        depths = []
+        for selection in node.selection_set.selections:
+            depth = measure_depth(node=selection, fragments=fragments)
+            depths.append(depth)
+        return 1 + max(depths)
+
+    elif (
+        isinstance(node, FragmentDefinition)
+        or isinstance(node, OperationDefinition)
+        or isinstance(node, InlineFragment)
+    ):
+        depths = []
+        for selection in node.selection_set.selections:
+            depth = measure_depth(node=selection, fragments=fragments)
+            depths.append(depth)
+        return max(depths)
+    else:
+        raise Exception("Unknown node")
+
+
+def check_max_depth(max_depth, document):
+    fragments = get_fragments(document.definitions)
+    queries = get_queries_and_mutations(document.definitions)
+
+    for query in queries:
+        depth = measure_depth(query, fragments)
+        if depth > max_depth:
+            raise QueryTooDeepError(
+                "Query is too deep - its depth is {} but the max depth is {}".format(
+                    depth, max_depth
+                )
+            )
+
+
+# Customize GraphQL Backend inspired by
+# https://github.com/manesioz/secure-graphene/pull/1/files
+class DepthAnalysisBackend(GraphQLCoreBackend):
+    def __init__(self, max_depth, executor=None):
+        super().__init__(executor=executor)
+        self.max_depth = max_depth
+
+    def document_from_string(self, schema, document_string):
+        document = super().document_from_string(schema, document_string)
+
+        check_max_depth(max_depth=self.max_depth, document=document.document_ast)
+
+        return document
 
 
 class SentryGraphQLView(FileUploadGraphQLView):

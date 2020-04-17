@@ -7,9 +7,11 @@ from django.views.decorators.csrf import csrf_exempt
 from helusers.admin_site import admin
 
 from common.utils import get_api_version
-from kukkuu.views import SentryGraphQLView
+from kukkuu.views import DepthAnalysisBackend, SentryGraphQLView
 
 admin.site.index_title = " ".join([ugettext("Kukkuu backend"), get_api_version()])
+
+gql_backend = DepthAnalysisBackend(max_depth=settings.KUKKUU_QUERY_MAX_DEPTH)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -17,7 +19,7 @@ urlpatterns = [
         "graphql",
         csrf_exempt(
             SentryGraphQLView.as_view(
-                graphiql=settings.ENABLE_GRAPHIQL or settings.DEBUG
+                graphiql=settings.ENABLE_GRAPHIQL or settings.DEBUG, backend=gql_backend
             )
         ),
     ),
