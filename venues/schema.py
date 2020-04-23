@@ -54,7 +54,7 @@ class VenueNode(DjangoObjectType):
     def resolve_occurrences(self, info, **kwargs):
         return (
             self.occurrences.annotate(
-                enrolments_count=Count("enrolments", distinct=True)
+                enrolment_count=Count("enrolments", distinct=True)
             )
             .select_related("event")
             .order_by("time")

@@ -15,13 +15,23 @@ class OccurrenceFilter(django_filters.FilterSet):
     venue_id = django_filters.CharFilter(
         field_name="venue", method="filter_by_venue_global_id"
     )
+    event_id = django_filters.CharFilter(
+        field_name="event", method="filter_by_event_global_id"
+    )
     occurrence_language = django_filters.CharFilter(
         field_name="occurrence_language", method="filter_by_occurrence_language"
     )
 
     class Meta:
         model = Occurrence
-        fields = ["date", "time", "upcoming", "venue_id", "occurrence_language"]
+        fields = [
+            "date",
+            "time",
+            "upcoming",
+            "venue_id",
+            "event_id",
+            "occurrence_language",
+        ]
 
     def filter_by_time(self, qs, name, value):
         value = convert_to_localtime_tz(value)
@@ -35,6 +45,10 @@ class OccurrenceFilter(django_filters.FilterSet):
     def filter_by_venue_global_id(self, qs, name, value):
         venue_id = from_global_id(value)[1]
         return qs.filter(venue_id=venue_id)
+
+    def filter_by_event_global_id(self, qs, name, value):
+        event_id = from_global_id(value)[1]
+        return qs.filter(event_id=event_id)
 
     def filter_by_occurrence_language(self, qs, name, value):
         return qs.filter(occurrence_language=value.lower())

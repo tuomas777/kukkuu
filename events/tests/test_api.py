@@ -67,6 +67,7 @@ query Events {
           edges {
             node {
               remainingCapacity
+              enrolmentCount
               time
               venue {
                 translations{
@@ -114,6 +115,7 @@ query Event($id:ID!) {
         node{
           time
           remainingCapacity
+          enrolmentCount
           venue{
             translations{
               name
@@ -135,6 +137,7 @@ query Occurrences {
       node {
         time
         remainingCapacity
+        enrolmentCount
         event {
           translations {
             name
@@ -168,9 +171,9 @@ query Occurrences {
 
 OCCURRENCES_FILTER_QUERY = """
 query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String,
-$occurrenceLanguage: String) {
+                  $eventId: String, $occurrenceLanguage: String) {
   occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId,
-  occurrenceLanguage: $occurrenceLanguage) {
+              eventId: $eventId, occurrenceLanguage: $occurrenceLanguage) {
     edges {
       node {
         time
@@ -194,6 +197,7 @@ query Occurrence($id: ID!) {
     }
     time
     remainingCapacity
+    enrolmentCount
     occurrenceLanguage
     event {
       translations {
@@ -951,6 +955,22 @@ def test_occurrences_filter_by_venue(user_api_client, snapshot, event, venue, pr
     snapshot.assert_match(executed)
 
 
+def test_occurrences_filter_by_event(user_api_client, snapshot, event, project):
+    OccurrenceFactory.create_batch(
+        2, event=event, time=datetime(1970, 1, 1, 12, tzinfo=timezone.now().tzinfo)
+    )
+    OccurrenceFactory.create_batch(
+        3,
+        event__project=project,
+        time=datetime(1981, 2, 18, 12, tzinfo=timezone.now().tzinfo),
+    )
+    variables = {"eventId": to_global_id("EventNode", event.id)}
+
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
+
+    snapshot.assert_match(executed)
+
+
 def test_occurrences_filter_by_language(user_api_client, snapshot, event, venue):
     occurrences = OccurrenceFactory.create_batch(2, venue=venue, event=event)
     sv_occurrences = OccurrenceFactory.create_batch(
@@ -968,18 +988,23 @@ def test_occurrences_filter_by_language(user_api_client, snapshot, event, venue)
     snapshot.assert_match(executed)
 
 
-def test_occurrence_available_capacity(user_api_client, snapshot, occurrence, project):
+def test_occurrence_available_capacity_and_enrolment_count(
+    user_api_client, snapshot, occurrence, project
+):
     max_capacity = occurrence.event.capacity_per_occurrence
     EnrolmentFactory.create_batch(3, occurrence=occurrence, child__project=project)
     variables = {"id": to_global_id("OccurrenceNode", occurrence.id)}
     executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
     assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 3
+    assert executed["data"]["occurrence"]["enrolmentCount"] == 3
     e = EnrolmentFactory(occurrence=occurrence, child__project=project)
     executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
     assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 4
+    assert executed["data"]["occurrence"]["enrolmentCount"] == 4
     e.delete()
     executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
     assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 3
+    assert executed["data"]["occurrence"]["enrolmentCount"] == 3
     snapshot.assert_match(executed)
 
 
