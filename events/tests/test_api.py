@@ -168,9 +168,9 @@ query Occurrences {
 
 OCCURRENCES_FILTER_QUERY = """
 query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String,
-$occurrenceLanguage: String) {
+                  $eventId: String, $occurrenceLanguage: String) {
   occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId,
-  occurrenceLanguage: $occurrenceLanguage) {
+              eventId: $eventId, occurrenceLanguage: $occurrenceLanguage) {
     edges {
       node {
         time
@@ -947,6 +947,22 @@ def test_occurrences_filter_by_venue(user_api_client, snapshot, event, venue, pr
     variables = {"venueId": to_global_id("VenueNode", another_occurrences[0].venue.id)}
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
     assert len(executed["data"]["occurrences"]["edges"]) == len(another_occurrences)
+
+    snapshot.assert_match(executed)
+
+
+def test_occurrences_filter_by_event(user_api_client, snapshot, event, project):
+    OccurrenceFactory.create_batch(
+        2, event=event, time=datetime(1970, 1, 1, 12, tzinfo=timezone.now().tzinfo)
+    )
+    OccurrenceFactory.create_batch(
+        3,
+        event__project=project,
+        time=datetime(1981, 2, 18, 12, tzinfo=timezone.now().tzinfo),
+    )
+    variables = {"eventId": to_global_id("EventNode", event.id)}
+
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
 
     snapshot.assert_match(executed)
 

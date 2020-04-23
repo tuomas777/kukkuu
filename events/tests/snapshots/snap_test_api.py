@@ -670,3 +670,14 @@ snapshots["test_child_enrol_occurence_from_different_project 1"] = {
         }
     }
 }
+
+snapshots["test_occurrences_filter_by_event 1"] = {
+    "data": {
+        "occurrences": {
+            "edges": [
+                {"node": {"time": "1970-01-01T12:00:00+00:00"}},
+                {"node": {"time": "1970-01-01T12:00:00+00:00"}},
+            ]
+        }
+    }
+}
