@@ -94,7 +94,7 @@ class EventNode(DjangoObjectType):
 
     def resolve_occurrences(self, info, **kwargs):
         return self.occurrences.annotate(
-            enrolments_count=Count("enrolments", distinct=True)
+            enrolment_count=Count("enrolments", distinct=True)
         ).order_by("time")
 
 
@@ -106,13 +106,14 @@ class EventConnection(Connection):
 class OccurrenceNode(DjangoObjectType):
     remaining_capacity = graphene.Int()
     occurrence_language = LanguageEnum(required=True)
+    enrolment_count = graphene.Int(required=True)
 
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
         return (
             queryset.user_can_view(info.context.user)
-            .annotate(enrolments_count=Count("enrolments", distinct=True))
+            .annotate(enrolment_count=Count("enrolments", distinct=True))
             .order_by("time")
         )
 
@@ -122,7 +123,7 @@ class OccurrenceNode(DjangoObjectType):
         return super().get_node(info, id)
 
     def resolve_remaining_capacity(self, info, **kwargs):
-        return self.event.capacity_per_occurrence - self.enrolments_count
+        return self.event.capacity_per_occurrence - self.enrolment_count
 
     class Meta:
         model = Occurrence
@@ -312,6 +313,10 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
             raise ObjectDoesNotExistError(e)
 
         occurrence = Occurrence.objects.create(**kwargs)
+
+        # needed because enrolment_count is an annotated field
+        occurrence.enrolment_count = 0
+
         return AddOccurrenceMutation(occurrence=occurrence)
 
 

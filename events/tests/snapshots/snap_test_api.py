@@ -82,6 +82,7 @@ snapshots["test_staff_publish_event 1"] = {
 snapshots["test_occurrence_query_normal_user 1"] = {
     "data": {
         "occurrence": {
+            "enrolmentCount": 0,
             "enrolments": {"edges": []},
             "event": {
                 "capacityPerOccurrence": 43,
@@ -137,6 +138,7 @@ snapshots["test_update_occurrence_staff_user 1"] = {
 snapshots["test_enrolment_visibility 1"] = {
     "data": {
         "occurrence": {
+            "enrolmentCount": 4,
             "enrolments": {"edges": [{"node": {"child": {"firstName": "Mary"}}}]},
             "event": {
                 "capacityPerOccurrence": 5,
@@ -198,6 +200,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                             "edges": [
                                 {
                                     "node": {
+                                        "enrolmentCount": 0,
                                         "remainingCapacity": 50,
                                         "time": "2005-09-07T17:47:05+00:00",
                                         "venue": {
@@ -250,6 +253,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                 "edges": [
                     {
                         "node": {
+                            "enrolmentCount": 0,
                             "remainingCapacity": 50,
                             "time": "2005-09-07T17:47:05+00:00",
                             "venue": {
@@ -302,6 +306,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                             "edges": [
                                 {
                                     "node": {
+                                        "enrolmentCount": 0,
                                         "remainingCapacity": 50,
                                         "time": "1978-11-27T17:53:39+00:00",
                                         "venue": {
@@ -348,6 +353,7 @@ If his their best. Election stay every something base.""",
                             "edges": [
                                 {
                                     "node": {
+                                        "enrolmentCount": 0,
                                         "remainingCapacity": 28,
                                         "time": "2012-05-15T10:30:47+00:00",
                                         "venue": {
@@ -487,54 +493,13 @@ snapshots["test_occurrences_filter_by_venue 1"] = {
     }
 }
 
-snapshots["test_occurrence_available_capacity 1"] = {
-    "data": {
-        "occurrence": {
-            "enrolments": {"edges": []},
-            "event": {
-                "capacityPerOccurrence": 43,
-                "duration": 112,
-                "image": "http://testserver/media/send.jpg",
-                "participantsPerInvite": "CHILD_AND_GUARDIAN",
-                "publishedAt": "2020-12-12T00:00:00+00:00",
-                "translations": [
-                    {
-                        "description": "Expert interview old affect quite nearly gun. Born land military first he law ago. Yard door indicate country individual course.",
-                        "languageCode": "EN",
-                        "name": "Up always sport return. Light a point charge stand store.",
-                        "shortDescription": "East site chance of.",
-                    }
-                ],
-            },
-            "occurrenceLanguage": "FI",
-            "remainingCapacity": 40,
-            "time": "2020-12-12T00:00:00+00:00",
-            "venue": {
-                "translations": [
-                    {
-                        "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
-                        "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
-                        "address": """48830 Whitehead Rapid Suite 548
-Whiteview, TN 11309""",
-                        "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
-                        "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
-Page box child care any concern. Defense level church use.""",
-                        "languageCode": "EN",
-                        "name": "Free heart significant machine try.",
-                        "wwwUrl": "http://brooks.org/",
-                    }
-                ]
-            },
-        }
-    }
-}
-
 snapshots["test_occurrences_query_normal_user 1"] = {
     "data": {
         "occurrences": {
             "edges": [
                 {
                     "node": {
+                        "enrolmentCount": 0,
                         "event": {
                             "capacityPerOccurrence": 43,
                             "duration": 112,
@@ -581,6 +546,7 @@ snapshots["test_occurrences_query_staff_user 1"] = {
             "edges": [
                 {
                     "node": {
+                        "enrolmentCount": 0,
                         "event": {
                             "capacityPerOccurrence": 43,
                             "duration": 112,
@@ -618,6 +584,7 @@ Page box child care any concern. Defense level church use.""",
                 },
                 {
                     "node": {
+                        "enrolmentCount": 0,
                         "event": {
                             "capacityPerOccurrence": 26,
                             "duration": 220,
@@ -678,6 +645,49 @@ snapshots["test_occurrences_filter_by_event 1"] = {
                 {"node": {"time": "1970-01-01T12:00:00+00:00"}},
                 {"node": {"time": "1970-01-01T12:00:00+00:00"}},
             ]
+        }
+    }
+}
+
+snapshots["test_occurrence_available_capacity_and_enrolment_count 1"] = {
+    "data": {
+        "occurrence": {
+            "enrolmentCount": 3,
+            "enrolments": {"edges": []},
+            "event": {
+                "capacityPerOccurrence": 43,
+                "duration": 112,
+                "image": "http://testserver/media/send.jpg",
+                "participantsPerInvite": "CHILD_AND_GUARDIAN",
+                "publishedAt": "2020-12-12T00:00:00+00:00",
+                "translations": [
+                    {
+                        "description": "Expert interview old affect quite nearly gun. Born land military first he law ago. Yard door indicate country individual course.",
+                        "languageCode": "EN",
+                        "name": "Up always sport return. Light a point charge stand store.",
+                        "shortDescription": "East site chance of.",
+                    }
+                ],
+            },
+            "occurrenceLanguage": "FI",
+            "remainingCapacity": 40,
+            "time": "2020-12-12T00:00:00+00:00",
+            "venue": {
+                "translations": [
+                    {
+                        "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
+                        "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
+                        "address": """48830 Whitehead Rapid Suite 548
+Whiteview, TN 11309""",
+                        "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
+                        "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
+Page box child care any concern. Defense level church use.""",
+                        "languageCode": "EN",
+                        "name": "Free heart significant machine try.",
+                        "wwwUrl": "http://brooks.org/",
+                    }
+                ]
+            },
         }
     }
 }
