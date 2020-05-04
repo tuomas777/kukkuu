@@ -2,6 +2,7 @@ import shutil
 
 import factory.random
 import pytest
+from django.apps import apps
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
 from django.utils import timezone
@@ -30,7 +31,13 @@ def setup_test_environment(settings):
 
 @pytest.fixture
 def project():
-    return Project.objects.get_or_create(year=2020)[0]
+    ProjectTranslation = apps.get_model("projects", "ProjectTranslation")
+    project = Project.objects.get_or_create(year=2020)[0]
+    project.translations.all().delete()
+    ProjectTranslation.objects.create(
+        master_id=project.pk, language_code="fi", name="Testiprojekti",
+    )
+    return project
 
 
 @pytest.fixture
