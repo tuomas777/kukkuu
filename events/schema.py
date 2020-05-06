@@ -17,8 +17,6 @@ from children.schema import ChildNode
 from common.utils import update_object, update_object_with_translations
 from events.filters import OccurrenceFilter
 from events.models import Enrolment, Event, Occurrence
-from events.notifications import NotificationType
-from events.utils import send_event_notifications_to_guardians
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
     EventAlreadyPublishedError,
@@ -27,7 +25,6 @@ from kukkuu.exceptions import (
     OccurrenceIsFullError,
     PastOccurrenceError,
 )
-from users.models import Guardian
 from users.schema import LanguageEnum
 from venues.models import Venue
 
@@ -397,15 +394,6 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
             if event.is_published():
                 raise EventAlreadyPublishedError("Event is already published")
             event.publish()
-            guardians = (
-                Guardian.objects.filter(children__project=event.project)
-                .distinct()
-                .annotate(children_count=Count("children"))
-                .filter(children_count__gt=0)
-            )
-            send_event_notifications_to_guardians(
-                event, NotificationType.EVENT_PUBLISHED, guardians
-            )
 
         except Event.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
