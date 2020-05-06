@@ -6,6 +6,8 @@ from parler.models import TranslatedFields
 
 from children.models import Child
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
+from events.consts import NotificationType
+from events.utils import send_event_notifications_to_guardians
 from venues.models import Venue
 
 
@@ -70,6 +72,12 @@ class Event(TimestampedModel, TranslatableModel):
     def publish(self):
         self.published_at = timezone.now()
         self.save()
+
+        send_event_notifications_to_guardians(
+            self,
+            NotificationType.EVENT_PUBLISHED,
+            self.project.children.prefetch_related("guardians"),
+        )
 
     def is_published(self):
         return bool(self.published_at)

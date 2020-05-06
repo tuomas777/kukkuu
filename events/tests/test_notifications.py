@@ -3,6 +3,7 @@ from copy import deepcopy
 import pytest
 from django.core import mail
 from graphql_relay import to_global_id
+from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import (
@@ -68,10 +69,14 @@ def test_event_publish_notification(
 ):
     GuardianFactory(language="fi")
     children = ChildWithGuardianFactory.create_batch(3, project=project)
+    children[1].guardians.set(GuardianFactory.create_batch(3, language="fi"))
+    ChildWithGuardianFactory.create_batch(2, project=ProjectFactory(year=2019))
+
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", unpublished_event.id)
     staff_api_client.execute(PUBLISH_EVENT_MUTATION, variables=event_variables)
-    assert len(mail.outbox) == len(children)
+
+    assert len(mail.outbox) == 5  # 3 children of which one has 3 guardians
 
 
 @pytest.mark.django_db
