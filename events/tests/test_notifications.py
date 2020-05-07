@@ -25,6 +25,7 @@ def notification_template_event_published_fi():
         body_text="""
         Event FI: {{ event }}
         Guardian FI: {{ guardian }}
+        Event URL: {{ event_url }}
 """,
     )
 

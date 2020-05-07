@@ -1,4 +1,5 @@
 from django.db import transaction
+from graphql_relay import to_global_id
 
 from kukkuu import __version__
 from kukkuu.exceptions import DataValidationError
@@ -25,3 +26,7 @@ def update_object_with_translations(model, model_data):
 
 def get_api_version():
     return " | ".join((__version__, REVISION.decode("utf-8")))
+
+
+def get_global_id(obj):
+    return to_global_id(f"{obj.__class__.__name__}Node", obj.pk)
