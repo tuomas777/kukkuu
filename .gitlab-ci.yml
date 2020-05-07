@@ -20,6 +20,7 @@ review:
     K8S_SECRET_DEBUG: 1
     K8S_SECRET_TOKEN_AUTH_AUTHSERVER_URL: "https://tunnistamo.test.kuva.hel.ninja/openid"
     K8S_SECRET_CORS_ORIGIN_ALLOW_ALL: 1
+    K8S_SECRET_KUKKUU_UI_BASE_URL: "https://kukkuu-ui.test.kuva.hel.ninja"
 
 staging:
   # By default the staging environment is created from the master-branch.
@@ -46,3 +47,4 @@ staging:
     K8S_SECRET_SENTRY_DSN: "$GL_SENTRY_DNS"
     K8S_SECRET_SENTRY_ENVIRONMENT: "test"
     K8S_SECRET_ENABLE_GRAPHIQL: 1
+    K8S_SECRET_KUKKUU_UI_BASE_URL: "https://kukkuu-ui.test.kuva.hel.ninja"

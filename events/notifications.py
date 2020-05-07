@@ -5,6 +5,7 @@ from django_ilmoitin.registry import notifications
 from children.factories import ChildWithGuardianFactory
 from events.consts import NotificationType
 from events.factories import EventFactory, OccurrenceFactory
+from events.utils import get_event_ui_url
 from users.factories import GuardianFactory
 
 notifications.register(NotificationType.EVENT_PUBLISHED, _("event published"))
@@ -24,6 +25,7 @@ dummy_context.update(
             "guardian": guardian,
             "event": event,
             "child": child,
+            "event_url": get_event_ui_url(event, child, guardian.language),
         },
         NotificationType.OCCURRENCE_ENROLMENT: {
             "guardian": guardian,
