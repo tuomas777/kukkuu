@@ -134,12 +134,7 @@ snapshots["test_my_profile_query 1"] = {
 snapshots["test_my_admin_profile_project_admin 1"] = {
     "data": {
         "myAdminProfile": {
-            "isProjectAdmin": False,
-            "projects": {
-                "edges": [
-                    {"node": {"id": "UHJvamVjdE5vZGU6Mg==", "name": "my only project"}}
-                ]
-            },
+            "projects": {"edges": [{"node": {"name": "my only project"}}]}
         }
     }
 }

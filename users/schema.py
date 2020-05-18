@@ -32,16 +32,10 @@ class GuardianNode(DjangoObjectType):
 
 
 class AdminNode(DjangoObjectType):
-    is_project_admin = graphene.Boolean()
-
     class Meta:
         model = User
         interfaces = (relay.Node,)
-        fields = ("is_project_admin", "projects")
-
-    def resolve_is_project_admin(self, info, **kwargs):
-        # TODO: Update this when Project is available
-        return self.is_staff
+        fields = ("projects",)
 
 
 class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):

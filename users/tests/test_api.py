@@ -101,11 +101,9 @@ query MyProfile {
 MY_ADMIN_PROFILE_QUERY = """
 query MyAdminProfle{
   myAdminProfile{
-    isProjectAdmin
     projects {
       edges {
         node {
-          id
           name
         }
       }
@@ -192,13 +190,6 @@ def test_update_my_profile_mutation(snapshot, user_api_client):
 def test_my_admin_profile_unauthenticated(api_client):
     executed = api_client.execute(MY_ADMIN_PROFILE_QUERY)
     assert_permission_denied(executed)
-
-
-def test_my_admin_profile_authenticated(user_api_client, staff_api_client):
-    executed = user_api_client.execute(MY_ADMIN_PROFILE_QUERY)
-    assert not executed["data"]["myAdminProfile"]["isProjectAdmin"]
-    executed = staff_api_client.execute(MY_ADMIN_PROFILE_QUERY)
-    assert executed["data"]["myAdminProfile"]["isProjectAdmin"]
 
 
 def test_my_admin_profile_normal_user(user_api_client):
