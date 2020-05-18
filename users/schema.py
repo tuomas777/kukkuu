@@ -1,5 +1,4 @@
 import graphene
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from graphene import relay
@@ -7,17 +6,13 @@ from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 
+from common.schema import LanguageEnum
 from common.utils import update_object
 from kukkuu.exceptions import ObjectDoesNotExistError
 
 from .models import Guardian
 
 User = get_user_model()
-
-
-LanguageEnum = graphene.Enum(
-    "Language", [(l[0].upper(), l[0]) for l in settings.LANGUAGES]
-)
 
 
 class GuardianNode(DjangoObjectType):
