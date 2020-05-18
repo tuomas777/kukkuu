@@ -37,7 +37,7 @@ class AdminNode(DjangoObjectType):
     class Meta:
         model = User
         interfaces = (relay.Node,)
-        fields = ("is_project_admin",)
+        fields = ("is_project_admin", "projects")
 
     def resolve_is_project_admin(self, info, **kwargs):
         # TODO: Update this when Project is available
