@@ -24,6 +24,7 @@ class ProjectNode(DjangoObjectType):
     class Meta:
         model = Project
         interfaces = (relay.Node,)
+        exclude = ("users",)
 
     @classmethod
     @login_required
