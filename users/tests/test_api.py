@@ -1,4 +1,5 @@
 import pytest
+from projects.factories import ProjectFactory
 
 from children.tests.test_api import (
     assert_guardian_matches_data,
@@ -100,7 +101,13 @@ query MyProfile {
 MY_ADMIN_PROFILE_QUERY = """
 query MyAdminProfle{
   myAdminProfile{
-    isProjectAdmin
+    projects {
+      edges {
+        node {
+          name
+        }
+      }
+    }
   }
 }
 """
@@ -185,8 +192,17 @@ def test_my_admin_profile_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_my_admin_profile_authenticated(user_api_client, staff_api_client):
+def test_my_admin_profile_normal_user(user_api_client):
+    ProjectFactory(year=2021, name="some project")
     executed = user_api_client.execute(MY_ADMIN_PROFILE_QUERY)
-    assert not executed["data"]["myAdminProfile"]["isProjectAdmin"]
-    executed = staff_api_client.execute(MY_ADMIN_PROFILE_QUERY)
-    assert executed["data"]["myAdminProfile"]["isProjectAdmin"]
+    assert executed["data"]["myAdminProfile"]["projects"]["edges"] == []
+
+
+def test_my_admin_profile_project_admin(snapshot, user_api_client):
+    project = ProjectFactory(year=2021, name="my only project")
+    project.users.add(user_api_client.user)
+    ProjectFactory(year=2022, name="someone else's project")
+
+    executed = user_api_client.execute(MY_ADMIN_PROFILE_QUERY)
+
+    snapshot.assert_match(executed)

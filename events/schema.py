@@ -14,6 +14,7 @@ from projects.models import Project
 
 from children.models import Child
 from children.schema import ChildNode
+from common.schema import LanguageEnum
 from common.utils import update_object, update_object_with_translations
 from events.filters import OccurrenceFilter
 from events.models import Enrolment, Event, Occurrence
@@ -25,7 +26,6 @@ from kukkuu.exceptions import (
     OccurrenceIsFullError,
     PastOccurrenceError,
 )
-from users.schema import LanguageEnum
 from venues.models import Venue
 
 EventTranslation = apps.get_model("events", "EventTranslation")

@@ -5,7 +5,7 @@ from graphene_django import DjangoConnectionField, DjangoObjectType
 from graphql_jwt.decorators import login_required
 from projects.models import Project
 
-from users.schema import LanguageEnum
+from common.schema import LanguageEnum
 
 ProjectTranslation = apps.get_model("projects", "ProjectTranslation")
 
@@ -24,6 +24,7 @@ class ProjectNode(DjangoObjectType):
     class Meta:
         model = Project
         interfaces = (relay.Node,)
+        exclude = ("users",)
 
     @classmethod
     @login_required
