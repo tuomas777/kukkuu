@@ -173,7 +173,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             children.append(child)
 
         send_notification(
-            guardian.user.email,
+            guardian.get_email_in_use(),
             NotificationType.SIGNUP,
             {"children": children, "guardian": guardian},
             guardian.language,

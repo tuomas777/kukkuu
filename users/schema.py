@@ -28,7 +28,7 @@ class GuardianNode(DjangoObjectType):
         return queryset.user_can_view(info.context.user).order_by("last_name")
 
     def resolve_email(self, info, **kwargs):
-        return self.user.email
+        return self.get_email_in_use()
 
 
 class AdminNode(DjangoObjectType):
@@ -44,6 +44,7 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         last_name = graphene.String()
         phone_number = graphene.String()
         language = LanguageEnum()
+        email = graphene.String()
 
     my_profile = graphene.Field(GuardianNode)
 
@@ -60,6 +61,7 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
 
         update_object(guardian, kwargs)
 
+        guardian.email = guardian.get_email_in_use()
         return UpdateMyProfileMutation(my_profile=guardian)
 
 

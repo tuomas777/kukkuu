@@ -5,6 +5,7 @@ from children.tests.test_api import (
     assert_guardian_matches_data,
     assert_permission_denied,
 )
+from common.tests.conftest import create_api_client_with_user
 from users.factories import GuardianFactory
 from users.models import Guardian
 
@@ -136,6 +137,24 @@ def test_my_profile_query(snapshot, user_api_client, project):
     snapshot.assert_match(executed)
 
 
+@pytest.mark.parametrize("guardian_email", ["guardian@example.com", ""])
+def test_my_profile_query_email(snapshot, guardian_email):
+    guardian = GuardianFactory(email=guardian_email, user__email="user@example.com")
+    api_client = create_api_client_with_user(guardian.user)
+
+    executed = api_client.execute(
+        """
+query MyProfile {
+  myProfile {
+    email
+  }
+}
+"""
+    )
+
+    snapshot.assert_match(executed)
+
+
 def test_my_profile_no_profile(snapshot, staff_api_client):
     GuardianFactory()
 
@@ -185,6 +204,31 @@ def test_update_my_profile_mutation(snapshot, user_api_client):
     snapshot.assert_match(executed)
     guardian = Guardian.objects.get(user=user_api_client.user)
     assert_guardian_matches_data(guardian, UPDATE_MY_PROFILE_VARIABLES["input"])
+
+
+@pytest.mark.parametrize("guardian_email", ["guardian_updated@example.com", ""])
+def test_update_my_profile_mutation_email(snapshot, guardian_email):
+    guardian = GuardianFactory(
+        email="guardian_original@example.com", user__email="user@example.com"
+    )
+    api_client = create_api_client_with_user(guardian.user)
+
+    executed = api_client.execute(
+        """
+mutation UpdateMyProfile($input: UpdateMyProfileMutationInput!) {
+  updateMyProfile(input: $input) {
+    myProfile {
+      email
+    }
+  }
+}
+""",
+        variables={"input": {"email": guardian_email}},
+    )
+
+    snapshot.assert_match(executed)
+    guardian.refresh_from_db()
+    assert guardian.email == guardian_email
 
 
 def test_my_admin_profile_unauthenticated(api_client):
