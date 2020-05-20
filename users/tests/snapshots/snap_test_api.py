@@ -138,3 +138,21 @@ snapshots["test_my_admin_profile_project_admin 1"] = {
         }
     }
 }
+
+snapshots["test_my_profile_query_email[guardian@example.com] 1"] = {
+    "data": {"myProfile": {"email": "guardian@example.com"}}
+}
+
+snapshots["test_my_profile_query_email[] 1"] = {
+    "data": {"myProfile": {"email": "user@example.com"}}
+}
+
+snapshots["test_update_my_profile_mutation_email[guardian_updated@example.com] 1"] = {
+    "data": {
+        "updateMyProfile": {"myProfile": {"email": "guardian_updated@example.com"}}
+    }
+}
+
+snapshots["test_update_my_profile_mutation_email[] 1"] = {
+    "data": {"updateMyProfile": {"myProfile": {"email": "user@example.com"}}}
+}

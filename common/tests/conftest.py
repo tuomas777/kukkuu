@@ -47,22 +47,22 @@ def user():
 
 @pytest.fixture
 def api_client():
-    return _create_api_client_with_user(AnonymousUser())
+    return create_api_client_with_user(AnonymousUser())
 
 
 @pytest.fixture
 def user_api_client():
-    return _create_api_client_with_user(UserFactory())
+    return create_api_client_with_user(UserFactory())
 
 
 @pytest.fixture
 def staff_api_client():
-    return _create_api_client_with_user(UserFactory(is_staff=True))
+    return create_api_client_with_user(UserFactory(is_staff=True))
 
 
 @pytest.fixture
 def guardian_api_client():
-    return _create_api_client_with_user(UserFactory(guardian=GuardianFactory()))
+    return create_api_client_with_user(UserFactory(guardian=GuardianFactory()))
 
 
 @pytest.fixture
@@ -102,7 +102,7 @@ def unpublished_occurrence(venue, unpublished_event):
     return OccurrenceFactory(time=timezone.now(), venue=venue, event=unpublished_event)
 
 
-def _create_api_client_with_user(user):
+def create_api_client_with_user(user):
     request = RequestFactory().post("/graphql")
     request.user = user
     client = Client(

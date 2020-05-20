@@ -34,6 +34,7 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
     language = models.CharField(
         verbose_name=_("language"), max_length=10, default=settings.LANGUAGES[0][0]
     )
+    email = models.EmailField(_("email address"), blank=True)
 
     objects = GuardianQuerySet.as_manager()
 
@@ -43,3 +44,6 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+    def get_email_in_use(self):
+        return self.email or self.user.email
