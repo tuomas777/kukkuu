@@ -17,6 +17,7 @@ from kukkuu.consts import (
     API_USAGE_ERROR,
     DATA_VALIDATION_ERROR,
     GENERAL_ERROR,
+    INVALID_EMAIL_FORMAT_ERROR,
     MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
 )
@@ -63,7 +64,7 @@ def assert_relationship_matches_data(relationship_obj, relationship_data):
 
 def assert_guardian_matches_data(guardian_obj, guardian_data):
     guardian_data = guardian_data or {}
-    for field_name in ("firstName", "lastName", "phoneNumber"):
+    for field_name in ("firstName", "lastName", "phoneNumber", "email"):
         if field_name in guardian_data:
             assert (
                 str(getattr(guardian_obj, to_snake_case(field_name)))
@@ -162,6 +163,20 @@ def test_submit_children_and_guardian(snapshot, user_api_client):
         assert_relationship_matches_data(relationship, child_data.get("relationship"))
 
 
+def test_submit_children_and_guardian_with_email(snapshot, user_api_client):
+    variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
+    variables["input"]["guardian"]["email"] = "updated_email@example.com"
+
+    executed = user_api_client.execute(
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+
+    guardian = Guardian.objects.last()
+    assert_guardian_matches_data(guardian, variables["input"]["guardian"])
+
+
 def test_submit_children_and_guardian_one_child_required(snapshot, user_api_client):
     variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
     variables["input"]["children"] = []
@@ -225,6 +240,18 @@ def test_submit_children_and_guardian_children_limit(user_api_client, settings):
 
     assert_match_error_code(executed, MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR)
     assert "Too many children." in str(executed["errors"])
+
+
+@pytest.mark.parametrize("guardian_email", ["INVALID_EMAIL", "", None])
+def test_submit_children_and_guardian_email_validation(user_api_client, guardian_email):
+    variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
+    variables["input"]["guardian"]["email"] = guardian_email
+
+    executed = user_api_client.execute(
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, INVALID_EMAIL_FORMAT_ERROR)
 
 
 CHILDREN_QUERY = """

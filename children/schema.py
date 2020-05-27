@@ -22,7 +22,7 @@ from kukkuu.exceptions import (
     ObjectDoesNotExistError,
 )
 from users.models import Guardian
-from users.schema import GuardianNode, LanguageEnum
+from users.schema import GuardianNode, LanguageEnum, validate_guardian_data
 
 from .models import Child, postal_code_validator, Relationship
 
@@ -95,6 +95,7 @@ class GuardianInput(graphene.InputObjectType):
     last_name = graphene.String(required=True)
     phone_number = graphene.String()
     language = LanguageEnum(required=True)
+    email = graphene.String()
 
 
 class ChildInput(graphene.InputObjectType):
@@ -150,12 +151,14 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             raise MaxNumberOfChildrenPerGuardianError("Too many children.")
 
         guardian_data = kwargs["guardian"]
+        validate_guardian_data(guardian_data)
         guardian = Guardian.objects.create(
             user=user,
             first_name=guardian_data["first_name"],
             last_name=guardian_data["last_name"],
             phone_number=guardian_data.get("phone_number", ""),
             language=guardian_data["language"],
+            email=guardian_data.get("email", ""),
         )
 
         children = []
