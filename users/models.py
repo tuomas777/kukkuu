@@ -34,7 +34,11 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
     language = models.CharField(
         verbose_name=_("language"), max_length=10, default=settings.LANGUAGES[0][0]
     )
-    email = models.EmailField(_("email address"), blank=True)
+    email = models.EmailField(
+        _("email address"),
+        blank=True,
+        help_text=_("If left blank, will be populated with the user's email."),
+    )
 
     objects = GuardianQuerySet.as_manager()
 
@@ -45,5 +49,7 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
-    def get_email_in_use(self):
-        return self.email or self.user.email
+    def save(self, *args, **kwargs):
+        if not self.email:
+            self.email = self.user.email
+        super().save(*args, **kwargs)

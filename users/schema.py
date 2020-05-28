@@ -28,7 +28,6 @@ def validate_guardian_data(guardian_data):
 
 class GuardianNode(DjangoObjectType):
     language = LanguageEnum(required=True)
-    email = graphene.String()
 
     class Meta:
         model = Guardian
@@ -37,9 +36,6 @@ class GuardianNode(DjangoObjectType):
     @classmethod
     def get_queryset(cls, queryset, info):
         return queryset.user_can_view(info.context.user).order_by("last_name")
-
-    def resolve_email(self, info, **kwargs):
-        return self.get_email_in_use()
 
 
 class AdminNode(DjangoObjectType):
@@ -73,7 +69,6 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         validate_guardian_data(kwargs)
         update_object(guardian, kwargs)
 
-        guardian.email = guardian.get_email_in_use()
         return UpdateMyProfileMutation(my_profile=guardian)
 
 
