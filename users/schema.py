@@ -13,6 +13,7 @@ from common.utils import update_object
 from kukkuu.exceptions import InvalidEmailFormatError, ObjectDoesNotExistError
 
 from .models import Guardian
+from .utils import send_guardian_email_changed_notification
 
 User = get_user_model()
 
@@ -67,7 +68,11 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
             raise ObjectDoesNotExistError(e)
 
         validate_guardian_data(kwargs)
+        old_email = guardian.email
         update_object(guardian, kwargs)
+
+        if guardian.email != old_email:
+            send_guardian_email_changed_notification(guardian)
 
         return UpdateMyProfileMutation(my_profile=guardian)
 
