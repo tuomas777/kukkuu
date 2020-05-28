@@ -50,6 +50,6 @@ the version in kukkuu/__init.py__ -->
 
 
 [Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.0.0...HEAD
-[0.2.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v0.2.0...v1.0.0
+[1.0.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v0.1.0...v0.2.0
 

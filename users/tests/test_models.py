@@ -30,3 +30,21 @@ def test_guardian_with_children_creation(project):
     assert Guardian.objects.count() == 1
     assert Child.objects.count() == 3
     assert list(Guardian.objects.first().children.all()) == list(Child.objects.all())
+
+
+@pytest.mark.django_db
+def test_guardian_email_populating():
+    user = UserFactory(email="user@example.com")
+
+    guardian = Guardian.objects.create(user=user)
+    assert guardian.email == "user@example.com"
+
+    guardian.email = "guardian@example.com"
+    guardian.save()
+    guardian.refresh_from_db()
+    assert guardian.email == "guardian@example.com"
+
+    guardian.email = ""
+    guardian.save()
+    guardian.refresh_from_db()
+    assert guardian.email == "user@example.com"

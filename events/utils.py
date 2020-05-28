@@ -23,7 +23,7 @@ def send_event_notifications_to_guardians(event, notification_type, children, **
             }
 
             send_notification(
-                guardian.get_email_in_use(),
+                guardian.email,
                 notification_type,
                 context=context,
                 language=guardian.language,
