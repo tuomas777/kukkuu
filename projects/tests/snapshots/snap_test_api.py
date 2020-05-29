@@ -1,0 +1,37 @@
+# -*- coding: utf-8 -*-
+# snapshottest: v1 - https://goo.gl/zC4yUc
+from __future__ import unicode_literals
+
+from snapshottest import Snapshot
+
+snapshots = Snapshot()
+
+snapshots["test_projects_query_normal_user 1"] = {
+    "data": {
+        "projects": {
+            "edges": [
+                {
+                    "node": {
+                        "id": "UHJvamVjdE5vZGU6MQ==",
+                        "name": "Testiprojekti",
+                        "translations": [
+                            {"languageCode": "FI", "name": "Testiprojekti"}
+                        ],
+                        "year": 2020,
+                    }
+                }
+            ]
+        }
+    }
+}
+
+snapshots["test_project_query_normal_user 1"] = {
+    "data": {
+        "project": {
+            "id": "UHJvamVjdE5vZGU6MQ==",
+            "name": "Testiprojekti",
+            "translations": [{"languageCode": "FI", "name": "Testiprojekti"}],
+            "year": 2020,
+        }
+    }
+}

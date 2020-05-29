@@ -7,6 +7,7 @@ from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 from graphql_jwt.decorators import login_required, staff_member_required
 from graphql_relay import from_global_id
+from projects.models import Project
 
 from common.utils import update_object_with_translations
 from kukkuu.exceptions import ObjectDoesNotExistError
@@ -53,7 +54,7 @@ class VenueNode(DjangoObjectType):
     def resolve_occurrences(self, info, **kwargs):
         return (
             self.occurrences.annotate(
-                enrolments_count=Count("enrolments", distinct=True)
+                enrolment_count=Count("enrolments", distinct=True)
             )
             .select_related("event")
             .order_by("time")
@@ -75,6 +76,7 @@ class VenueTranslationsInput(graphene.InputObjectType):
 class AddVenueMutation(graphene.relay.ClientIDMutation):
     class Input:
         translations = graphene.List(VenueTranslationsInput)
+        project_id = graphene.GlobalID()
 
     venue = graphene.Field(VenueNode)
 
@@ -83,15 +85,21 @@ class AddVenueMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         # TODO: Add validation
+        project_global_id = kwargs.pop("project_id")
+        try:
+            project = Project.objects.get(pk=from_global_id(project_global_id)[1])
+            kwargs["project_id"] = project.id
+        except Project.DoesNotExist as e:
+            raise ObjectDoesNotExistError(e)
         venue = Venue.objects.create_translatable_object(**kwargs)
         return AddVenueMutation(venue=venue)
 
 
 class UpdateVenueMutation(graphene.relay.ClientIDMutation):
     class Input:
-        id = graphene.GlobalID(required=True)
+        id = graphene.GlobalID()
         translations = graphene.List(VenueTranslationsInput)
-        delete_translations = graphene.List(LanguageEnum)
+        project_id = graphene.GlobalID(required=False)
 
     venue = graphene.Field(VenueNode)
 
@@ -101,6 +109,13 @@ class UpdateVenueMutation(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **kwargs):
         # TODO: Add validation
         venue_global_id = kwargs.pop("id")
+        project_global_id = kwargs.pop("project_id", None)
+        if project_global_id:
+            try:
+                project = Project.objects.get(pk=from_global_id(project_global_id)[1])
+                kwargs["project_id"] = project.id
+            except Project.DoesNotExist as e:
+                raise ObjectDoesNotExistError(e)
         try:
             venue = Venue.objects.get(pk=from_global_id(venue_global_id)[1])
             update_object_with_translations(venue, kwargs)

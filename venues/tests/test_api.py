@@ -105,6 +105,9 @@ query Venue($id: ID!) {
         }
       }
     }
+    project{
+      year
+    }
   }
 }
 """
@@ -123,6 +126,9 @@ mutation AddVenue($input: AddVenueMutationInput!) {
         additionalInfo
         wcAndFacilities
         wwwUrl
+      }
+      project{
+        year
       }
     }
   }
@@ -144,6 +150,7 @@ ADD_VENUE_VARIABLES = {
                 "wwwUrl": "www.url.com",
             }
         ],
+        "projectId": "",
     }
 }
 
@@ -161,6 +168,9 @@ mutation updateVenue($input: UpdateVenueMutationInput!) {
         additionalInfo
         wcAndFacilities
         wwwUrl
+      }
+      project{
+        year
       }
     }
   }
@@ -231,10 +241,10 @@ def test_add_venue_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_add_venue_staff_user(snapshot, staff_api_client):
-    executed = staff_api_client.execute(
-        ADD_VENUE_MUTATION, variables=ADD_VENUE_VARIABLES
-    )
+def test_add_venue_staff_user(snapshot, staff_api_client, project):
+    venue_variables = deepcopy(ADD_VENUE_VARIABLES)
+    venue_variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
+    executed = staff_api_client.execute(ADD_VENUE_MUTATION, variables=venue_variables)
     snapshot.assert_match(executed)
 
 

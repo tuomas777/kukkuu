@@ -3,6 +3,7 @@ from copy import deepcopy
 import pytest
 from django.core import mail
 from graphql_relay import to_global_id
+from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import (
@@ -24,6 +25,7 @@ def notification_template_event_published_fi():
         body_text="""
         Event FI: {{ event }}
         Guardian FI: {{ guardian }}
+        Event URL: {{ event_url }}
 """,
     )
 
@@ -64,13 +66,18 @@ def test_event_publish_notification(
     staff_api_client,
     notification_template_event_published_fi,
     unpublished_event,
+    project,
 ):
     GuardianFactory(language="fi")
-    children = ChildWithGuardianFactory.create_batch(3)
+    children = ChildWithGuardianFactory.create_batch(3, project=project)
+    children[1].guardians.set(GuardianFactory.create_batch(3, language="fi"))
+    ChildWithGuardianFactory.create_batch(2, project=ProjectFactory(year=2019))
+
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", unpublished_event.id)
     staff_api_client.execute(PUBLISH_EVENT_MUTATION, variables=event_variables)
-    assert len(mail.outbox) == len(children)
+
+    assert len(mail.outbox) == 5  # 3 children of which one has 3 guardians
 
 
 @pytest.mark.django_db
@@ -80,8 +87,11 @@ def test_occurrence_enrolment_notifications(
     notification_template_occurrence_unenrolment_fi,
     notification_template_occurrence_enrolment_fi,
     occurrence,
+    project,
 ):
-    child = ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=user_api_client.user, project=project
+    )
     Enrolment.objects.create(child=child, occurrence=occurrence)
     occurrence.children.remove(child)
     assert len(mail.outbox) == 2

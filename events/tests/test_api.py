@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.utils.translation import activate
 from graphql_relay import to_global_id
 from parler.utils.context import switch_language
+from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
@@ -16,14 +17,18 @@ from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from events.models import Enrolment, Event, Occurrence
 from kukkuu.consts import (
     CHILD_ALREADY_JOINED_EVENT_ERROR,
-    DELETE_DEFAULT_TRANSLATION_ERROR,
+    DATA_VALIDATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
     GENERAL_ERROR,
+    INELIGIBLE_OCCURRENCE_ENROLMENT,
     MISSING_DEFAULT_TRANSLATION_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
     OCCURRENCE_IS_FULL_ERROR,
     PAST_OCCURRENCE_ERROR,
 )
+from kukkuu.exceptions import QueryTooDeepError
+from kukkuu.schema import schema
+from kukkuu.views import DepthAnalysisBackend
 from venues.factories import VenueFactory
 
 
@@ -44,6 +49,9 @@ query Events {
           imageAltText
           languageCode
         }
+        project{
+          year
+        }
         name
         description
         shortDescription
@@ -59,6 +67,7 @@ query Events {
           edges {
             node {
               remainingCapacity
+              enrolmentCount
               time
               venue {
                 translations{
@@ -87,6 +96,9 @@ query Event($id:ID!) {
       imageAltText
       languageCode
     }
+    project{
+      year
+    }
     name
     description
     shortDescription
@@ -103,6 +115,7 @@ query Event($id:ID!) {
         node{
           time
           remainingCapacity
+          enrolmentCount
           venue{
             translations{
               name
@@ -124,6 +137,7 @@ query Occurrences {
       node {
         time
         remainingCapacity
+        enrolmentCount
         event {
           translations {
             name
@@ -156,8 +170,10 @@ query Occurrences {
 """
 
 OCCURRENCES_FILTER_QUERY = """
-query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String) {
-  occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId) {
+query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String,
+                  $eventId: String, $occurrenceLanguage: String) {
+  occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId,
+              eventId: $eventId, occurrenceLanguage: $occurrenceLanguage) {
     edges {
       node {
         time
@@ -181,6 +197,8 @@ query Occurrence($id: ID!) {
     }
     time
     remainingCapacity
+    enrolmentCount
+    occurrenceLanguage
     event {
       translations {
         name
@@ -221,6 +239,9 @@ mutation AddEvent($input: AddEventMutationInput!) {
         imageAltText
         shortDescription
       }
+      project{
+        year
+      }
       duration
       image
       imageAltText
@@ -244,8 +265,9 @@ ADD_EVENT_VARIABLES = {
             }
         ],
         "duration": 1000,
-        "participantsPerInvite": "family",
+        "participantsPerInvite": "FAMILY",
         "capacityPerOccurrence": 30,
+        "projectId": "",
     }
 }
 
@@ -286,11 +308,18 @@ UPDATE_EVENT_VARIABLES = {
                 "shortDescription": "Short desc",
                 "description": "desc",
                 "imageAltText": "Image alt text",
+                "languageCode": "FI",
+            },
+            {
+                "name": "Event test in swedish",
+                "shortDescription": "Short desc",
+                "description": "desc",
+                "imageAltText": "Image alt text",
                 "languageCode": "SV",
-            }
+            },
         ],
         "duration": 1000,
-        "participantsPerInvite": "family",
+        "participantsPerInvite": "FAMILY",
         "capacityPerOccurrence": 30,
     }
 }
@@ -326,6 +355,7 @@ mutation AddOccurrence($input: AddOccurrenceMutationInput!) {
         createdAt
       }
       time
+      occurrenceLanguage
     }
   }
 }
@@ -347,6 +377,7 @@ mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
         createdAt
       }
       time
+      occurrenceLanguage
     }
   }
 }
@@ -359,6 +390,7 @@ UPDATE_OCCURRENCE_VARIABLES = {
         "eventId": "",
         "venueId": "",
         "time": "1986-12-12T16:40:48+00:00",
+        "occurrenceLanguage": "SV",
     }
 }
 
@@ -393,7 +425,12 @@ ENROL_OCCURRENCE_VARIABLES = {"input": {"occurrenceId": "", "childId": ""}}
 UNENROL_OCCURRENCE_MUTATION = """
 mutation UnenrolOccurrence($input: UnenrolOccurrenceMutationInput!) {
   unenrolOccurrence(input: $input) {
-    __typename
+    occurrence{
+        time
+    }
+    child{
+        firstName
+    }
   }
 }
 
@@ -406,16 +443,18 @@ def test_events_query_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_events_query_normal_user(snapshot, user_api_client, event):
-    OccurrenceFactory(event=event)
+def test_events_query_normal_user(snapshot, user_api_client, event, venue):
+    OccurrenceFactory(event=event, venue=venue)
     executed = user_api_client.execute(EVENTS_QUERY)
 
     snapshot.assert_match(executed)
 
 
-def test_events_query_staff_user(snapshot, staff_api_client, event, unpublished_event):
-    OccurrenceFactory(event=event)
-    OccurrenceFactory(event=unpublished_event)
+def test_events_query_staff_user(
+    snapshot, staff_api_client, event, unpublished_event, venue
+):
+    OccurrenceFactory(event=event, venue=venue)
+    OccurrenceFactory(event=unpublished_event, venue=venue)
     executed = staff_api_client.execute(EVENTS_QUERY)
 
     snapshot.assert_match(executed)
@@ -428,8 +467,8 @@ def test_event_query_unauthenticated(api_client, event):
     assert_permission_denied(executed)
 
 
-def test_event_query_normal_user(snapshot, user_api_client, event):
-    OccurrenceFactory(event=event)
+def test_event_query_normal_user(snapshot, user_api_client, event, venue):
+    OccurrenceFactory(event=event, venue=venue)
     variables = {"id": to_global_id("EventNode", event.id)}
     executed = user_api_client.execute(EVENT_QUERY, variables=variables)
 
@@ -482,10 +521,10 @@ def test_add_event_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_add_event_staff_user(snapshot, staff_api_client):
-    executed = staff_api_client.execute(
-        ADD_EVENT_MUTATION, variables=ADD_EVENT_VARIABLES
-    )
+def test_add_event_staff_user(snapshot, staff_api_client, project):
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
+    executed = staff_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
     snapshot.assert_match(executed)
 
 
@@ -615,11 +654,6 @@ def test_update_event_translations(staff_api_client, event):
     staff_api_client.execute(UPDATE_EVENT_MUTATION, variables=event_variables)
     assert event.has_translation(new_translation["languageCode"].lower())
 
-    # Test delete translation
-    event_variables["input"]["deleteTranslations"] = [new_translation["languageCode"]]
-    staff_api_client.execute(UPDATE_EVENT_MUTATION, variables=event_variables)
-    assert not event.has_translation(new_translation["languageCode"].lower())
-
     # Test invalid translation
     new_translation["languageCode"] = "foo"
     executed = staff_api_client.execute(
@@ -631,8 +665,9 @@ def test_update_event_translations(staff_api_client, event):
     assert "languageCode" in str(executed["errors"])
 
 
-def test_upload_image_to_event(staff_api_client, snapshot):
+def test_upload_image_to_event(staff_api_client, snapshot, project):
     add_event_variables = deepcopy(ADD_EVENT_VARIABLES)
+    add_event_variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
     # noinspection PyTypeChecker
     add_event_variables["input"]["image"] = SimpleUploadedFile(
         "sample.jpg", content=None, content_type="image/jpeg"
@@ -660,21 +695,21 @@ def test_staff_publish_event(snapshot, staff_api_client, unpublished_event):
     assert_match_error_code(executed, EVENT_ALREADY_PUBLISHED_ERROR)
 
 
-def test_enrol_occurrence(api_client, guardian_api_client, snapshot, occurrence):
+def test_enrol_occurrence(
+    api_client, guardian_api_client, snapshot, occurrence, child_with_user_guardian
+):
     non_authen_executed = api_client.execute(
         ENROL_OCCURRENCE_MUTATION, variables=ENROL_OCCURRENCE_VARIABLES
     )
     assert_permission_denied(non_authen_executed)
 
-    child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user
-    )
-
     enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
     enrolment_variables["input"]["occurrenceId"] = to_global_id(
         "OccurrenceNode", occurrence.id
     )
-    enrolment_variables["input"]["childId"] = to_global_id("ChildNode", child.id)
+    enrolment_variables["input"]["childId"] = to_global_id(
+        "ChildNode", child_with_user_guardian.id
+    )
 
     executed = guardian_api_client.execute(
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
@@ -682,17 +717,18 @@ def test_enrol_occurrence(api_client, guardian_api_client, snapshot, occurrence)
     snapshot.assert_match(executed)
 
 
-def test_already_enroled_occurrence(guardian_api_client, snapshot, occurrence):
-    child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user
-    )
-    EnrolmentFactory(child=child, occurrence=occurrence)
+def test_already_enroled_occurrence(
+    guardian_api_client, snapshot, occurrence, child_with_user_guardian
+):
+    EnrolmentFactory(child=child_with_user_guardian, occurrence=occurrence)
 
     enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
     enrolment_variables["input"]["occurrenceId"] = to_global_id(
         "OccurrenceNode", occurrence.id
     )
-    enrolment_variables["input"]["childId"] = to_global_id("ChildNode", child.id)
+    enrolment_variables["input"]["childId"] = to_global_id(
+        "ChildNode", child_with_user_guardian.id
+    )
 
     executed = guardian_api_client.execute(
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
@@ -701,13 +737,16 @@ def test_already_enroled_occurrence(guardian_api_client, snapshot, occurrence):
     assert_match_error_code(executed, CHILD_ALREADY_JOINED_EVENT_ERROR)
 
 
-def test_enrol_occurrence_not_allowed(guardian_api_client, snapshot, occurrence):
-    random_child = ChildWithGuardianFactory()
+def test_enrol_occurrence_not_allowed(
+    guardian_api_client, snapshot, occurrence, child_with_random_guardian
+):
     enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
     enrolment_variables["input"]["occurrenceId"] = to_global_id(
         "OccurrenceNode", occurrence.id
     )
-    enrolment_variables["input"]["childId"] = to_global_id("ChildNode", random_child.id)
+    enrolment_variables["input"]["childId"] = to_global_id(
+        "ChildNode", child_with_random_guardian.id
+    )
 
     executed = guardian_api_client.execute(
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
@@ -715,27 +754,35 @@ def test_enrol_occurrence_not_allowed(guardian_api_client, snapshot, occurrence)
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
 
 
-def test_unenrol_occurrence(api_client, user_api_client, snapshot, occurrence):
+def test_unenrol_occurrence(
+    api_client,
+    user_api_client,
+    snapshot,
+    occurrence,
+    project,
+    child_with_random_guardian,
+):
     non_authen_executed = api_client.execute(
         UNENROL_OCCURRENCE_MUTATION, variables=ENROL_OCCURRENCE_VARIABLES
     )
     assert_permission_denied(non_authen_executed)
 
-    child = ChildWithGuardianFactory(relationship__guardian__user=user_api_client.user)
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=user_api_client.user, project=project
+    )
     EnrolmentFactory(occurrence=occurrence, child=child)
 
-    random_child = ChildWithGuardianFactory()
-    EnrolmentFactory(occurrence=occurrence, child=random_child)
+    EnrolmentFactory(occurrence=occurrence, child=child_with_random_guardian)
     assert Enrolment.objects.count() == 2
     assert child.occurrences.count() == 1
-    assert random_child.occurrences.count() == 1
+    assert child_with_random_guardian.occurrences.count() == 1
 
     unenrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
     unenrolment_variables["input"]["occurrenceId"] = to_global_id(
         "OccurrenceNode", occurrence.id
     )
     unenrolment_variables["input"]["childId"] = to_global_id(
-        "ChildNode", random_child.id
+        "ChildNode", child_with_random_guardian.id
     )
 
     executed = user_api_client.execute(
@@ -744,31 +791,33 @@ def test_unenrol_occurrence(api_client, user_api_client, snapshot, occurrence):
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
     assert Enrolment.objects.count() == 2
     assert child.occurrences.count() == 1
-    assert random_child.occurrences.count() == 1
+    assert child_with_random_guardian.occurrences.count() == 1
 
     unenrolment_variables["input"]["childId"] = to_global_id("ChildNode", child.id)
-    user_api_client.execute(
+    executed = user_api_client.execute(
         UNENROL_OCCURRENCE_MUTATION, variables=unenrolment_variables
     )
     assert Enrolment.objects.count() == 1
     assert child.occurrences.count() == 0
-    assert random_child.occurrences.count() == 1
+    assert child_with_random_guardian.occurrences.count() == 1
+    snapshot.assert_match(executed)
 
 
-def test_maximum_enrolment(guardian_api_client, occurrence):
+def test_maximum_enrolment(
+    guardian_api_client, occurrence, project, child_with_user_guardian
+):
     max_capactity = occurrence.event.capacity_per_occurrence
-    children = ChildWithGuardianFactory.create_batch(max_capactity)
+    children = ChildWithGuardianFactory.create_batch(max_capactity, project=project)
     for child in children:
         EnrolmentFactory(occurrence=occurrence, child=child)
-    child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user
-    )
 
     enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
     enrolment_variables["input"]["occurrenceId"] = to_global_id(
         "OccurrenceNode", occurrence.id
     )
-    enrolment_variables["input"]["childId"] = to_global_id("ChildNode", child.id)
+    enrolment_variables["input"]["childId"] = to_global_id(
+        "ChildNode", child_with_user_guardian.id
+    )
 
     executed = guardian_api_client.execute(
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
@@ -777,18 +826,21 @@ def test_maximum_enrolment(guardian_api_client, occurrence):
     assert_match_error_code(executed, OCCURRENCE_IS_FULL_ERROR)
 
 
-def test_invalid_occurrence_enrolment(guardian_api_client):
+def test_invalid_occurrence_enrolment(
+    guardian_api_client, event, venue, child_with_user_guardian
+):
     occurrence = OccurrenceFactory(
-        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo)
-    )
-    child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user
+        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo),
+        venue=venue,
+        event=event,
     )
     enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
     enrolment_variables["input"]["occurrenceId"] = to_global_id(
         "OccurrenceNode", occurrence.id
     )
-    enrolment_variables["input"]["childId"] = to_global_id("ChildNode", child.id)
+    enrolment_variables["input"]["childId"] = to_global_id(
+        "ChildNode", child_with_user_guardian.id
+    )
     executed = guardian_api_client.execute(
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
     )
@@ -813,37 +865,47 @@ def test_normal_translation_fields(snapshot, user_api_client, event):
         assert executed["data"]["event"]["name"] == translation
 
 
-def test_occurrences_filter_by_date(user_api_client, snapshot, event):
+def test_occurrences_filter_by_date(user_api_client, snapshot, event, venue):
     OccurrenceFactory(
-        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo), event=event
+        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo),
+        event=event,
+        venue=venue,
     )
     OccurrenceFactory(
-        time=datetime(1970, 1, 2, 0, 0, 0, tzinfo=timezone.now().tzinfo), event=event
+        time=datetime(1970, 1, 2, 0, 0, 0, tzinfo=timezone.now().tzinfo),
+        event=event,
+        venue=venue,
     )
     variables = {"date": "1970-01-02"}
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
 
     assert len(executed["data"]["occurrences"]["edges"]) == 1
     OccurrenceFactory(
-        time=datetime(1970, 1, 2, 0, 0, 0, tzinfo=timezone.now().tzinfo), event=event
+        time=datetime(1970, 1, 2, 0, 0, 0, tzinfo=timezone.now().tzinfo),
+        event=event,
+        venue=venue,
     )
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
     assert len(executed["data"]["occurrences"]["edges"]) == 2
     snapshot.assert_match(executed)
 
 
-def test_occurrences_filter_by_time(user_api_client, snapshot, event):
+def test_occurrences_filter_by_time(user_api_client, snapshot, event, venue):
     for i in range(10, 12):
         OccurrenceFactory(
             time=datetime(1970, 1, 1, i, 0, 0, tzinfo=timezone.now().tzinfo),
             event=event,
+            venue=venue,
         )
         OccurrenceFactory(
             time=datetime(1970, 1, 2, i + 1, 0, 0, tzinfo=timezone.now().tzinfo),
             event=event,
+            venue=venue,
         )
     OccurrenceFactory(
-        time=datetime(1970, 1, 1, 13, 0, 0, tzinfo=timezone.now().tzinfo), event=event
+        time=datetime(1970, 1, 1, 13, 0, 0, tzinfo=timezone.now().tzinfo),
+        event=event,
+        venue=venue,
     )
     variables_1 = {"time": "12:00:00"}
     variables_2 = {"time": "14:00:00+02:00"}
@@ -858,11 +920,13 @@ def test_occurrences_filter_by_time(user_api_client, snapshot, event):
     snapshot.assert_match(executed)
 
 
-def test_occurrences_filter_by_upcoming(user_api_client, snapshot, event):
+def test_occurrences_filter_by_upcoming(user_api_client, snapshot, event, venue):
     OccurrenceFactory(
-        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo), event=event
+        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.now().tzinfo),
+        event=event,
+        venue=venue,
     )
-    OccurrenceFactory(time=timezone.now(), event=event)
+    OccurrenceFactory(time=timezone.now(), event=event, venue=venue)
     variables = {"upcoming": True}
 
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
@@ -874,11 +938,11 @@ def test_occurrences_filter_by_upcoming(user_api_client, snapshot, event):
     snapshot.assert_match(executed)
 
 
-def test_occurrences_filter_by_venue(user_api_client, snapshot, event):
-    occurrences = OccurrenceFactory.create_batch(2, venue=VenueFactory(), event=event)
-    another_occurrences = OccurrenceFactory.create_batch(
-        3, venue=VenueFactory(), event=event
+def test_occurrences_filter_by_venue(user_api_client, snapshot, event, venue, project):
+    occurrences = OccurrenceFactory.create_batch(
+        2, venue=VenueFactory(project=project), event=event
     )
+    another_occurrences = OccurrenceFactory.create_batch(3, venue=venue, event=event)
 
     variables = {"venueId": to_global_id("VenueNode", occurrences[0].venue.id)}
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
@@ -891,36 +955,74 @@ def test_occurrences_filter_by_venue(user_api_client, snapshot, event):
     snapshot.assert_match(executed)
 
 
-def test_occurrence_available_capacity(user_api_client, snapshot, occurrence):
-    max_capacity = occurrence.event.capacity_per_occurrence
-    EnrolmentFactory.create_batch(3, occurrence=occurrence)
-    variables = {"id": to_global_id("OccurrenceNode", occurrence.id)}
-    executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
-    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 3
-    e = EnrolmentFactory(occurrence=occurrence)
-    executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
-    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 4
-    e.delete()
-    executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
-    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 3
+def test_occurrences_filter_by_event(user_api_client, snapshot, event, project):
+    OccurrenceFactory.create_batch(
+        2, event=event, time=datetime(1970, 1, 1, 12, tzinfo=timezone.now().tzinfo)
+    )
+    OccurrenceFactory.create_batch(
+        3,
+        event__project=project,
+        time=datetime(1981, 2, 18, 12, tzinfo=timezone.now().tzinfo),
+    )
+    variables = {"eventId": to_global_id("EventNode", event.id)}
+
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
+
     snapshot.assert_match(executed)
 
 
-def test_enrolment_visibility(guardian_api_client, snapshot, occurrence):
-    EnrolmentFactory.create_batch(3, occurrence=occurrence)
-    child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user
+def test_occurrences_filter_by_language(user_api_client, snapshot, event, venue):
+    occurrences = OccurrenceFactory.create_batch(2, venue=venue, event=event)
+    sv_occurrences = OccurrenceFactory.create_batch(
+        2, venue=venue, event=event, occurrence_language="sv"
     )
-    EnrolmentFactory(child=child, occurrence=occurrence)
+
+    variables = {"occurrenceLanguage": "FI"}
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
+    assert len(executed["data"]["occurrences"]["edges"]) == len(occurrences)
+
+    variables = {"occurrenceLanguage": "SV"}
+    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
+    assert len(executed["data"]["occurrences"]["edges"]) == len(sv_occurrences)
+
+    snapshot.assert_match(executed)
+
+
+def test_occurrence_available_capacity_and_enrolment_count(
+    user_api_client, snapshot, occurrence, project
+):
+    max_capacity = occurrence.event.capacity_per_occurrence
+    EnrolmentFactory.create_batch(3, occurrence=occurrence, child__project=project)
+    variables = {"id": to_global_id("OccurrenceNode", occurrence.id)}
+    executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
+    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 3
+    assert executed["data"]["occurrence"]["enrolmentCount"] == 3
+    e = EnrolmentFactory(occurrence=occurrence, child__project=project)
+    executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
+    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 4
+    assert executed["data"]["occurrence"]["enrolmentCount"] == 4
+    e.delete()
+    executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
+    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 3
+    assert executed["data"]["occurrence"]["enrolmentCount"] == 3
+    snapshot.assert_match(executed)
+
+
+def test_enrolment_visibility(
+    guardian_api_client, snapshot, occurrence, project, child_with_user_guardian
+):
+    EnrolmentFactory.create_batch(3, occurrence=occurrence, child__project=project)
+    EnrolmentFactory(child=child_with_user_guardian, occurrence=occurrence)
     variables = {"id": to_global_id("OccurrenceNode", occurrence.id)}
     executed = guardian_api_client.execute(OCCURRENCE_QUERY, variables=variables)
     assert len(executed["data"]["occurrence"]["enrolments"]["edges"]) == 1
     snapshot.assert_match(executed)
 
 
-def test_required_translation(staff_api_client, snapshot):
+def test_required_translation(staff_api_client, snapshot, project):
     # Finnish translation required when creating event
     variable = deepcopy(ADD_EVENT_VARIABLES)
+    variable["input"]["projectId"] = to_global_id("ProjectNode", project.id)
     variable["input"]["translations"][0]["languageCode"] = "SV"
     executed = staff_api_client.execute(ADD_EVENT_MUTATION, variables=variable)
     assert_match_error_code(executed, MISSING_DEFAULT_TRANSLATION_ERROR)
@@ -929,13 +1031,103 @@ def test_required_translation(staff_api_client, snapshot):
     snapshot.assert_match(executed)
 
     # Test delete default translation
-    event = EventFactory()
+    event = EventFactory(project=project)
     if not event.has_translation("fi"):
         event.create_translation(language_code="fi", **{"name": "Finnish translation"})
-    event_variables = deepcopy(UPDATE_EVENT_VARIABLES)
-    event_variables["input"]["deleteTranslations"] = ["FI"]
+    event_variables = {
+        "input": {
+            "id": "",
+            "translations": [
+                {
+                    "name": "Event test in swedish",
+                    "shortDescription": "Short desc",
+                    "description": "desc",
+                    "imageAltText": "Image alt text",
+                    "languageCode": "SV",
+                }
+            ],
+            "duration": 1000,
+            "participantsPerInvite": "FAMILY",
+            "capacityPerOccurrence": 30,
+        }
+    }
     event_variables["input"]["id"] = to_global_id("EventNode", event.id)
     executed = staff_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
     )
-    assert_match_error_code(executed, DELETE_DEFAULT_TRANSLATION_ERROR)
+    assert_match_error_code(executed, MISSING_DEFAULT_TRANSLATION_ERROR)
+
+
+def test_update_field_with_null_value(staff_api_client, project):
+    event = EventFactory(project=project)
+    # To make sure event has Finnish translation and bypass the language validation
+    if not event.has_translation("fi"):
+        event.create_translation(language_code="fi", **{"name": "Finnish translation"})
+    event_variables = deepcopy(UPDATE_EVENT_VARIABLES)
+    event_variables["input"]["id"] = to_global_id("EventNode", event.id)
+    # Null value for not-nullable field
+    event_variables["input"]["participantsPerInvite"] = None
+    executed = staff_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=event_variables
+    )
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert "cannot be null" in str(executed["errors"])
+
+
+def test_child_enrol_occurence_from_different_project(
+    snapshot, guardian_api_client, child_with_user_guardian, occurrence
+):
+    next_project = ProjectFactory(year=2021)
+    another_occurrence = OccurrenceFactory(
+        event__project=next_project, venue__project=next_project
+    )
+    assert Occurrence.objects.count() == 2
+    enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    enrolment_variables["input"]["occurrenceId"] = to_global_id(
+        "OccurrenceNode", occurrence.id
+    )
+    enrolment_variables["input"]["childId"] = to_global_id(
+        "ChildNode", child_with_user_guardian.id
+    )
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+    snapshot.assert_match(executed)
+    enrolment_variables["input"]["occurrenceId"] = to_global_id(
+        "OccurrenceNode", another_occurrence.id
+    )
+    enrolment_variables["input"]["childId"] = to_global_id(
+        "ChildNode", child_with_user_guardian.id
+    )
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+    assert_match_error_code(executed, INELIGIBLE_OCCURRENCE_ENROLMENT)
+
+
+def test_api_query_depth(snapshot, guardian_api_client, event):
+    # Depth 6
+    query = """
+    query Events {
+      events {
+        edges {
+          node {
+            project{
+              events{
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+    """
+    backend = DepthAnalysisBackend(max_depth=5)
+    with pytest.raises(QueryTooDeepError):
+        backend.document_from_string(schema=schema, document_string=query)
+
+    backend = DepthAnalysisBackend(max_depth=6)
+    document = backend.document_from_string(schema=schema, document_string=query)
+    assert document is not None

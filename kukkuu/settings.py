@@ -45,12 +45,14 @@ env = environ.Env(
     ILMOITIN_QUEUE_NOTIFICATIONS=(bool, False),
     DEFAULT_FILE_STORAGE=(str, "django.core.files.storage.FileSystemStorage"),
     GS_BUCKET_NAME=(str, ""),
-    GOOGLE_APPLICATION_CREDENTIALS=(str, ""),
+    STAGING_GCS_BUCKET_CREDENTIALS=(str, ""),
     GS_DEFAULT_ACL=(str, "publicRead"),
     GS_FILE_OVERWRITE=(bool, False),
     AZURE_ACCOUNT_NAME=(str, ""),
     AZURE_ACCOUNT_KEY=(str, ""),
     AZURE_CONTAINER=(str, ""),
+    ENABLE_GRAPHIQL=(bool, False),
+    KUKKUU_UI_BASE_URL=(str, "http://localhost:3000"),
 )
 
 if os.path.exists(env_file):
@@ -104,7 +106,7 @@ STATIC_URL = env.str("STATIC_URL")
 DEFAULT_FILE_STORAGE = env("DEFAULT_FILE_STORAGE")
 if DEFAULT_FILE_STORAGE == "storages.backends.gcloud.GoogleCloudStorage":
     GS_BUCKET_NAME = env("GS_BUCKET_NAME")
-    GOOGLE_APPLICATION_CREDENTIALS = env("GOOGLE_APPLICATION_CREDENTIALS")
+    GOOGLE_APPLICATION_CREDENTIALS = env("STAGING_GCS_BUCKET_CREDENTIALS")
     GS_DEFAULT_ACL = env("GS_DEFAULT_ACL")
     GS_FILE_OVERWRITE = env("GS_FILE_OVERWRITE")
 # For prod, it's Azure Storage
@@ -122,6 +124,8 @@ TIME_ZONE = "Europe/Helsinki"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
+# Set to True to enable GraphiQL interface, this will overriden to True if DEBUG=True
+ENABLE_GRAPHIQL = env("ENABLE_GRAPHIQL")
 
 INSTALLED_APPS = [
     "helusers",
@@ -142,6 +146,7 @@ INSTALLED_APPS = [
     "users",
     "children",
     "utils",
+    "projects",
     "events",
     "venues",
     "django_cleanup.apps.CleanupConfig",  # This must be included last
@@ -208,6 +213,8 @@ GRAPHENE = {
 GRAPHQL_JWT = {"JWT_AUTH_HEADER_PREFIX": "Bearer"}
 
 KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN = 100
+KUKKUU_QUERY_MAX_DEPTH = 12
+KUKKUU_UI_BASE_URL = env("KUKKUU_UI_BASE_URL")
 
 LOGGING = {
     "version": 1,

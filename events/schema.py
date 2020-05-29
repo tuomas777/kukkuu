@@ -10,34 +10,43 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphene_file_upload.scalars import Upload
 from graphql_jwt.decorators import login_required, staff_member_required
 from graphql_relay import from_global_id
+from projects.models import Project
 
 from children.models import Child
+from children.schema import ChildNode
+from common.schema import LanguageEnum
 from common.utils import update_object, update_object_with_translations
 from events.filters import OccurrenceFilter
 from events.models import Enrolment, Event, Occurrence
-from events.notifications import NotificationType
-from events.utils import send_event_notifications_to_guardians
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
     EventAlreadyPublishedError,
+    IneligibleOccurrenceEnrolment,
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
     PastOccurrenceError,
 )
-from users.models import Guardian
-from users.schema import LanguageEnum
 from venues.models import Venue
 
 EventTranslation = apps.get_model("events", "EventTranslation")
 
 
 def validate_enrolment(child, occurrence):
+    if child.project != occurrence.event.project:
+        raise IneligibleOccurrenceEnrolment(
+            "Child does not belong to the project event"
+        )
     if child.occurrences.filter(event=occurrence.event).exists():
         raise ChildAlreadyJoinedEventError("Child already joined this event")
     if occurrence.enrolments.count() >= occurrence.event.capacity_per_occurrence:
         raise OccurrenceIsFullError("Maximum enrolments created")
     if occurrence.time < timezone.now():
         raise PastOccurrenceError("Cannot join occurrence in the past")
+
+
+class EventParticipantsPerInvite(graphene.Enum):
+    CHILD_AND_GUARDIAN = "child_and_guardian"
+    FAMILY = "family"
 
 
 class EventTranslationType(DjangoObjectType):
@@ -53,6 +62,7 @@ class EventNode(DjangoObjectType):
     description = graphene.String()
     short_description = graphene.String()
     image_alt_text = graphene.String()
+    participants_per_invite = EventParticipantsPerInvite(required=True)
 
     class Meta:
         model = Event
@@ -81,7 +91,7 @@ class EventNode(DjangoObjectType):
 
     def resolve_occurrences(self, info, **kwargs):
         return self.occurrences.annotate(
-            enrolments_count=Count("enrolments", distinct=True)
+            enrolment_count=Count("enrolments", distinct=True)
         ).order_by("time")
 
 
@@ -92,13 +102,15 @@ class EventConnection(Connection):
 
 class OccurrenceNode(DjangoObjectType):
     remaining_capacity = graphene.Int()
+    occurrence_language = LanguageEnum(required=True)
+    enrolment_count = graphene.Int(required=True)
 
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
         return (
             queryset.user_can_view(info.context.user)
-            .annotate(enrolments_count=Count("enrolments", distinct=True))
+            .annotate(enrolment_count=Count("enrolments", distinct=True))
             .order_by("time")
         )
 
@@ -108,7 +120,7 @@ class OccurrenceNode(DjangoObjectType):
         return super().get_node(info, id)
 
     def resolve_remaining_capacity(self, info, **kwargs):
-        return self.event.capacity_per_occurrence - self.enrolments_count
+        return self.event.capacity_per_occurrence - self.enrolment_count
 
     class Meta:
         model = Occurrence
@@ -141,9 +153,10 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
     class Input:
         translations = graphene.List(EventTranslationsInput)
         duration = graphene.Int()
-        participants_per_invite = graphene.String(required=True)
+        participants_per_invite = EventParticipantsPerInvite(required=True)
         capacity_per_occurrence = graphene.Int(required=True)
         image = Upload()
+        project_id = graphene.GlobalID()
 
     event = graphene.Field(EventNode)
 
@@ -152,19 +165,25 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         # TODO: Add validation
+        project_global_id = kwargs.pop("project_id")
+        try:
+            project = Project.objects.get(pk=from_global_id(project_global_id)[1])
+            kwargs["project_id"] = project.id
+        except Project.DoesNotExist as e:
+            raise ObjectDoesNotExistError(e)
         event = Event.objects.create_translatable_object(**kwargs)
         return AddEventMutation(event=event)
 
 
 class UpdateEventMutation(graphene.relay.ClientIDMutation):
     class Input:
-        id = graphene.GlobalID(required=True)
+        id = graphene.GlobalID()
         duration = graphene.Int()
-        participants_per_invite = graphene.String()
+        participants_per_invite = EventParticipantsPerInvite()
         capacity_per_occurrence = graphene.Int()
         image = Upload()
         translations = graphene.List(EventTranslationsInput)
-        delete_translations = graphene.List(LanguageEnum)
+        project_id = graphene.GlobalID(required=False)
 
     event = graphene.Field(EventNode)
 
@@ -173,6 +192,13 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         # TODO: Add validation
+        project_global_id = kwargs.pop("project_id", None)
+        if project_global_id:
+            try:
+                project = Project.objects.get(pk=from_global_id(project_global_id)[1])
+                kwargs["project_id"] = project.id
+            except Project.DoesNotExist as e:
+                raise ObjectDoesNotExistError(e)
         event_global_id = kwargs.pop("id")
         try:
             event = Event.objects.get(pk=from_global_id(event_global_id)[1])
@@ -202,10 +228,8 @@ class DeleteEventMutation(graphene.relay.ClientIDMutation):
 
 class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
-        occurrence_id = graphene.GlobalID(
-            required=True, description="Occurrence id of event"
-        )
-        child_id = graphene.GlobalID(required=True, description="Guardian's child id")
+        occurrence_id = graphene.GlobalID(description="Occurrence id of event")
+        child_id = graphene.GlobalID(description="Guardian's child id")
 
     enrolment = graphene.Field(EnrolmentNode)
 
@@ -232,10 +256,11 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
 
 class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
-        occurrence_id = graphene.GlobalID(
-            required=True, description="Occurrence id " "of event"
-        )
-        child_id = graphene.GlobalID(required=True, description="Guardian's child id")
+        occurrence_id = graphene.GlobalID(description="Occurrence id of event")
+        child_id = graphene.GlobalID(description="Guardian's child id")
+
+    occurrence = graphene.Field(OccurrenceNode)
+    child = graphene.Field(ChildNode)
 
     @classmethod
     @login_required
@@ -253,14 +278,15 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
             occurrence.children.remove(child)
         except Occurrence.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
-        return UnenrolOccurrenceMutation()
+        return UnenrolOccurrenceMutation(child=child, occurrence=occurrence)
 
 
 class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
         time = graphene.DateTime(required=True)
-        event_id = graphene.GlobalID(required=True)
-        venue_id = graphene.GlobalID(required=True)
+        event_id = graphene.GlobalID()
+        venue_id = graphene.GlobalID()
+        occurrence_language = LanguageEnum()
 
     occurrence = graphene.Field(OccurrenceNode)
 
@@ -284,15 +310,20 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
             raise ObjectDoesNotExistError(e)
 
         occurrence = Occurrence.objects.create(**kwargs)
+
+        # needed because enrolment_count is an annotated field
+        occurrence.enrolment_count = 0
+
         return AddOccurrenceMutation(occurrence=occurrence)
 
 
 class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
-        id = graphene.GlobalID(required=True)
+        id = graphene.GlobalID()
         time = graphene.DateTime()
-        event_id = graphene.GlobalID()
-        venue_id = graphene.GlobalID()
+        event_id = graphene.GlobalID(required=False)
+        venue_id = graphene.GlobalID(required=False)
+        occurrence_language = LanguageEnum()
 
     occurrence = graphene.Field(OccurrenceNode)
 
@@ -330,7 +361,7 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
 
 class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
-        id = graphene.GlobalID(required=True)
+        id = graphene.GlobalID()
 
     @classmethod
     @staff_member_required
@@ -348,7 +379,7 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
 
 class PublishEventMutation(graphene.relay.ClientIDMutation):
     class Input:
-        id = graphene.GlobalID(required=True)
+        id = graphene.GlobalID()
 
     event = graphene.Field(EventNode)
 
@@ -363,13 +394,6 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
             if event.is_published():
                 raise EventAlreadyPublishedError("Event is already published")
             event.publish()
-            # TODO: Send notifications to guardian who belongs to the same project
-            guardians = Guardian.objects.annotate(
-                children_count=Count("children")
-            ).filter(children_count__gt=0)
-            send_event_notifications_to_guardians(
-                event, NotificationType.EVENT_PUBLISHED, guardians
-            )
 
         except Event.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)

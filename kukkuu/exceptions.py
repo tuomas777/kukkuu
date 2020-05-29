@@ -44,5 +44,13 @@ class MissingDefaultTranslationError(KukkuuGraphQLError):
     """Missing default translation for translatable object"""
 
 
-class DeleteDefaultTranslationError(KukkuuGraphQLError):
-    """Cannot delete default language translation"""
+class IneligibleOccurrenceEnrolment(KukkuuGraphQLError):
+    """Ineligible to enrol event"""
+
+
+class QueryTooDeepError(KukkuuGraphQLError):
+    """Query depth exceeded settings.KUKKUU_QUERY_MAX_DEPTH"""
+
+
+class InvalidEmailFormatError(KukkuuGraphQLError):
+    """Invalid email format"""

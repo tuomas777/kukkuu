@@ -1,28 +1,34 @@
 import graphene
-from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.db import transaction
 from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 
+from common.schema import LanguageEnum
 from common.utils import update_object
-from kukkuu.exceptions import ObjectDoesNotExistError
+from kukkuu.exceptions import InvalidEmailFormatError, ObjectDoesNotExistError
 
 from .models import Guardian
+from .utils import send_guardian_email_changed_notification
 
 User = get_user_model()
 
 
-LanguageEnum = graphene.Enum(
-    "Language", [(l[0].upper(), l[0]) for l in settings.LANGUAGES]
-)
+def validate_guardian_data(guardian_data):
+    if "email" in guardian_data:
+        try:
+            validate_email(guardian_data["email"])
+        except ValidationError:
+            raise InvalidEmailFormatError("Invalid email format")
+    return guardian_data
 
 
 class GuardianNode(DjangoObjectType):
     language = LanguageEnum(required=True)
-    email = graphene.String()
 
     class Meta:
         model = Guardian
@@ -32,21 +38,12 @@ class GuardianNode(DjangoObjectType):
     def get_queryset(cls, queryset, info):
         return queryset.user_can_view(info.context.user).order_by("last_name")
 
-    def resolve_email(self, info, **kwargs):
-        return self.user.email
-
 
 class AdminNode(DjangoObjectType):
-    is_project_admin = graphene.Boolean()
-
     class Meta:
         model = User
         interfaces = (relay.Node,)
-        fields = ("is_project_admin",)
-
-    def resolve_is_project_admin(self, info, **kwargs):
-        # TODO: Update this when Project is available
-        return self.is_staff
+        fields = ("projects",)
 
 
 class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
@@ -55,6 +52,7 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         last_name = graphene.String()
         phone_number = graphene.String()
         language = LanguageEnum()
+        email = graphene.String()
 
     my_profile = graphene.Field(GuardianNode)
 
@@ -69,7 +67,12 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         except Guardian.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
+        validate_guardian_data(kwargs)
+        old_email = guardian.email
         update_object(guardian, kwargs)
+
+        if guardian.email != old_email:
+            send_guardian_email_changed_notification(guardian)
 
         return UpdateMyProfileMutation(my_profile=guardian)
 

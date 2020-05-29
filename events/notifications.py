@@ -3,15 +3,10 @@ from django_ilmoitin.dummy_context import dummy_context
 from django_ilmoitin.registry import notifications
 
 from children.factories import ChildWithGuardianFactory
+from events.consts import NotificationType
 from events.factories import EventFactory, OccurrenceFactory
+from events.utils import get_event_ui_url
 from users.factories import GuardianFactory
-
-
-class NotificationType:
-    EVENT_PUBLISHED = "event_published"
-    OCCURRENCE_ENROLMENT = "occurrence_enrolment"
-    OCCURRENCE_UNENROLMENT = "occurrence_unenrolment"
-
 
 notifications.register(NotificationType.EVENT_PUBLISHED, _("event published"))
 notifications.register(NotificationType.OCCURRENCE_ENROLMENT, _("occurrence enrolment"))
@@ -26,7 +21,12 @@ occurrence = OccurrenceFactory.build(event=event)
 
 dummy_context.update(
     {
-        NotificationType.EVENT_PUBLISHED: {"guardian": guardian, "event": event},
+        NotificationType.EVENT_PUBLISHED: {
+            "guardian": guardian,
+            "event": event,
+            "child": child,
+            "event_url": get_event_ui_url(event, child, guardian.language),
+        },
         NotificationType.OCCURRENCE_ENROLMENT: {
             "guardian": guardian,
             "occurrence": occurrence,

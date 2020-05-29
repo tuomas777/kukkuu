@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -5,6 +6,8 @@ from parler.models import TranslatedFields
 
 from children.models import Child
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
+from events.consts import NotificationType
+from events.utils import send_event_notifications_to_guardians
 from venues.models import Venue
 
 
@@ -50,6 +53,13 @@ class Event(TimestampedModel, TranslatableModel):
         blank=True, null=True, verbose_name=_("published at")
     )
 
+    project = models.ForeignKey(
+        "projects.Project",
+        verbose_name=_("project"),
+        related_name="events",
+        on_delete=models.CASCADE,
+    )
+
     objects = EventQueryset.as_manager()
 
     class Meta:
@@ -62,6 +72,12 @@ class Event(TimestampedModel, TranslatableModel):
     def publish(self):
         self.published_at = timezone.now()
         self.save()
+
+        send_event_notifications_to_guardians(
+            self,
+            NotificationType.EVENT_PUBLISHED,
+            self.project.children.prefetch_related("guardians"),
+        )
 
     def is_published(self):
         return bool(self.published_at)
@@ -95,6 +111,12 @@ class Occurrence(TimestampedModel):
         related_name="occurrences",
         through="events.Enrolment",
         blank=True,
+    )
+    occurrence_language = models.CharField(
+        max_length=10,
+        choices=settings.LANGUAGES,
+        verbose_name=_("occurrence language"),
+        default=settings.LANGUAGES[0][0],
     )
     objects = OccurrenceQueryset.as_manager()
 

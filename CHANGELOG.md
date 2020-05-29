@@ -2,6 +2,30 @@
 the version in kukkuu/__init.py__ -->
 
 
+## [1.1.0] - 29 May 2020
+### Added
+- Add occurrence language
+- Return occurrence & child from unenrolment mutation
+- Add null field validation when updating objects
+- Add setting to enable graphiql in staging
+- Add custom depth limit backend
+- Add event filter to occurrences query
+- Add `enrolmentCount` to `OccurrenceNode`
+- Add `name` to project model
+- Make event UI URL available to event published notification
+- Add `projects` to `MyAdminProfileNode`
+- Allow a guardian to change her email when registering and when modifying her profile. A new notification is sent when the latter happens. 
+### Changed
+- Change mutations' `translations` field behaviour: from now on, translations for languages that are not sent are deleted
+- Change event publish notification to be sent to every child of the project
+### Removed
+- Remove `translationsToDelete` from all mutations that had it
+- Remove `users` from `ProjectNode`
+- Remove `isProjectAdmin` from `MyAdminProfileNode`
+### Fixed
+- Fix required fields in occurrence mutations
+- Use `ParticipantsPerInvite` enum in event mutation inputs
+
 ## [1.0.0] - 30 Mar 2020
 ### Added
 - Add availableEvents and pastEvents to child query
@@ -49,7 +73,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.0.0...HEAD
-[0.2.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v0.2.0...v1.0.0
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v0.1.0...v0.2.0
 
