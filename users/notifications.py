@@ -10,7 +10,7 @@ class NotificationType:
 
 
 notifications.register(
-    NotificationType.GUARDIAN_EMAIL_CHANGED, _("Guardian email changed")
+    NotificationType.GUARDIAN_EMAIL_CHANGED, _("guardian email changed")
 )
 
 guardian = GuardianFactory.build()
