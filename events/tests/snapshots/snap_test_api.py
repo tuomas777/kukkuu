@@ -439,92 +439,6 @@ Page box child care any concern. Defense level church use.""",
     }
 }
 
-snapshots["test_occurrences_query_staff_user 1"] = {
-    "data": {
-        "occurrences": {
-            "edges": [
-                {
-                    "node": {
-                        "enrolmentCount": 0,
-                        "event": {
-                            "capacityPerOccurrence": 43,
-                            "duration": 112,
-                            "image": "http://testserver/media/send.jpg",
-                            "participantsPerInvite": "CHILD_AND_GUARDIAN",
-                            "publishedAt": "2020-12-12T00:00:00+00:00",
-                            "translations": [
-                                {
-                                    "description": "Expert interview old affect quite nearly gun. Born land military first he law ago. Yard door indicate country individual course.",
-                                    "languageCode": "FI",
-                                    "name": "Up always sport return. Light a point charge stand store.",
-                                    "shortDescription": "East site chance of.",
-                                }
-                            ],
-                        },
-                        "remainingCapacity": 43,
-                        "time": "2020-12-12T00:00:00+00:00",
-                        "venue": {
-                            "translations": [
-                                {
-                                    "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
-                                    "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
-                                    "address": """48830 Whitehead Rapid Suite 548
-Whiteview, TN 11309""",
-                                    "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
-                                    "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
-Page box child care any concern. Defense level church use.""",
-                                    "languageCode": "FI",
-                                    "name": "Free heart significant machine try.",
-                                    "wwwUrl": "http://brooks.org/",
-                                }
-                            ]
-                        },
-                    }
-                },
-                {
-                    "node": {
-                        "enrolmentCount": 0,
-                        "event": {
-                            "capacityPerOccurrence": 26,
-                            "duration": 220,
-                            "image": "http://testserver/media/eight.jpg",
-                            "participantsPerInvite": "CHILD_AND_GUARDIAN",
-                            "publishedAt": None,
-                            "translations": [
-                                {
-                                    "description": """Along hear follow sometimes. Special far magazine. Know say former conference carry factor front Mr.
-Conference thing much like test.""",
-                                    "languageCode": "FI",
-                                    "name": "Huge realize at rather that place against moment.",
-                                    "shortDescription": "Run hand human value base.",
-                                }
-                            ],
-                        },
-                        "remainingCapacity": 26,
-                        "time": "2020-12-12T00:00:00+00:00",
-                        "venue": {
-                            "translations": [
-                                {
-                                    "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
-                                    "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
-                                    "address": """48830 Whitehead Rapid Suite 548
-Whiteview, TN 11309""",
-                                    "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
-                                    "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
-Page box child care any concern. Defense level church use.""",
-                                    "languageCode": "FI",
-                                    "name": "Free heart significant machine try.",
-                                    "wwwUrl": "http://brooks.org/",
-                                }
-                            ]
-                        },
-                    }
-                },
-            ]
-        }
-    }
-}
-
 snapshots["test_child_enrol_occurence_from_different_project 1"] = {
     "data": {
         "enrolOccurrence": {
@@ -652,7 +566,26 @@ If his their best. Election stay every something base.""",
                         "image": "http://testserver/media/think.jpg",
                         "imageAltText": "",
                         "name": "Able process base sing according.",
-                        "occurrences": {"edges": []},
+                        "occurrences": {
+                            "edges": [
+                                {
+                                    "node": {
+                                        "enrolmentCount": 0,
+                                        "remainingCapacity": 28,
+                                        "time": "2012-05-15T10:30:47+00:00",
+                                        "venue": {
+                                            "translations": [
+                                                {
+                                                    "description": "Effort clear and local challenge box. Care figure mention wrong when lead involve. Event lay yes policy data control as receive. End available avoid girl middle.",
+                                                    "languageCode": "FI",
+                                                    "name": "Especially can quite industry relationship very produce social.",
+                                                }
+                                            ]
+                                        },
+                                    }
+                                }
+                            ]
+                        },
                         "participantsPerInvite": "FAMILY",
                         "project": {"year": 2020},
                         "publishedAt": None,
@@ -668,6 +601,92 @@ If his their best. Election stay every something base.""",
                             }
                         ],
                         "updatedAt": "2020-12-12T00:00:00+00:00",
+                    }
+                },
+            ]
+        }
+    }
+}
+
+snapshots["test_occurrences_query_project_user 1"] = {
+    "data": {
+        "occurrences": {
+            "edges": [
+                {
+                    "node": {
+                        "enrolmentCount": 0,
+                        "event": {
+                            "capacityPerOccurrence": 43,
+                            "duration": 112,
+                            "image": "http://testserver/media/send.jpg",
+                            "participantsPerInvite": "CHILD_AND_GUARDIAN",
+                            "publishedAt": "2020-12-12T00:00:00+00:00",
+                            "translations": [
+                                {
+                                    "description": "Expert interview old affect quite nearly gun. Born land military first he law ago. Yard door indicate country individual course.",
+                                    "languageCode": "FI",
+                                    "name": "Up always sport return. Light a point charge stand store.",
+                                    "shortDescription": "East site chance of.",
+                                }
+                            ],
+                        },
+                        "remainingCapacity": 43,
+                        "time": "2020-12-12T00:00:00+00:00",
+                        "venue": {
+                            "translations": [
+                                {
+                                    "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
+                                    "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
+                                    "address": """48830 Whitehead Rapid Suite 548
+Whiteview, TN 11309""",
+                                    "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
+                                    "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
+Page box child care any concern. Defense level church use.""",
+                                    "languageCode": "FI",
+                                    "name": "Free heart significant machine try.",
+                                    "wwwUrl": "http://brooks.org/",
+                                }
+                            ]
+                        },
+                    }
+                },
+                {
+                    "node": {
+                        "enrolmentCount": 0,
+                        "event": {
+                            "capacityPerOccurrence": 26,
+                            "duration": 220,
+                            "image": "http://testserver/media/eight.jpg",
+                            "participantsPerInvite": "CHILD_AND_GUARDIAN",
+                            "publishedAt": None,
+                            "translations": [
+                                {
+                                    "description": """Along hear follow sometimes. Special far magazine. Know say former conference carry factor front Mr.
+Conference thing much like test.""",
+                                    "languageCode": "FI",
+                                    "name": "Huge realize at rather that place against moment.",
+                                    "shortDescription": "Run hand human value base.",
+                                }
+                            ],
+                        },
+                        "remainingCapacity": 26,
+                        "time": "2020-12-12T00:00:00+00:00",
+                        "venue": {
+                            "translations": [
+                                {
+                                    "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
+                                    "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
+                                    "address": """48830 Whitehead Rapid Suite 548
+Whiteview, TN 11309""",
+                                    "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
+                                    "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
+Page box child care any concern. Defense level church use.""",
+                                    "languageCode": "FI",
+                                    "name": "Free heart significant machine try.",
+                                    "wwwUrl": "http://brooks.org/",
+                                }
+                            ]
+                        },
                     }
                 },
             ]

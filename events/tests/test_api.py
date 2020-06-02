@@ -494,10 +494,10 @@ def test_occurrences_query_normal_user(
     snapshot.assert_match(executed)
 
 
-def test_occurrences_query_staff_user(
-    snapshot, staff_api_client, occurrence, unpublished_occurrence
+def test_occurrences_query_project_user(
+    snapshot, project_user_api_client, occurrence, unpublished_occurrence
 ):
-    executed = staff_api_client.execute(OCCURRENCES_QUERY)
+    executed = project_user_api_client.execute(OCCURRENCES_QUERY)
 
     snapshot.assert_match(executed)
 

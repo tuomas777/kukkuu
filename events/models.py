@@ -86,9 +86,9 @@ class Event(TimestampedModel, TranslatableModel):
 
 class OccurrenceQueryset(models.QuerySet):
     def user_can_view(self, user):
-        if user.is_staff:
-            return self
-        return self.exclude(event__published_at=None)
+        return self.filter(
+            Q(event__project__users=user) | Q(event__published_at__isnull=False)
+        ).distinct()
 
 
 class Occurrence(TimestampedModel):
