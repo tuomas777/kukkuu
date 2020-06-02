@@ -1,5 +1,6 @@
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
@@ -8,11 +9,7 @@ from users.models import Guardian
 
 class ChildQuerySet(models.QuerySet):
     def user_can_view(self, user):
-        # TODO we'll probably need more fine-grained control than this
-        if user.is_staff:
-            return self
-        else:
-            return self.filter(guardians__user=user)
+        return self.filter(Q(guardians__user=user) | Q(project__users=user)).distinct()
 
     def user_can_update(self, user):
         return self.filter(guardians__user=user)

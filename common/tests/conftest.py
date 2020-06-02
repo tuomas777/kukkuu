@@ -8,6 +8,7 @@ from django.test import RequestFactory
 from django.utils import timezone
 from freezegun import freeze_time
 from graphene.test import Client
+from projects.factories import ProjectFactory
 from projects.models import Project
 
 from children.factories import ChildWithGuardianFactory
@@ -41,6 +42,11 @@ def project():
 
 
 @pytest.fixture
+def another_project():
+    return ProjectFactory(year=2030, name="Toinen testiprojekti")
+
+
+@pytest.fixture
 def user():
     return UserFactory()
 
@@ -63,6 +69,13 @@ def staff_api_client():
 @pytest.fixture
 def guardian_api_client():
     return create_api_client_with_user(UserFactory(guardian=GuardianFactory()))
+
+
+@pytest.fixture()
+def project_user_api_client(project):
+    user = UserFactory()
+    user.projects.set([project])
+    return create_api_client_with_user(user)
 
 
 @pytest.fixture
