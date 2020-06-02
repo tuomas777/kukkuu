@@ -668,7 +668,7 @@ Conference thing much like test.""",
                             ],
                         },
                         "remainingCapacity": 26,
-                        "time": "2020-12-12T00:00:00+00:00",
+                        "time": "2020-12-12T06:00:00+00:00",
                         "venue": {
                             "translations": [
                                 {
