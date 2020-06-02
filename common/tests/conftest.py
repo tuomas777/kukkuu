@@ -1,4 +1,5 @@
 import shutil
+from datetime import timedelta
 
 import factory.random
 import pytest
@@ -112,7 +113,9 @@ def occurrence(venue, event):
 
 @pytest.fixture
 def unpublished_occurrence(venue, unpublished_event):
-    return OccurrenceFactory(time=timezone.now(), venue=venue, event=unpublished_event)
+    return OccurrenceFactory(
+        time=timezone.now() + timedelta(hours=6), venue=venue, event=unpublished_event
+    )
 
 
 def create_api_client_with_user(user):
