@@ -288,109 +288,6 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
     }
 }
 
-snapshots["test_events_query_staff_user 1"] = {
-    "data": {
-        "events": {
-            "edges": [
-                {
-                    "node": {
-                        "capacityPerOccurrence": 50,
-                        "createdAt": "2020-12-12T00:00:00+00:00",
-                        "description": """Serious listen police shake. Page box child care any concern.
-Agree room laugh prevent make. Our very television beat at success decade.""",
-                        "duration": 197,
-                        "image": "http://testserver/media/spring.jpg",
-                        "imageAltText": "",
-                        "name": "Free heart significant machine try.",
-                        "occurrences": {
-                            "edges": [
-                                {
-                                    "node": {
-                                        "enrolmentCount": 0,
-                                        "remainingCapacity": 50,
-                                        "time": "1978-11-27T17:53:39+00:00",
-                                        "venue": {
-                                            "translations": [
-                                                {
-                                                    "description": "Effort clear and local challenge box. Care figure mention wrong when lead involve. Event lay yes policy data control as receive. End available avoid girl middle.",
-                                                    "languageCode": "FI",
-                                                    "name": "Especially can quite industry relationship very produce social.",
-                                                }
-                                            ]
-                                        },
-                                    }
-                                }
-                            ]
-                        },
-                        "participantsPerInvite": "FAMILY",
-                        "project": {"year": 2020},
-                        "publishedAt": "2020-12-12T00:00:00+00:00",
-                        "shortDescription": "Perform in weight success answer.",
-                        "translations": [
-                            {
-                                "description": """Serious listen police shake. Page box child care any concern.
-Agree room laugh prevent make. Our very television beat at success decade.""",
-                                "imageAltText": "",
-                                "languageCode": "FI",
-                                "name": "Free heart significant machine try.",
-                                "shortDescription": "Perform in weight success answer.",
-                            }
-                        ],
-                        "updatedAt": "2020-12-12T00:00:00+00:00",
-                    }
-                },
-                {
-                    "node": {
-                        "capacityPerOccurrence": 28,
-                        "createdAt": "2020-12-12T00:00:00+00:00",
-                        "description": """Wonder everything pay parent theory go home. Book and interesting sit future dream party. Truth list pressure stage history.
-If his their best. Election stay every something base.""",
-                        "duration": 42,
-                        "image": "http://testserver/media/think.jpg",
-                        "imageAltText": "",
-                        "name": "Able process base sing according.",
-                        "occurrences": {
-                            "edges": [
-                                {
-                                    "node": {
-                                        "enrolmentCount": 0,
-                                        "remainingCapacity": 28,
-                                        "time": "2012-05-15T10:30:47+00:00",
-                                        "venue": {
-                                            "translations": [
-                                                {
-                                                    "description": "Effort clear and local challenge box. Care figure mention wrong when lead involve. Event lay yes policy data control as receive. End available avoid girl middle.",
-                                                    "languageCode": "FI",
-                                                    "name": "Especially can quite industry relationship very produce social.",
-                                                }
-                                            ]
-                                        },
-                                    }
-                                }
-                            ]
-                        },
-                        "participantsPerInvite": "FAMILY",
-                        "project": {"year": 2020},
-                        "publishedAt": None,
-                        "shortDescription": "Later evening southern would according strong.",
-                        "translations": [
-                            {
-                                "description": """Wonder everything pay parent theory go home. Book and interesting sit future dream party. Truth list pressure stage history.
-If his their best. Election stay every something base.""",
-                                "imageAltText": "",
-                                "languageCode": "FI",
-                                "name": "Able process base sing according.",
-                                "shortDescription": "Later evening southern would according strong.",
-                            }
-                        ],
-                        "updatedAt": "2020-12-12T00:00:00+00:00",
-                    }
-                },
-            ]
-        }
-    }
-}
-
 snapshots["test_unenrol_occurrence 1"] = {
     "data": {
         "unenrolOccurrence": {
@@ -688,6 +585,90 @@ Page box child care any concern. Defense level church use.""",
                     }
                 ]
             },
+        }
+    }
+}
+
+snapshots["test_events_query_project_user 1"] = {
+    "data": {
+        "events": {
+            "edges": [
+                {
+                    "node": {
+                        "capacityPerOccurrence": 50,
+                        "createdAt": "2020-12-12T00:00:00+00:00",
+                        "description": """Serious listen police shake. Page box child care any concern.
+Agree room laugh prevent make. Our very television beat at success decade.""",
+                        "duration": 197,
+                        "image": "http://testserver/media/spring.jpg",
+                        "imageAltText": "",
+                        "name": "Free heart significant machine try.",
+                        "occurrences": {
+                            "edges": [
+                                {
+                                    "node": {
+                                        "enrolmentCount": 0,
+                                        "remainingCapacity": 50,
+                                        "time": "1978-11-27T17:53:39+00:00",
+                                        "venue": {
+                                            "translations": [
+                                                {
+                                                    "description": "Effort clear and local challenge box. Care figure mention wrong when lead involve. Event lay yes policy data control as receive. End available avoid girl middle.",
+                                                    "languageCode": "FI",
+                                                    "name": "Especially can quite industry relationship very produce social.",
+                                                }
+                                            ]
+                                        },
+                                    }
+                                }
+                            ]
+                        },
+                        "participantsPerInvite": "FAMILY",
+                        "project": {"year": 2020},
+                        "publishedAt": "2020-12-12T00:00:00+00:00",
+                        "shortDescription": "Perform in weight success answer.",
+                        "translations": [
+                            {
+                                "description": """Serious listen police shake. Page box child care any concern.
+Agree room laugh prevent make. Our very television beat at success decade.""",
+                                "imageAltText": "",
+                                "languageCode": "FI",
+                                "name": "Free heart significant machine try.",
+                                "shortDescription": "Perform in weight success answer.",
+                            }
+                        ],
+                        "updatedAt": "2020-12-12T00:00:00+00:00",
+                    }
+                },
+                {
+                    "node": {
+                        "capacityPerOccurrence": 28,
+                        "createdAt": "2020-12-12T00:00:00+00:00",
+                        "description": """Wonder everything pay parent theory go home. Book and interesting sit future dream party. Truth list pressure stage history.
+If his their best. Election stay every something base.""",
+                        "duration": 42,
+                        "image": "http://testserver/media/think.jpg",
+                        "imageAltText": "",
+                        "name": "Able process base sing according.",
+                        "occurrences": {"edges": []},
+                        "participantsPerInvite": "FAMILY",
+                        "project": {"year": 2020},
+                        "publishedAt": None,
+                        "shortDescription": "Later evening southern would according strong.",
+                        "translations": [
+                            {
+                                "description": """Wonder everything pay parent theory go home. Book and interesting sit future dream party. Truth list pressure stage history.
+If his their best. Election stay every something base.""",
+                                "imageAltText": "",
+                                "languageCode": "FI",
+                                "name": "Able process base sing according.",
+                                "shortDescription": "Later evening southern would according strong.",
+                            }
+                        ],
+                        "updatedAt": "2020-12-12T00:00:00+00:00",
+                    }
+                },
+            ]
         }
     }
 }

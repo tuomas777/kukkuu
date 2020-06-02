@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatedFields
@@ -14,9 +15,9 @@ from venues.models import Venue
 # This need to be inherited from TranslatableQuerySet instead of default model.QuerySet
 class EventQueryset(TranslatableQuerySet):
     def user_can_view(self, user):
-        if user.is_staff:
-            return self
-        return self.exclude(published_at=None)
+        return self.filter(
+            Q(project__users=user) | Q(published_at__isnull=False)
+        ).distinct()
 
 
 class Event(TimestampedModel, TranslatableModel):

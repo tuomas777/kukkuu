@@ -450,12 +450,15 @@ def test_events_query_normal_user(snapshot, user_api_client, event, venue):
     snapshot.assert_match(executed)
 
 
-def test_events_query_staff_user(
-    snapshot, staff_api_client, event, unpublished_event, venue
+def test_events_query_project_user(
+    snapshot, project_user_api_client, event, unpublished_event, venue, another_project
 ):
     OccurrenceFactory(event=event, venue=venue)
     OccurrenceFactory(event=unpublished_event, venue=venue)
-    executed = staff_api_client.execute(EVENTS_QUERY)
+    # unpublished event from another project, should not be returned
+    OccurrenceFactory(event=EventFactory(project=another_project), venue=venue)
+
+    executed = project_user_api_client.execute(EVENTS_QUERY)
 
     snapshot.assert_match(executed)
 
