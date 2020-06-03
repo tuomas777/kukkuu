@@ -6,79 +6,6 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots["test_add_event_staff_user 1"] = {
-    "data": {
-        "addEvent": {
-            "event": {
-                "capacityPerOccurrence": 30,
-                "duration": 1000,
-                "image": "",
-                "imageAltText": "Image alt text",
-                "participantsPerInvite": "FAMILY",
-                "project": {"year": 2020},
-                "publishedAt": None,
-                "translations": [
-                    {
-                        "description": "desc",
-                        "imageAltText": "Image alt text",
-                        "languageCode": "FI",
-                        "name": "Event test",
-                        "shortDescription": "Short desc",
-                    }
-                ],
-            }
-        }
-    }
-}
-
-snapshots["test_add_occurrence_staff_user 1"] = {
-    "data": {
-        "addOccurrence": {
-            "occurrence": {
-                "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
-                "occurrenceLanguage": "FI",
-                "time": "1986-12-12T16:40:48+00:00",
-                "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
-            }
-        }
-    }
-}
-
-snapshots["test_update_event_staff_user 1"] = {
-    "data": {
-        "updateEvent": {
-            "event": {
-                "capacityPerOccurrence": 30,
-                "duration": 1000,
-                "image": "http://testserver/media/spring.jpg",
-                "imageAltText": "Image alt text",
-                "occurrences": {"edges": []},
-                "participantsPerInvite": "FAMILY",
-                "translations": [
-                    {
-                        "description": "desc",
-                        "imageAltText": "Image alt text",
-                        "languageCode": "SV",
-                        "name": "Event test in swedish",
-                        "shortDescription": "Short desc",
-                    },
-                    {
-                        "description": "desc",
-                        "imageAltText": "Image alt text",
-                        "languageCode": "FI",
-                        "name": "Event test in suomi",
-                        "shortDescription": "Short desc",
-                    },
-                ],
-            }
-        }
-    }
-}
-
-snapshots["test_staff_publish_event 1"] = {
-    "data": {"publishEvent": {"event": {"publishedAt": "2020-12-12T00:00:00+00:00"}}}
-}
-
 snapshots["test_occurrence_query_normal_user 1"] = {
     "data": {
         "occurrence": {
@@ -118,19 +45,6 @@ Page box child care any concern. Defense level church use.""",
                     }
                 ]
             },
-        }
-    }
-}
-
-snapshots["test_update_occurrence_staff_user 1"] = {
-    "data": {
-        "updateOccurrence": {
-            "occurrence": {
-                "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
-                "occurrenceLanguage": "SV",
-                "time": "1986-12-12T16:40:48+00:00",
-                "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
-            }
         }
     }
 }
@@ -690,4 +604,90 @@ Page box child care any concern. Defense level church use.""",
             ]
         }
     }
+}
+
+snapshots["test_add_event_project_user 1"] = {
+    "data": {
+        "addEvent": {
+            "event": {
+                "capacityPerOccurrence": 30,
+                "duration": 1000,
+                "image": "",
+                "imageAltText": "Image alt text",
+                "participantsPerInvite": "FAMILY",
+                "project": {"year": 2020},
+                "publishedAt": None,
+                "translations": [
+                    {
+                        "description": "desc",
+                        "imageAltText": "Image alt text",
+                        "languageCode": "FI",
+                        "name": "Event test",
+                        "shortDescription": "Short desc",
+                    }
+                ],
+            }
+        }
+    }
+}
+
+snapshots["test_add_occurrence_project_user 1"] = {
+    "data": {
+        "addOccurrence": {
+            "occurrence": {
+                "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
+                "occurrenceLanguage": "FI",
+                "time": "1986-12-12T16:40:48+00:00",
+                "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
+            }
+        }
+    }
+}
+
+snapshots["test_update_occurrence_project_user 1"] = {
+    "data": {
+        "updateOccurrence": {
+            "occurrence": {
+                "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
+                "occurrenceLanguage": "SV",
+                "time": "1986-12-12T16:40:48+00:00",
+                "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
+            }
+        }
+    }
+}
+
+snapshots["test_update_event_project_user 1"] = {
+    "data": {
+        "updateEvent": {
+            "event": {
+                "capacityPerOccurrence": 30,
+                "duration": 1000,
+                "image": "http://testserver/media/spring.jpg",
+                "imageAltText": "Image alt text",
+                "occurrences": {"edges": []},
+                "participantsPerInvite": "FAMILY",
+                "translations": [
+                    {
+                        "description": "desc",
+                        "imageAltText": "Image alt text",
+                        "languageCode": "SV",
+                        "name": "Event test in swedish",
+                        "shortDescription": "Short desc",
+                    },
+                    {
+                        "description": "desc",
+                        "imageAltText": "Image alt text",
+                        "languageCode": "FI",
+                        "name": "Event test in suomi",
+                        "shortDescription": "Short desc",
+                    },
+                ],
+            }
+        }
+    }
+}
+
+snapshots["test_project_user_publish_event 1"] = {
+    "data": {"publishEvent": {"event": {"publishedAt": "2020-12-12T00:00:00+00:00"}}}
 }

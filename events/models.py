@@ -70,6 +70,9 @@ class Event(TimestampedModel, TranslatableModel):
     def __str__(self):
         return self.safe_translation_getter("name", super().__str__())
 
+    def can_user_administer(self, user):
+        return user.projects.filter(pk=self.project_id).exists()
+
     def publish(self):
         self.published_at = timezone.now()
         self.save()
@@ -127,6 +130,11 @@ class Occurrence(TimestampedModel):
 
     def __str__(self):
         return f"{self.pk} {self.time}"
+
+    def can_user_administer(self, user):
+        # There shouldn't ever be a situation where event.project != venue.project
+        # so we can just check one of them
+        return user.projects.filter(pk=self.event.project.pk).exists()
 
 
 class Enrolment(models.Model):

@@ -20,3 +20,6 @@ class Project(TranslatableModel):
 
     def __str__(self):
         return f"#{self.pk} {self.year}"
+
+    def can_user_administer(self, user):
+        return user.projects.filter(pk=self.pk).exists()

@@ -84,7 +84,7 @@ Assume training seek full several. Authority develop identify ready.""",
     }
 }
 
-snapshots["test_add_venue_staff_user 1"] = {
+snapshots["test_add_venue_project_user 1"] = {
     "data": {
         "addVenue": {
             "venue": {
@@ -107,7 +107,7 @@ snapshots["test_add_venue_staff_user 1"] = {
     }
 }
 
-snapshots["test_update_venue_staff_user 1"] = {
+snapshots["test_update_venue_project_user 1"] = {
     "data": {
         "updateVenue": {
             "venue": {

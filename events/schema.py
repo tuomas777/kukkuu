@@ -8,14 +8,19 @@ from graphene import Connection, relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_file_upload.scalars import Upload
-from graphql_jwt.decorators import login_required, staff_member_required
+from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from projects.models import Project
 
 from children.models import Child
 from children.schema import ChildNode
 from common.schema import LanguageEnum
-from common.utils import update_object, update_object_with_translations
+from common.utils import (
+    get_obj_if_user_can_administer,
+    project_user_required,
+    update_object,
+    update_object_with_translations,
+)
 from events.filters import OccurrenceFilter
 from events.models import Enrolment, Event, Occurrence
 from kukkuu.exceptions import (
@@ -161,16 +166,12 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
     event = graphene.Field(EventNode)
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Add validation
-        project_global_id = kwargs.pop("project_id")
-        try:
-            project = Project.objects.get(pk=from_global_id(project_global_id)[1])
-            kwargs["project_id"] = project.id
-        except Project.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        kwargs["project_id"] = get_obj_if_user_can_administer(
+            info, kwargs.pop("project_id"), Project
+        ).pk
         event = Event.objects.create_translatable_object(**kwargs)
         return AddEventMutation(event=event)
 
@@ -188,23 +189,17 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
     event = graphene.Field(EventNode)
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Add validation
         project_global_id = kwargs.pop("project_id", None)
         if project_global_id:
-            try:
-                project = Project.objects.get(pk=from_global_id(project_global_id)[1])
-                kwargs["project_id"] = project.id
-            except Project.DoesNotExist as e:
-                raise ObjectDoesNotExistError(e)
-        event_global_id = kwargs.pop("id")
-        try:
-            event = Event.objects.get(pk=from_global_id(event_global_id)[1])
-            update_object_with_translations(event, kwargs)
-        except Event.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+            kwargs["project_id"] = get_obj_if_user_can_administer(
+                info, project_global_id, Project
+            ).pk
+
+        event = get_obj_if_user_can_administer(info, kwargs.pop("id"), Event)
+        update_object_with_translations(event, kwargs)
         return UpdateEventMutation(event=event)
 
 
@@ -213,16 +208,11 @@ class DeleteEventMutation(graphene.relay.ClientIDMutation):
         id = graphene.GlobalID()
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Validate data
-        event_id = from_global_id(kwargs["id"])[1]
-        try:
-            event = Event.objects.get(pk=event_id)
-            event.delete()
-        except Event.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        event = get_obj_if_user_can_administer(info, kwargs["id"], Event)
+        event.delete()
         return DeleteEventMutation()
 
 
@@ -291,23 +281,15 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
     occurrence = graphene.Field(OccurrenceNode)
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Validate data
-        event_id = from_global_id(kwargs["event_id"])[1]
-        try:
-            Event.objects.get(pk=event_id)
-            kwargs["event_id"] = event_id
-        except Event.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
-
-        venue_id = from_global_id(kwargs["venue_id"])[1]
-        try:
-            Venue.objects.get(pk=venue_id)
-            kwargs["venue_id"] = venue_id
-        except Venue.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        kwargs["event_id"] = get_obj_if_user_can_administer(
+            info, kwargs["event_id"], Event
+        ).pk
+        kwargs["venue_id"] = get_obj_if_user_can_administer(
+            info, kwargs["venue_id"], Venue
+        ).pk
 
         occurrence = Occurrence.objects.create(**kwargs)
 
@@ -328,32 +310,20 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
     occurrence = graphene.Field(OccurrenceNode)
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Validate data
-        occurrence_id = from_global_id(kwargs["id"])[1]
-        try:
-            occurrence = Occurrence.objects.get(pk=occurrence_id)
-            kwargs["id"] = occurrence_id
-        except Occurrence.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        occurrence = get_obj_if_user_can_administer(info, kwargs.pop("id"), Occurrence)
 
-        if kwargs.get("event_id", None):
-            event_id = from_global_id(kwargs["event_id"])[1]
-            try:
-                Event.objects.get(pk=event_id)
-                kwargs["event_id"] = event_id
-            except Event.DoesNotExist as e:
-                raise ObjectDoesNotExistError(e)
+        if kwargs.get("event_id"):
+            kwargs["event_id"] = get_obj_if_user_can_administer(
+                info, kwargs["event_id"], Event
+            ).pk
 
-        if kwargs.get("venue_id", None):
-            venue_id = from_global_id(kwargs["venue_id"])[1]
-            try:
-                Venue.objects.get(pk=venue_id)
-                kwargs["venue_id"] = venue_id
-            except Venue.DoesNotExist as e:
-                raise ObjectDoesNotExistError(e)
+        if kwargs.get("venue_id"):
+            kwargs["venue_id"] = get_obj_if_user_can_administer(
+                info, kwargs["venue_id"], Venue
+            ).pk
 
         update_object(occurrence, kwargs)
         return UpdateOccurrenceMutation(occurrence=occurrence)
@@ -364,16 +334,11 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
         id = graphene.GlobalID()
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Validate data
-        occurrence_id = from_global_id(kwargs["id"])[1]
-        try:
-            occurrence = Occurrence.objects.get(pk=occurrence_id)
-            occurrence.delete()
-        except Occurrence.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        occurrence = get_obj_if_user_can_administer(info, kwargs["id"], Occurrence)
+        occurrence.delete()
         return DeleteOccurrenceMutation()
 
 
@@ -384,19 +349,15 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
     event = graphene.Field(EventNode)
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Add validation
-        event_global_id = kwargs.pop("id")
-        try:
-            event = Event.objects.get(pk=from_global_id(event_global_id)[1])
-            if event.is_published():
-                raise EventAlreadyPublishedError("Event is already published")
-            event.publish()
+        event = get_obj_if_user_can_administer(info, kwargs["id"], Event)
 
-        except Event.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        if event.is_published():
+            raise EventAlreadyPublishedError("Event is already published")
+
+        event.publish()
         return PublishEventMutation(event=event)
 
 

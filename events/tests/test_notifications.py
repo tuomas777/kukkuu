@@ -63,7 +63,7 @@ def notification_template_occurrence_unenrolment_fi():
 @pytest.mark.django_db
 def test_event_publish_notification(
     snapshot,
-    staff_api_client,
+    project_user_api_client,
     notification_template_event_published_fi,
     unpublished_event,
     project,
@@ -75,7 +75,7 @@ def test_event_publish_notification(
 
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", unpublished_event.id)
-    staff_api_client.execute(PUBLISH_EVENT_MUTATION, variables=event_variables)
+    project_user_api_client.execute(PUBLISH_EVENT_MUTATION, variables=event_variables)
 
     assert len(mail.outbox) == 5  # 3 children of which one has 3 guardians
 
