@@ -118,6 +118,22 @@ def unpublished_occurrence(venue, unpublished_event):
     )
 
 
+@pytest.fixture()
+def wrong_project_api_client(another_project):
+    user = UserFactory()
+    user.projects.set([another_project])
+    return create_api_client_with_user(user)
+
+
+@pytest.fixture(
+    params=range(3), ids=["unauthenticated_user", "normal_user", "wrong_project_user"]
+)
+def unauthorized_user_api_client(
+    api_client, user_api_client, wrong_project_api_client, request
+):
+    return (api_client, user_api_client, wrong_project_api_client)[request.param]
+
+
 def create_api_client_with_user(user):
     request = RequestFactory().post("/graphql")
     request.user = user
