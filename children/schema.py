@@ -85,6 +85,19 @@ class RelationshipNode(DjangoObjectType):
 
     type = graphene.Field(RelationshipTypeEnum)
 
+    @classmethod
+    @login_required
+    def get_queryset(cls, queryset, info):
+        return queryset.user_can_view(info.context.user).order_by("id")
+
+    @classmethod
+    @login_required
+    def get_node(cls, info, id):
+        try:
+            return cls._meta.model.objects.user_can_view(info.context.user).get(id=id)
+        except cls._meta.model.DoesNotExist:
+            return None
+
 
 class RelationshipInput(graphene.InputObjectType):
     type = RelationshipTypeEnum()

@@ -57,6 +57,13 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
         return f"{self.first_name} {self.last_name} ({self.birthdate})"
 
 
+class RelationshipQuerySet(models.QuerySet):
+    def user_can_view(self, user):
+        return self.filter(
+            Q(guardian__user=user) | Q(child__project__users=user)
+        ).distinct()
+
+
 class Relationship(models.Model):
     PARENT = "parent"  # In Finnish: Vanhempi
     OTHER_GUARDIAN = "other_guardian"  # In Finnish: Muu huoltaja
@@ -89,6 +96,8 @@ class Relationship(models.Model):
         null=True,
         blank=True,
     )
+
+    objects = RelationshipQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("relationship")
