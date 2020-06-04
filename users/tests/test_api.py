@@ -184,10 +184,10 @@ query MyProfile {
     snapshot.assert_match(executed)
 
 
-def test_my_profile_no_profile(snapshot, staff_api_client):
+def test_my_profile_no_profile(snapshot, user_api_client):
     GuardianFactory()
 
-    executed = staff_api_client.execute(MY_PROFILE_QUERY)
+    executed = user_api_client.execute(MY_PROFILE_QUERY)
 
     snapshot.assert_match(executed)
 

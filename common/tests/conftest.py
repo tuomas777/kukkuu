@@ -63,11 +63,6 @@ def user_api_client():
 
 
 @pytest.fixture
-def staff_api_client():
-    return create_api_client_with_user(UserFactory(is_staff=True))
-
-
-@pytest.fixture
 def guardian_api_client():
     return create_api_client_with_user(UserFactory(guardian=GuardianFactory()))
 
