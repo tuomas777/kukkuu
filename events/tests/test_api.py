@@ -378,6 +378,8 @@ mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
       }
       time
       occurrenceLanguage
+      enrolmentCount
+      remainingCapacity
     }
   }
 }

@@ -127,6 +127,13 @@ class Occurrence(TimestampedModel):
     def __str__(self):
         return f"{self.pk} {self.time}"
 
+    def get_enrolment_count(self):
+        try:
+            # try to use an annotated value
+            return self.enrolment_count
+        except AttributeError:
+            return self.enrolments.count()
+
 
 class Enrolment(models.Model):
     child = models.ForeignKey(
