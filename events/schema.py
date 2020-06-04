@@ -120,7 +120,10 @@ class OccurrenceNode(DjangoObjectType):
         return super().get_node(info, id)
 
     def resolve_remaining_capacity(self, info, **kwargs):
-        return self.event.capacity_per_occurrence - self.enrolment_count
+        return self.event.capacity_per_occurrence - self.get_enrolment_count()
+
+    def resolve_enrolment_count(self, info, **kwargs):
+        return self.get_enrolment_count()
 
     class Meta:
         model = Occurrence

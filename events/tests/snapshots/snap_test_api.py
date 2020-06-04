@@ -126,8 +126,10 @@ snapshots["test_update_occurrence_staff_user 1"] = {
     "data": {
         "updateOccurrence": {
             "occurrence": {
+                "enrolmentCount": 0,
                 "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
                 "occurrenceLanguage": "SV",
+                "remainingCapacity": 43,
                 "time": "1986-12-12T16:40:48+00:00",
                 "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
             }
