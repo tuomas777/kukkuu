@@ -693,3 +693,13 @@ snapshots["test_update_event_project_user 1"] = {
 snapshots["test_project_user_publish_event 1"] = {
     "data": {"publishEvent": {"event": {"publishedAt": "2020-12-12T00:00:00+00:00"}}}
 }
+
+snapshots["test_occurrences_filter_by_project 1"] = {
+    "data": {
+        "occurrences": {"edges": [{"node": {"time": "1970-01-01T12:00:00+00:00"}}]}
+    }
+}
+
+snapshots["test_event_filter_by_project 1"] = {
+    "data": {"events": {"edges": [{"node": {"name": "Should be visible"}}]}}
+}

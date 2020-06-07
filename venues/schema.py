@@ -4,7 +4,8 @@ from django.db import transaction
 from django.db.models import Count
 from django.utils.translation import get_language
 from graphene import relay
-from graphene_django import DjangoConnectionField, DjangoObjectType
+from graphene_django import DjangoObjectType
+from graphene_django.filter import DjangoFilterConnectionField
 from graphql_jwt.decorators import login_required
 from projects.models import Project
 
@@ -40,6 +41,7 @@ class VenueNode(DjangoObjectType):
     class Meta:
         model = Venue
         interfaces = (relay.Node,)
+        filter_fields = ("project_id",)
 
     @classmethod
     @login_required
@@ -131,7 +133,7 @@ class DeleteVenueMutation(graphene.relay.ClientIDMutation):
 
 class Query:
     venue = relay.Node.Field(VenueNode)
-    venues = DjangoConnectionField(VenueNode)
+    venues = DjangoFilterConnectionField(VenueNode)
 
 
 class Mutation:
