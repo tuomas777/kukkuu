@@ -1,5 +1,6 @@
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
@@ -8,11 +9,7 @@ from users.models import Guardian
 
 class ChildQuerySet(models.QuerySet):
     def user_can_view(self, user):
-        # TODO we'll probably need more fine-grained control than this
-        if user.is_staff:
-            return self
-        else:
-            return self.filter(guardians__user=user)
+        return self.filter(Q(guardians__user=user) | Q(project__users=user)).distinct()
 
     def user_can_update(self, user):
         return self.filter(guardians__user=user)
@@ -60,6 +57,13 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
         return f"{self.first_name} {self.last_name} ({self.birthdate})"
 
 
+class RelationshipQuerySet(models.QuerySet):
+    def user_can_view(self, user):
+        return self.filter(
+            Q(guardian__user=user) | Q(child__project__users=user)
+        ).distinct()
+
+
 class Relationship(models.Model):
     PARENT = "parent"  # In Finnish: Vanhempi
     OTHER_GUARDIAN = "other_guardian"  # In Finnish: Muu huoltaja
@@ -92,6 +96,8 @@ class Relationship(models.Model):
         null=True,
         blank=True,
     )
+
+    objects = RelationshipQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("relationship")

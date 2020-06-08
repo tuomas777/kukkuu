@@ -1,6 +1,7 @@
 import pytest
 from projects.factories import ProjectFactory
 
+from children.factories import RelationshipFactory
 from children.tests.test_api import (
     assert_guardian_matches_data,
     assert_permission_denied,
@@ -34,6 +35,9 @@ query Guardians {
                 firstName
                 lastName
                 birthdate
+                project {
+                  year
+                }
               }
             }
           }
@@ -64,15 +68,38 @@ def test_guardians_query_normal_user(snapshot, user_api_client, project):
     snapshot.assert_match(executed)
 
 
-def test_guardians_query_staff_user(snapshot, staff_api_client, project):
-    GuardianFactory(relationships__count=1, relationships__child__project=project)
-    GuardianFactory(
-        user=staff_api_client.user,
+def test_guardians_query_project_user(
+    snapshot, project_user_api_client, project, another_project
+):
+    guardian_1 = GuardianFactory(
+        first_name="Guardian having children in own and another project",
+        last_name="Should be visible 1/2",
         relationships__count=1,
         relationships__child__project=project,
     )
+    RelationshipFactory(
+        guardian=guardian_1,
+        child__first_name="Second child from another project",
+        child__last_name="Should NOT be visible",
+        child__project=another_project,
+    )
 
-    executed = staff_api_client.execute(GUARDIANS_QUERY)
+    GuardianFactory(
+        first_name="Another project own guardian",
+        last_name="Should be visible 2/2",
+        user=project_user_api_client.user,
+        relationships__count=1,
+        relationships__child__project=another_project,
+    )
+
+    GuardianFactory(
+        first_name="Another project guardian",
+        last_name="Should NOT be visible",
+        relationships__count=1,
+        relationships__child__project=another_project,
+    )
+
+    executed = project_user_api_client.execute(GUARDIANS_QUERY)
 
     snapshot.assert_match(executed)
 
@@ -157,10 +184,10 @@ query MyProfile {
     snapshot.assert_match(executed)
 
 
-def test_my_profile_no_profile(snapshot, staff_api_client):
+def test_my_profile_no_profile(snapshot, user_api_client):
     GuardianFactory()
 
-    executed = staff_api_client.execute(MY_PROFILE_QUERY)
+    executed = user_api_client.execute(MY_PROFILE_QUERY)
 
     snapshot.assert_match(executed)
 

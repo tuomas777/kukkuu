@@ -21,6 +21,7 @@ from kukkuu.consts import (
     MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
 )
+from users.factories import GuardianFactory
 from users.models import Guardian
 
 from ..models import Child, Relationship
@@ -299,14 +300,52 @@ def test_children_query_normal_user(snapshot, user_api_client, project):
     snapshot.assert_match(executed)
 
 
-def test_children_query_staff_user(
-    snapshot, staff_api_client, project, child_with_random_guardian
+def test_children_query_project_user(
+    snapshot, project_user_api_client, project, another_project
 ):
     ChildWithGuardianFactory(
-        relationship__guardian__user=staff_api_client.user, project=project
+        first_name="Same project", last_name="Should be returned 1/1", project=project
+    )
+    ChildWithGuardianFactory(
+        first_name="Another project",
+        last_name="Should NOT be returned",
+        project=another_project,
     )
 
-    executed = staff_api_client.execute(CHILDREN_QUERY)
+    executed = project_user_api_client.execute(CHILDREN_QUERY)
+
+    snapshot.assert_match(executed)
+
+
+def test_children_query_project_user_and_guardian(
+    snapshot, project_user_api_client, project, another_project
+):
+    guardian = GuardianFactory(user=project_user_api_client.user)
+
+    ChildWithGuardianFactory(
+        first_name="Own child same project",
+        last_name="Should be returned 1/3",
+        project=project,
+        relationship__guardian=guardian,
+    )
+    ChildWithGuardianFactory(
+        first_name="Own child another project",
+        last_name="Should be returned 2/3",
+        project=project,
+        relationship__guardian=guardian,
+    )
+    ChildWithGuardianFactory(
+        first_name="Not own child same project",
+        last_name="Should be returned 3/3",
+        project=project,
+    )
+    ChildWithGuardianFactory(
+        first_name="Not own child another project",
+        last_name="Should NOT be returned",
+        project=another_project,
+    )
+
+    executed = project_user_api_client.execute(CHILDREN_QUERY)
 
     snapshot.assert_match(executed)
 
@@ -405,12 +444,12 @@ def test_child_query_not_own_child(user_api_client, child_with_random_guardian):
     assert executed["data"]["child"] is None
 
 
-def test_child_query_not_own_child_staff_user(
-    snapshot, staff_api_client, child_with_random_guardian
+def test_child_query_not_own_child_project_user(
+    snapshot, project_user_api_client, child_with_random_guardian
 ):
     variables = {"id": to_global_id("ChildNode", child_with_random_guardian.id)}
 
-    executed = staff_api_client.execute(CHILD_QUERY, variables=variables)
+    executed = project_user_api_client.execute(CHILD_QUERY, variables=variables)
 
     snapshot.assert_match(executed)
 

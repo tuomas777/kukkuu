@@ -37,3 +37,6 @@ class Venue(TimestampedModel, TranslatableModel):
 
     def __str__(self):
         return self.safe_translation_getter("name", super().__str__())
+
+    def can_user_administer(self, user):
+        return user.projects.filter(pk=self.project_id).exists()

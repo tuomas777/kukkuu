@@ -1,8 +1,11 @@
 from django.db import transaction
+from graphene import Node
+from graphql_jwt.decorators import user_passes_test
+from graphql_jwt.exceptions import PermissionDenied
 from graphql_relay import to_global_id
 
 from kukkuu import __version__
-from kukkuu.exceptions import DataValidationError
+from kukkuu.exceptions import DataValidationError, ObjectDoesNotExistError
 from kukkuu.settings import REVISION
 
 
@@ -30,3 +33,34 @@ def get_api_version():
 
 def get_global_id(obj):
     return to_global_id(f"{obj.__class__.__name__}Node", obj.pk)
+
+
+def check_can_user_administer(obj, user):
+    try:
+        yes_we_can = obj.can_user_administer(user)
+    except AttributeError:
+        raise TypeError(
+            f"{obj.__class__.__name__} model does not implement can_user_administer()."
+        )
+    if not yes_we_can:
+        raise PermissionDenied()
+
+
+def get_obj_from_global_id(info, global_id, expected_obj_type):
+    obj = Node.get_node_from_global_id(info, global_id)
+    if not obj or type(obj) != expected_obj_type:
+        raise ObjectDoesNotExistError(
+            f"{expected_obj_type.__name__} matching query does not exist."
+        )
+    return obj
+
+
+def get_obj_if_user_can_administer(info, global_id, expected_obj_type):
+    obj = get_obj_from_global_id(info, global_id, expected_obj_type)
+    check_can_user_administer(obj, info.context.user)
+    return obj
+
+
+project_user_required = user_passes_test(
+    lambda u: u.is_authenticated and u.projects.exists()
+)

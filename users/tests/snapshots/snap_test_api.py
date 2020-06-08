@@ -6,59 +6,6 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots["test_guardians_query_staff_user 1"] = {
-    "data": {
-        "guardians": {
-            "edges": [
-                {
-                    "node": {
-                        "email": "ramirezandrew@burns.com",
-                        "firstName": "Christy",
-                        "lastName": "Jenkins",
-                        "phoneNumber": "001-803-466-9727x0117",
-                        "relationships": {
-                            "edges": [
-                                {
-                                    "node": {
-                                        "child": {
-                                            "birthdate": "2020-02-14",
-                                            "firstName": "Robin",
-                                            "lastName": "Moses",
-                                        },
-                                        "type": "ADVOCATE",
-                                    }
-                                }
-                            ]
-                        },
-                    }
-                },
-                {
-                    "node": {
-                        "email": "mperez@cox.com",
-                        "firstName": "Sandra",
-                        "lastName": "Meyer",
-                        "phoneNumber": "(727)708-9817",
-                        "relationships": {
-                            "edges": [
-                                {
-                                    "node": {
-                                        "child": {
-                                            "birthdate": "2020-11-22",
-                                            "firstName": "Christopher",
-                                            "lastName": "Jones",
-                                        },
-                                        "type": "ADVOCATE",
-                                    }
-                                }
-                            ]
-                        },
-                    }
-                },
-            ]
-        }
-    }
-}
-
 snapshots["test_my_profile_no_profile 1"] = {"data": {"myProfile": None}}
 
 snapshots["test_update_my_profile_mutation 1"] = {
@@ -92,6 +39,7 @@ snapshots["test_guardians_query_normal_user 1"] = {
                                             "birthdate": "2020-11-22",
                                             "firstName": "Christopher",
                                             "lastName": "Jones",
+                                            "project": {"year": 2020},
                                         },
                                         "type": "ADVOCATE",
                                     }
@@ -152,5 +100,60 @@ snapshots[
 ] = {
     "data": {
         "updateMyProfile": {"myProfile": {"email": "guardian_updated@example.com"}}
+    }
+}
+
+snapshots["test_guardians_query_project_user 1"] = {
+    "data": {
+        "guardians": {
+            "edges": [
+                {
+                    "node": {
+                        "email": "ramirezandrew@burns.com",
+                        "firstName": "Guardian having children in own and another project",
+                        "lastName": "Should be visible 1/2",
+                        "phoneNumber": "638.034.6697x2701",
+                        "relationships": {
+                            "edges": [
+                                {
+                                    "node": {
+                                        "child": {
+                                            "birthdate": "2020-09-05",
+                                            "firstName": "Craig",
+                                            "lastName": "Oneill",
+                                            "project": {"year": 2020},
+                                        },
+                                        "type": "PARENT",
+                                    }
+                                }
+                            ]
+                        },
+                    }
+                },
+                {
+                    "node": {
+                        "email": "mperez@cox.com",
+                        "firstName": "Another project own guardian",
+                        "lastName": "Should be visible 2/2",
+                        "phoneNumber": "708-981-7101",
+                        "relationships": {
+                            "edges": [
+                                {
+                                    "node": {
+                                        "child": {
+                                            "birthdate": "2020-04-08",
+                                            "firstName": "Elizabeth",
+                                            "lastName": "Jackson",
+                                            "project": {"year": 2030},
+                                        },
+                                        "type": "ADVOCATE",
+                                    }
+                                }
+                            ]
+                        },
+                    }
+                },
+            ]
+        }
     }
 }

@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatedFields
@@ -14,9 +15,9 @@ from venues.models import Venue
 # This need to be inherited from TranslatableQuerySet instead of default model.QuerySet
 class EventQueryset(TranslatableQuerySet):
     def user_can_view(self, user):
-        if user.is_staff:
-            return self
-        return self.exclude(published_at=None)
+        return self.filter(
+            Q(project__users=user) | Q(published_at__isnull=False)
+        ).distinct()
 
 
 class Event(TimestampedModel, TranslatableModel):
@@ -69,6 +70,9 @@ class Event(TimestampedModel, TranslatableModel):
     def __str__(self):
         return self.safe_translation_getter("name", super().__str__())
 
+    def can_user_administer(self, user):
+        return user.projects.filter(pk=self.project_id).exists()
+
     def publish(self):
         self.published_at = timezone.now()
         self.save()
@@ -85,9 +89,9 @@ class Event(TimestampedModel, TranslatableModel):
 
 class OccurrenceQueryset(models.QuerySet):
     def user_can_view(self, user):
-        if user.is_staff:
-            return self
-        return self.exclude(event__published_at=None)
+        return self.filter(
+            Q(event__project__users=user) | Q(event__published_at__isnull=False)
+        ).distinct()
 
 
 class Occurrence(TimestampedModel):
@@ -133,6 +137,11 @@ class Occurrence(TimestampedModel):
             return self.enrolment_count
         except AttributeError:
             return self.enrolments.count()
+
+    def can_user_administer(self, user):
+        # There shouldn't ever be a situation where event.project != venue.project
+        # so we can just check one of them
+        return user.projects.filter(pk=self.event.project.pk).exists()
 
 
 class Enrolment(models.Model):
