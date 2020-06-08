@@ -12,6 +12,7 @@ from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
+from common.utils import get_global_id
 from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from kukkuu.consts import (
     API_USAGE_ERROR,
@@ -346,6 +347,40 @@ def test_children_query_project_user_and_guardian(
     )
 
     executed = project_user_api_client.execute(CHILDREN_QUERY)
+
+    snapshot.assert_match(executed)
+
+
+CHILDREN_FILTER_QUERY = """
+query Children($projectId: ID!) {
+  children(projectId: $projectId) {
+    edges {
+      node {
+        firstName
+        lastName
+      }
+    }
+  }
+}
+"""
+
+
+def test_children_project_filter(
+    snapshot, two_project_user_api_client, project, another_project
+):
+    ChildWithGuardianFactory(
+        first_name="Only I", last_name="Should be returned", project=project
+    )
+    ChildWithGuardianFactory(
+        first_name="I certainly",
+        last_name="Should NOT be returned",
+        project=another_project,
+    )
+    variables = {"projectId": get_global_id(project)}
+
+    executed = two_project_user_api_client.execute(
+        CHILDREN_FILTER_QUERY, variables=variables
+    )
 
     snapshot.assert_match(executed)
 

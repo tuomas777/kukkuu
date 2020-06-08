@@ -2,6 +2,7 @@ import django_filters
 from django.utils import timezone
 from graphql_relay import from_global_id
 
+from common.utils import get_node_id_from_global_id
 from events.models import Occurrence
 from events.utils import convert_to_localtime_tz
 
@@ -21,6 +22,7 @@ class OccurrenceFilter(django_filters.FilterSet):
     occurrence_language = django_filters.CharFilter(
         field_name="occurrence_language", method="filter_by_occurrence_language"
     )
+    project_id = django_filters.Filter(method="filter_by_project_global_id")
 
     class Meta:
         model = Occurrence
@@ -52,3 +54,7 @@ class OccurrenceFilter(django_filters.FilterSet):
 
     def filter_by_occurrence_language(self, qs, name, value):
         return qs.filter(occurrence_language=value.lower())
+
+    def filter_by_project_global_id(self, qs, name, value):
+        node_id = get_node_id_from_global_id(value, "ProjectNode")
+        return qs.filter(event__project_id=node_id) if node_id else qs.none()

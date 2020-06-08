@@ -120,6 +120,13 @@ def wrong_project_api_client(another_project):
     return create_api_client_with_user(user)
 
 
+@pytest.fixture
+def two_project_user_api_client(project, another_project):
+    user = UserFactory()
+    user.projects.set([project, another_project])
+    return create_api_client_with_user(user)
+
+
 @pytest.fixture(
     params=range(3), ids=["unauthenticated_user", "normal_user", "wrong_project_user"]
 )

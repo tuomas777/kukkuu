@@ -398,3 +398,13 @@ snapshots["test_get_past_events 1"] = {
         }
     }
 }
+
+snapshots["test_children_project_filter 1"] = {
+    "data": {
+        "children": {
+            "edges": [
+                {"node": {"firstName": "Only I", "lastName": "Should be returned"}}
+            ]
+        }
+    }
+}

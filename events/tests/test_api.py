@@ -6,6 +6,7 @@ import pytest
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
+from django.utils.timezone import now
 from django.utils.translation import activate
 from graphql_relay import to_global_id
 from parler.utils.context import switch_language
@@ -13,6 +14,7 @@ from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
+from common.utils import get_global_id
 from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from events.models import Enrolment, Event, Occurrence
 from kukkuu.consts import (
@@ -130,6 +132,18 @@ query Event($id:ID!) {
 }
 """
 
+EVENTS_FILTER_QUERY = """
+query Events($projectId: ID) {
+  events(projectId: $projectId) {
+    edges {
+      node {
+        name
+      }
+    }
+  }
+}
+"""
+
 OCCURRENCES_QUERY = """
 query Occurrences {
   occurrences {
@@ -171,9 +185,10 @@ query Occurrences {
 
 OCCURRENCES_FILTER_QUERY = """
 query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String,
-                  $eventId: String, $occurrenceLanguage: String) {
+                  $eventId: String, $occurrenceLanguage: String, $projectId: String) {
   occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId,
-              eventId: $eventId, occurrenceLanguage: $occurrenceLanguage) {
+              eventId: $eventId, occurrenceLanguage: $occurrenceLanguage,
+              projectId: $projectId) {
     edges {
       node {
         time
@@ -701,6 +716,20 @@ def test_project_user_publish_event(
     assert_match_error_code(executed, EVENT_ALREADY_PUBLISHED_ERROR)
 
 
+def test_event_filter_by_project(
+    two_project_user_api_client, project, another_project, snapshot
+):
+    EventFactory(name="Should be visible", project=project)
+    EventFactory(name="Should NOT be visible", project=another_project)
+    variables = {"projectId": get_global_id(project)}
+
+    executed = two_project_user_api_client.execute(
+        EVENTS_FILTER_QUERY, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+
+
 def test_enrol_occurrence(
     api_client, guardian_api_client, snapshot, occurrence, child_with_user_guardian
 ):
@@ -990,6 +1019,28 @@ def test_occurrences_filter_by_language(user_api_client, snapshot, event, venue)
     variables = {"occurrenceLanguage": "SV"}
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
     assert len(executed["data"]["occurrences"]["edges"]) == len(sv_occurrences)
+
+    snapshot.assert_match(executed)
+
+
+def test_occurrences_filter_by_project(
+    two_project_user_api_client, snapshot, project, another_project
+):
+    OccurrenceFactory(
+        event__project=project,
+        event__published_at=now(),
+        time=datetime(1970, 1, 1, 12, tzinfo=timezone.now().tzinfo),
+    )
+    OccurrenceFactory(
+        event__project=another_project,
+        event__published_at=now(),
+        time=datetime(1981, 2, 18, 12, tzinfo=timezone.now().tzinfo),
+    )
+    variables = {"projectId": get_global_id(project)}
+
+    executed = two_project_user_api_client.execute(
+        OCCURRENCES_FILTER_QUERY, variables=variables
+    )
 
     snapshot.assert_match(executed)
 

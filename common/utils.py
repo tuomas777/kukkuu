@@ -2,7 +2,7 @@ from django.db import transaction
 from graphene import Node
 from graphql_jwt.decorators import user_passes_test
 from graphql_jwt.exceptions import PermissionDenied
-from graphql_relay import to_global_id
+from graphql_relay import from_global_id, to_global_id
 
 from kukkuu import __version__
 from kukkuu.exceptions import DataValidationError, ObjectDoesNotExistError
@@ -33,6 +33,11 @@ def get_api_version():
 
 def get_global_id(obj):
     return to_global_id(f"{obj.__class__.__name__}Node", obj.pk)
+
+
+def get_node_id_from_global_id(global_id, expected_node_name):
+    name, id = from_global_id(global_id)
+    return id if name == expected_node_name else None
 
 
 def check_can_user_administer(obj, user):

@@ -5,7 +5,7 @@ from django.db.models import Count
 from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, relay
-from graphene_django import DjangoConnectionField, DjangoObjectType
+from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_file_upload.scalars import Upload
 from graphql_jwt.decorators import login_required
@@ -72,6 +72,7 @@ class EventNode(DjangoObjectType):
     class Meta:
         model = Event
         interfaces = (relay.Node,)
+        filter_fields = ("project_id",)
 
     @classmethod
     @login_required
@@ -365,7 +366,7 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
 
 
 class Query:
-    events = DjangoConnectionField(EventNode)
+    events = DjangoFilterConnectionField(EventNode)
     occurrences = DjangoFilterConnectionField(OccurrenceNode)
 
     event = relay.Node.Field(EventNode)

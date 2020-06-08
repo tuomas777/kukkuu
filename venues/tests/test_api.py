@@ -4,6 +4,8 @@ import pytest
 from graphql_relay import to_global_id
 
 from common.tests.utils import assert_permission_denied
+from common.utils import get_global_id
+from venues.factories import VenueFactory
 from venues.models import Venue
 
 
@@ -203,6 +205,33 @@ mutation DeleteVenue($input: DeleteVenueMutationInput!) {
   }
 }
 """
+
+VENUES_FILTER_QUERY = """
+query Venues($projectId: ID!) {
+  venues(projectId: $projectId) {
+    edges {
+      node {
+        name
+      }
+    }
+  }
+}
+"""
+
+
+def test_venues_project_filter(
+    snapshot, two_project_user_api_client, project, another_project
+):
+    VenueFactory(name="Should be returned", project=project)
+    VenueFactory(name="Should NOT be returned", project=another_project)
+
+    variables = {"projectId": get_global_id(project)}
+
+    executed = two_project_user_api_client.execute(
+        VENUES_FILTER_QUERY, variables=variables
+    )
+
+    snapshot.assert_match(executed)
 
 
 def test_venues_query_unauthenticated(api_client):

@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.timezone import localtime, now
 from django_ilmoitin.utils import send_notification
 from graphene import relay
-from graphene_django import DjangoConnectionField
+from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
@@ -36,6 +36,7 @@ class ChildNode(DjangoObjectType):
     class Meta:
         model = Child
         interfaces = (relay.Node,)
+        filter_fields = ("project_id",)
 
     @classmethod
     @login_required
@@ -296,7 +297,7 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
 
 
 class Query:
-    children = DjangoConnectionField(ChildNode)
+    children = DjangoFilterConnectionField(ChildNode)
     child = relay.Node.Field(ChildNode)
 
 

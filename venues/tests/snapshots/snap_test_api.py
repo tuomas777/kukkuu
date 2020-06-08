@@ -129,3 +129,7 @@ snapshots["test_update_venue_project_user 1"] = {
         }
     }
 }
+
+snapshots["test_venues_project_filter 1"] = {
+    "data": {"venues": {"edges": [{"node": {"name": "Should be returned"}}]}}
+}
