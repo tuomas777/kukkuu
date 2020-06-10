@@ -25,6 +25,7 @@ from events.filters import OccurrenceFilter
 from events.models import Enrolment, Event, Occurrence
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
+    DataValidationError,
     EventAlreadyPublishedError,
     IneligibleOccurrenceEnrolment,
     ObjectDoesNotExistError,
@@ -141,7 +142,7 @@ class EnrolmentNode(DjangoObjectType):
     class Meta:
         model = Enrolment
         interfaces = (relay.Node,)
-        fields = ("occurrence", "child", "created_at")
+        fields = ("occurrence", "child", "attended", "created_at", "updated_at")
 
     @classmethod
     @login_required
@@ -277,6 +278,32 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
         return UnenrolOccurrenceMutation(child=child, occurrence=occurrence)
 
 
+class SetEnrolmentAttendanceMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        enrolment_id = graphene.GlobalID()
+        attended = graphene.Boolean(
+            description="This field is required (but it can be null)."
+        )
+
+    enrolment = graphene.Field(EnrolmentNode)
+
+    @classmethod
+    @login_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        if "attended" not in kwargs:
+            raise DataValidationError('"attended" is required.')
+
+        enrolment = get_obj_if_user_can_administer(
+            info, kwargs["enrolment_id"], Enrolment
+        )
+
+        enrolment.attended = kwargs["attended"]
+        enrolment.save()
+
+        return SetEnrolmentAttendanceMutation(enrolment=enrolment)
+
+
 class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
         time = graphene.DateTime(required=True)
@@ -386,3 +413,4 @@ class Mutation:
     delete_occurrence = DeleteOccurrenceMutation.Field()
     enrol_occurrence = EnrolOccurrenceMutation.Field()
     unenrol_occurrence = UnenrolOccurrenceMutation.Field()
+    set_enrolment_attendance = SetEnrolmentAttendanceMutation.Field()

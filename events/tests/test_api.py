@@ -453,6 +453,17 @@ mutation UnenrolOccurrence($input: UnenrolOccurrenceMutationInput!) {
 
 """
 
+SET_ENROLMENT_ATTENDANCE_MUTATION = """
+mutation SetEnrolmentAttendance($input: SetEnrolmentAttendanceMutationInput!) {
+  setEnrolmentAttendance(input: $input) {
+    enrolment {
+      attended
+    }
+  }
+}
+
+"""
+
 
 def test_events_query_unauthenticated(api_client):
     executed = api_client.execute(EVENTS_QUERY)
@@ -1225,3 +1236,48 @@ def test_api_query_depth(snapshot, guardian_api_client, event):
     backend = DepthAnalysisBackend(max_depth=6)
     document = backend.document_from_string(schema=schema, document_string=query)
     assert document is not None
+
+
+@pytest.mark.parametrize("expected_attended", [True, None])
+def test_set_enrolment_attendance(
+    snapshot,
+    project_user_api_client,
+    occurrence,
+    child_with_user_guardian,
+    expected_attended,
+):
+    enrolment = EnrolmentFactory(
+        occurrence=occurrence,
+        child=child_with_user_guardian,
+        attended=None if expected_attended else True,
+    )
+    variables = {
+        "input": {
+            "enrolmentId": get_global_id(enrolment),
+            "attended": expected_attended,
+        }
+    }
+
+    executed = project_user_api_client.execute(
+        SET_ENROLMENT_ATTENDANCE_MUTATION, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+    enrolment.refresh_from_db()
+    assert enrolment.attended == expected_attended
+
+
+def test_set_enrolment_attendance_another_project_child(
+    project_user_api_client, occurrence, another_project,
+):
+    another_project_child = ChildWithGuardianFactory(project=another_project)
+    enrolment = EnrolmentFactory(
+        occurrence=occurrence, child=another_project_child, attended=None
+    )
+    variables = {"input": {"enrolmentId": get_global_id(enrolment), "attended": True}}
+
+    executed = project_user_api_client.execute(
+        SET_ENROLMENT_ATTENDANCE_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)

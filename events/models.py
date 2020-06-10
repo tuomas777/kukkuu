@@ -144,7 +144,7 @@ class Occurrence(TimestampedModel):
         return user.projects.filter(pk=self.event.project.pk).exists()
 
 
-class Enrolment(models.Model):
+class Enrolment(TimestampedModel):
     child = models.ForeignKey(
         Child,
         related_name="enrolments",
@@ -157,7 +157,7 @@ class Enrolment(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_("occurrence"),
     )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
+    attended = models.NullBooleanField(verbose_name=_("attended"))
 
     class Meta:
         verbose_name = _("enrolment")
@@ -170,3 +170,6 @@ class Enrolment(models.Model):
 
     def __str__(self):
         return f"{self.pk} {self.child_id}"
+
+    def can_user_administer(self, user):
+        return self.occurrence.can_user_administer(user)

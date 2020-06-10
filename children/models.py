@@ -56,6 +56,9 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.birthdate})"
 
+    def can_user_administer(self, user):
+        return user.projects.filter(pk=self.project_id).exists()
+
 
 class RelationshipQuerySet(models.QuerySet):
     def user_can_view(self, user):
