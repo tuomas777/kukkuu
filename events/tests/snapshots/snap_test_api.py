@@ -703,3 +703,11 @@ snapshots["test_occurrences_filter_by_project 1"] = {
 snapshots["test_event_filter_by_project 1"] = {
     "data": {"events": {"edges": [{"node": {"name": "Should be visible"}}]}}
 }
+
+snapshots["test_enrolment_visibility_project_user 1"] = {
+    "data": {
+        "occurrence": {
+            "enrolments": {"edges": [{"node": {"child": {"firstName": "ME ME ME"}}}]}
+        }
+    }
+}

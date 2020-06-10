@@ -1076,6 +1076,43 @@ def test_enrolment_visibility(
     snapshot.assert_match(executed)
 
 
+def test_enrolment_visibility_project_user(
+    project_user_api_client, snapshot, project, another_project
+):
+    enrolment = EnrolmentFactory(
+        child__first_name="ME ME ME",
+        child__project=project,
+        occurrence__event__project=project,
+    )
+    EnrolmentFactory(
+        child__first_name="NOT me",
+        child__project=another_project,
+        occurrence__event__project=another_project,
+    )
+    variables = {"id": get_global_id(enrolment.occurrence)}
+
+    executed = project_user_api_client.execute(
+        """
+        query Occurrence($id: ID!) {
+          occurrence(id: $id){
+            enrolments {
+              edges {
+                node {
+                  child {
+                    firstName
+                  }
+                }
+              }
+            }
+          }
+        }
+        """,
+        variables=variables,
+    )
+
+    snapshot.assert_match(executed)
+
+
 def test_required_translation(project_user_api_client, snapshot, project):
     # Finnish translation required when creating event
     variable = deepcopy(ADD_EVENT_VARIABLES)

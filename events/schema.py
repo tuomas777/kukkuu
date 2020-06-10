@@ -1,7 +1,7 @@
 import graphene
 from django.apps import apps
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, relay
@@ -146,8 +146,10 @@ class EnrolmentNode(DjangoObjectType):
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        # Should only return enrolments of guardian's children
-        return queryset.filter(child__guardians__user=info.context.user)
+        user = info.context.user
+        return queryset.filter(
+            Q(child__guardians__user=info.context.user) | Q(child__project__users=user)
+        ).distinct()
 
 
 class EventTranslationsInput(graphene.InputObjectType):
