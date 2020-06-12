@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 
-from .models import Event, Occurrence
+from .models import Enrolment, Event, Occurrence
 
 
 class OccurrencesInline(admin.StackedInline):
@@ -35,8 +35,22 @@ class EventAdmin(TranslatableAdmin):
     publish.short_description = _("Publish selected events")
 
 
+class EnrolmentsInline(admin.TabularInline):
+    model = Enrolment
+    extra = 0
+    readonly_fields = ("created_at", "updated_at")
+
+
 @admin.register(Occurrence)
 class OccurrenceAdmin(admin.ModelAdmin):
-    list_display = ("id", "time", "event", "created_at", "updated_at")
+    list_display = (
+        "id",
+        "time",
+        "event",
+        "occurrence_language",
+        "created_at",
+        "updated_at",
+    )
     list_display_links = ("id", "time")
-    fields = ("time", "event", "venue")
+    fields = ("time", "event", "venue", "occurrence_language")
+    inlines = [EnrolmentsInline]
