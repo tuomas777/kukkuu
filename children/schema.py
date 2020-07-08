@@ -1,3 +1,5 @@
+import logging
+
 import graphene
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -27,6 +29,8 @@ from users.schema import GuardianNode, LanguageEnum, validate_guardian_data
 from .models import Child, postal_code_validator, Relationship
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 
 class ChildNode(DjangoObjectType):
@@ -189,6 +193,11 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
 
             children.append(child)
 
+        logger.info(
+            f"user {user.uuid} submitted children {[c.pk for c in children]} "
+            f"and guardian {guardian.pk}"
+        )
+
         send_notification(
             guardian.email,
             NotificationType.SIGNUP,
@@ -234,6 +243,10 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
             type=relationship_data.get("type"), child=child, guardian=user.guardian
         )
 
+        logger.info(
+            f"user {user.uuid} added child {child.pk} to guardian {user.guardian.pk}"
+        )
+
         return AddChildMutation(child=child)
 
 
@@ -271,6 +284,8 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
 
         update_object(child, kwargs)
 
+        logger.info(f"user {user.uuid} updated child {child.pk}")
+
         return UpdateChildMutation(child=child)
 
 
@@ -292,6 +307,8 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
             raise ObjectDoesNotExistError(e)
 
         child.delete()
+
+        logger.info(f"user {user.uuid} deleted child {child.pk}")
 
         return DeleteChildMutation()
 

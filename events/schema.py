@@ -1,3 +1,5 @@
+import logging
+
 import graphene
 from django.apps import apps
 from django.db import transaction
@@ -33,6 +35,8 @@ from kukkuu.exceptions import (
     PastOccurrenceError,
 )
 from venues.models import Venue
+
+logger = logging.getLogger(__name__)
 
 EventTranslation = apps.get_model("events", "EventTranslation")
 
@@ -248,6 +252,10 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
         validate_enrolment(child, occurrence)
         enrolment = Enrolment.objects.create(child=child, occurrence=occurrence)
 
+        logger.info(
+            "user {user.uuid} enrolled child {child.pk} to occurrence {occurrence}"
+        )
+
         return EnrolOccurrenceMutation(enrolment=enrolment)
 
 
@@ -275,6 +283,11 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
             occurrence.children.remove(child)
         except Occurrence.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
+
+        logger.info(
+            "user {user.uuid} unenrolled child {child.pk} from occurrence {occurrence}"
+        )
+
         return UnenrolOccurrenceMutation(child=child, occurrence=occurrence)
 
 
