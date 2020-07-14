@@ -26,7 +26,7 @@ def notification_template_event_published_fi():
         "fi",
         subject="Event published FI",
         body_text="""
-        Event FI: {{ event }}
+        Event FI: {{ event.name }}
         Guardian FI: {{ guardian }}
         Event URL: {{ event_url }}
 """,
@@ -40,7 +40,7 @@ def notification_template_occurrence_enrolment_fi():
         "fi",
         subject="Occurrence enrolment FI",
         body_text="""
-        Event FI: {{ occurrence.event }}
+        Event FI: {{ occurrence.event.name }}
         Guardian FI: {{ guardian }}
         Occurrence: {{ occurrence.time }}
         Child: {{ child }}
@@ -55,7 +55,7 @@ def notification_template_occurrence_unenrolment_fi():
         "fi",
         subject="Occurrence unenrolment FI",
         body_text="""
-        Event FI: {{ occurrence.event }}
+        Event FI: {{ occurrence.event.name }}
         Guardian FI: {{ guardian }}
         Occurrence: {{ occurrence.time }}
         Child: {{ child }}
@@ -70,7 +70,7 @@ def notification_template_occurrence_cancelled_fi():
         "fi",
         subject="Occurrence cancelled FI",
         body_text="""
-        Event FI: {{ occurrence.event }}
+        Event FI: {{ occurrence.event.name }}
         Guardian FI: {{ guardian }}
         Occurrence: {{ occurrence.time }}
         Child: {{ child }}
