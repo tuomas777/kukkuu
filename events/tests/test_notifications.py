@@ -1,7 +1,9 @@
 from copy import deepcopy
+from datetime import timedelta
 
 import pytest
 from django.core import mail
+from django.utils.timezone import now
 from graphql_relay import to_global_id
 from projects.factories import ProjectFactory
 
@@ -10,7 +12,8 @@ from common.tests.utils import (
     assert_mails_match_snapshot,
     create_notification_template_in_language,
 )
-from events.models import Enrolment
+from events.factories import OccurrenceFactory
+from events.models import Enrolment, Occurrence
 from events.notifications import NotificationType
 from events.tests.test_api import PUBLISH_EVENT_MUTATION, PUBLISH_EVENT_VARIABLES
 from users.factories import GuardianFactory
@@ -60,6 +63,21 @@ def notification_template_occurrence_unenrolment_fi():
     )
 
 
+@pytest.fixture
+def notification_template_occurrence_cancelled_fi():
+    return create_notification_template_in_language(
+        NotificationType.OCCURRENCE_CANCELLED,
+        "fi",
+        subject="Occurrence cancelled FI",
+        body_text="""
+        Event FI: {{ occurrence.event }}
+        Guardian FI: {{ guardian }}
+        Occurrence: {{ occurrence.time }}
+        Child: {{ child }}
+""",
+    )
+
+
 @pytest.mark.django_db
 def test_event_publish_notification(
     snapshot,
@@ -95,4 +113,46 @@ def test_occurrence_enrolment_notifications(
     Enrolment.objects.create(child=child, occurrence=occurrence)
     occurrence.children.remove(child)
     assert len(mail.outbox) == 2
+    assert_mails_match_snapshot(snapshot)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("is_queryset", (True, False))
+def test_occurrence_cancelled_notification(
+    snapshot,
+    user_api_client,
+    notification_template_occurrence_cancelled_fi,
+    project,
+    is_queryset,
+):
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=user_api_client.user,
+        relationship__guardian__first_name="I Should Receive A Notification",
+        project=project,
+    )
+    other_child = ChildWithGuardianFactory(
+        relationship__guardian__first_name="I Should NOT Receive A Notification",
+        project=project,
+    )
+
+    occurrence = OccurrenceFactory(
+        time=now() + timedelta(hours=1), event__project=project
+    )
+    past_occurrence = OccurrenceFactory(
+        time=now() - timedelta(hours=1), event=occurrence.event
+    )
+    other_event_occurrence = OccurrenceFactory(
+        time=now() + timedelta(hours=1), event__project=project
+    )
+
+    Enrolment.objects.create(child=child, occurrence=occurrence)
+    Enrolment.objects.create(child=child, occurrence=past_occurrence)
+    Enrolment.objects.create(child=other_child, occurrence=other_event_occurrence)
+
+    if is_queryset:
+        Occurrence.objects.filter(id=occurrence.id).delete()
+    else:
+        occurrence.delete()
+
+    assert len(mail.outbox) == 1
     assert_mails_match_snapshot(snapshot)
