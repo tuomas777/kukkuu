@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from django.db import transaction
 from graphene import Node
 from graphql_jwt.decorators import user_passes_test
@@ -21,6 +23,7 @@ def update_object(obj, data):
 
 @transaction.atomic
 def update_object_with_translations(model, model_data):
+    model_data = deepcopy(model_data)
     translations_input = model_data.pop("translations", None)
     if translations_input:
         model.create_or_update_translations(translations_input)

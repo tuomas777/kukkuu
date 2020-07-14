@@ -1,3 +1,5 @@
+import logging
+
 import graphene
 from django.apps import apps
 from django.db import transaction
@@ -16,6 +18,8 @@ from common.utils import (
 )
 from users.schema import LanguageEnum
 from venues.models import Venue
+
+logger = logging.getLogger(__name__)
 
 VenueTranslation = apps.get_model("venues", "VenueTranslation")
 
@@ -92,6 +96,11 @@ class AddVenueMutation(graphene.relay.ClientIDMutation):
             info, kwargs["project_id"], Project
         ).pk
         venue = Venue.objects.create_translatable_object(**kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} added venue {venue} with data {kwargs}"
+        )
+
         return AddVenueMutation(venue=venue)
 
 
@@ -115,6 +124,10 @@ class UpdateVenueMutation(graphene.relay.ClientIDMutation):
         venue = get_obj_if_user_can_administer(info, kwargs.pop("id"), Venue)
         update_object_with_translations(venue, kwargs)
 
+        logger.info(
+            f"user {info.context.user.uuid} updated venue {venue} with data {kwargs}"
+        )
+
         return UpdateVenueMutation(venue=venue)
 
 
@@ -128,6 +141,9 @@ class DeleteVenueMutation(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **kwargs):
         venue = get_obj_if_user_can_administer(info, kwargs["id"], Venue)
         venue.delete()
+
+        logger.info(f"user {info.context.user.uuid} deleted venue {venue}")
+
         return DeleteVenueMutation()
 
 

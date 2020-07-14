@@ -1,3 +1,5 @@
+import logging
+
 import graphene
 from django.apps import apps
 from django.db import transaction
@@ -33,6 +35,8 @@ from kukkuu.exceptions import (
     PastOccurrenceError,
 )
 from venues.models import Venue
+
+logger = logging.getLogger(__name__)
 
 EventTranslation = apps.get_model("events", "EventTranslation")
 
@@ -180,6 +184,11 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
             info, kwargs.pop("project_id"), Project
         ).pk
         event = Event.objects.create_translatable_object(**kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} added event {event} with data {kwargs}"
+        )
+
         return AddEventMutation(event=event)
 
 
@@ -207,6 +216,11 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
 
         event = get_obj_if_user_can_administer(info, kwargs.pop("id"), Event)
         update_object_with_translations(event, kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} updated event {event} with data {kwargs}"
+        )
+
         return UpdateEventMutation(event=event)
 
 
@@ -220,6 +234,9 @@ class DeleteEventMutation(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event = get_obj_if_user_can_administer(info, kwargs["id"], Event)
         event.delete()
+
+        logger.info(f"user {info.context.user.uuid} deleted event {event}")
+
         return DeleteEventMutation()
 
 
@@ -248,6 +265,10 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
         validate_enrolment(child, occurrence)
         enrolment = Enrolment.objects.create(child=child, occurrence=occurrence)
 
+        logger.info(
+            f"user {user.uuid} enrolled child {child.pk} to occurrence {occurrence}"
+        )
+
         return EnrolOccurrenceMutation(enrolment=enrolment)
 
 
@@ -275,6 +296,11 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
             occurrence.children.remove(child)
         except Occurrence.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
+
+        logger.info(
+            f"user {user.uuid} unenrolled child {child.pk} from occurrence {occurrence}"
+        )
+
         return UnenrolOccurrenceMutation(child=child, occurrence=occurrence)
 
 
@@ -300,6 +326,11 @@ class SetEnrolmentAttendanceMutation(graphene.relay.ClientIDMutation):
 
         enrolment.attended = kwargs["attended"]
         enrolment.save()
+
+        logger.info(
+            f"user {info.context.user.uuid} set enrolment {enrolment} attendance to "
+            f"{kwargs['attended']}"
+        )
 
         return SetEnrolmentAttendanceMutation(enrolment=enrolment)
 
@@ -328,6 +359,11 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
 
         # needed because enrolment_count is an annotated field
         occurrence.enrolment_count = 0
+
+        logger.info(
+            f"user {info.context.user.uuid} added occurrence {occurrence} with data "
+            f"{kwargs}"
+        )
 
         return AddOccurrenceMutation(occurrence=occurrence)
 
@@ -359,6 +395,12 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
             ).pk
 
         update_object(occurrence, kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} updated occurrence {occurrence} with data "
+            f"{kwargs}"
+        )
+
         return UpdateOccurrenceMutation(occurrence=occurrence)
 
 
@@ -372,6 +414,9 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **kwargs):
         occurrence = get_obj_if_user_can_administer(info, kwargs["id"], Occurrence)
         occurrence.delete()
+
+        logger.info(f"user {info.context.user.uuid} deleted occurrence {occurrence}")
+
         return DeleteOccurrenceMutation()
 
 
@@ -391,6 +436,9 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
             raise EventAlreadyPublishedError("Event is already published")
 
         event.publish()
+
+        logger.info(f"user {info.context.user.uuid} published event {event}")
+
         return PublishEventMutation(event=event)
 
 
