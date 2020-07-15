@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatedFields
 
@@ -94,6 +95,10 @@ class OccurrenceQueryset(models.QuerySet):
             Q(event__project__users=user) | Q(event__published_at__isnull=False)
         ).distinct()
 
+    def delete(self, *args, **kwargs):
+        for obj in self:
+            obj.delete()
+
 
 class Occurrence(TimestampedModel):
     time = models.DateTimeField(verbose_name=_("time"))
@@ -131,6 +136,23 @@ class Occurrence(TimestampedModel):
 
     def __str__(self):
         return f"{self.pk} {self.time}"
+
+    def delete(self, *args, **kwargs):
+        if self.time >= now():
+            # this QS needs to be evaluated here, it would not work after the
+            # occurrence has been deleted
+            children = list(self.children.all())
+
+            super().delete(*args, **kwargs)
+
+            send_event_notifications_to_guardians(
+                self.event,
+                NotificationType.OCCURRENCE_CANCELLED,
+                children,
+                occurrence=self,
+            )
+        else:
+            super().delete(*args, **kwargs)
 
     def get_enrolment_count(self):
         try:
