@@ -811,3 +811,51 @@ def test_get_past_events(
     # Should only return past events from current project
     assert len(executed["data"]["child"]["pastEvents"]["edges"]) == 1
     snapshot.assert_match(executed)
+
+
+CHILDREN_PAGINATION_QUERY = """
+query Children($projectId: ID!, $limit: Int, $offset: Int, $after: String, $first: Int) {
+  children(projectId: $projectId, limit: $limit, offset: $offset, after: $after, first: $first) {
+    edges {
+      node {
+        lastName
+      }
+    }
+  }
+}
+"""  # noqa: E501
+
+
+def test_children_cursor_and_offset_pagination_cannot_be_combined(
+    project_user_api_client, project
+):
+    variables = {
+        "projectId": get_global_id(project),
+        "limit": 2,
+        "offset": 2,
+        "after": "foo",
+        "first": 2,
+    }
+
+    executed = project_user_api_client.execute(
+        CHILDREN_PAGINATION_QUERY, variables=variables,
+    )
+
+    assert_match_error_code(executed, API_USAGE_ERROR)
+
+
+@pytest.mark.parametrize(
+    "limit, offset", ((None, 2), (2, None), (2, 2), (10, None), (None, 5)),
+)
+def test_children_offset_pagination(
+    snapshot, project_user_api_client, project, limit, offset
+):
+    for i in range(5):
+        ChildWithGuardianFactory(last_name=i, project=project)
+    variables = {"projectId": get_global_id(project), "limit": limit, "offset": offset}
+
+    executed = project_user_api_client.execute(
+        CHILDREN_PAGINATION_QUERY, variables=variables,
+    )
+
+    snapshot.assert_match(executed)

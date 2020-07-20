@@ -408,3 +408,49 @@ snapshots["test_children_project_filter 1"] = {
         }
     }
 }
+
+snapshots["test_children_offset_pagination[None-2] 1"] = {
+    "data": {
+        "children": {
+            "edges": [
+                {"node": {"lastName": "2"}},
+                {"node": {"lastName": "3"}},
+                {"node": {"lastName": "4"}},
+            ]
+        }
+    }
+}
+
+snapshots["test_children_offset_pagination[2-None] 1"] = {
+    "data": {
+        "children": {
+            "edges": [{"node": {"lastName": "0"}}, {"node": {"lastName": "1"}}]
+        }
+    }
+}
+
+snapshots["test_children_offset_pagination[2-2] 1"] = {
+    "data": {
+        "children": {
+            "edges": [{"node": {"lastName": "2"}}, {"node": {"lastName": "3"}}]
+        }
+    }
+}
+
+snapshots["test_children_offset_pagination[10-None] 1"] = {
+    "data": {
+        "children": {
+            "edges": [
+                {"node": {"lastName": "0"}},
+                {"node": {"lastName": "1"}},
+                {"node": {"lastName": "2"}},
+                {"node": {"lastName": "3"}},
+                {"node": {"lastName": "4"}},
+            ]
+        }
+    }
+}
+
+snapshots["test_children_offset_pagination[None-5] 1"] = {
+    "data": {"children": {"edges": []}}
+}
