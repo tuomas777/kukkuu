@@ -34,6 +34,16 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
+class ChildrenConnection(graphene.Connection):
+    class Meta:
+        abstract = True
+
+    count = graphene.Int(required=True)
+
+    def resolve_count(self, info, **kwargs):
+        return self.length
+
+
 class ChildNode(DjangoObjectType):
     available_events = relay.ConnectionField("events.schema.EventConnection")
     past_events = relay.ConnectionField("events.schema.EventConnection")
@@ -41,6 +51,7 @@ class ChildNode(DjangoObjectType):
     class Meta:
         model = Child
         interfaces = (relay.Node,)
+        connection_class = ChildrenConnection
         filter_fields = ("project_id",)
 
     @classmethod

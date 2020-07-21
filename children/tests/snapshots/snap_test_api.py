@@ -454,3 +454,9 @@ snapshots["test_children_offset_pagination[10-None] 1"] = {
 snapshots["test_children_offset_pagination[None-5] 1"] = {
     "data": {"children": {"edges": []}}
 }
+
+snapshots["test_children_total_count[None] 1"] = {"data": {"children": {"count": 5}}}
+
+snapshots["test_children_total_count[limit] 1"] = {"data": {"children": {"count": 5}}}
+
+snapshots["test_children_total_count[first] 1"] = {"data": {"children": {"count": 5}}}

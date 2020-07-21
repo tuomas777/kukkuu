@@ -859,3 +859,26 @@ def test_children_offset_pagination(
     )
 
     snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize("pagination", (None, "limit", "first"))
+def test_children_total_count(
+    snapshot, project_user_api_client, project, another_project, pagination
+):
+    ChildWithGuardianFactory.create_batch(5, project=project)
+    ChildWithGuardianFactory.create_batch(5, project=another_project)
+    variables = {"projectId": get_global_id(project)}
+    if pagination:
+        variables.update({pagination: 2})
+
+    executed = project_user_api_client.execute(
+        """
+query Children($projectId: ID!, $limit: Int, $first: Int) {
+  children(projectId: $projectId, limit: $limit, first: $first) {
+    count
+  }
+}""",
+        variables=variables,
+    )
+
+    snapshot.assert_match(executed)
