@@ -13,6 +13,7 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
+from graphql_relay.connection.arrayconnection import offset_to_cursor
 from projects.models import Project
 
 from children.notifications import NotificationType
@@ -33,6 +34,16 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
+class ChildrenConnection(graphene.Connection):
+    class Meta:
+        abstract = True
+
+    count = graphene.Int(required=True)
+
+    def resolve_count(self, info, **kwargs):
+        return self.length
+
+
 class ChildNode(DjangoObjectType):
     available_events = relay.ConnectionField("events.schema.EventConnection")
     past_events = relay.ConnectionField("events.schema.EventConnection")
@@ -40,6 +51,7 @@ class ChildNode(DjangoObjectType):
     class Meta:
         model = Child
         interfaces = (relay.Node,)
+        connection_class = ChildrenConnection
         filter_fields = ("project_id",)
 
     @classmethod
@@ -313,8 +325,33 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
         return DeleteChildMutation()
 
 
+class DjangoFilterAndOffsetConnectionField(DjangoFilterConnectionField):
+    def __init__(self, type, *args, **kwargs):
+        kwargs.setdefault("limit", graphene.Int())
+        kwargs.setdefault("offset", graphene.Int())
+        super().__init__(type, *args, **kwargs)
+
+    @classmethod
+    def connection_resolver(cls, *args, **kwargs):
+        has_limit_or_offset = "limit" in kwargs or "offset" in kwargs
+        has_cursor = any(arg in kwargs for arg in ("first", "last", "after", "before"))
+
+        if has_limit_or_offset:
+            if has_cursor:
+                raise ApiUsageError("Cannot use both offset and cursor pagination.")
+
+            limit = kwargs.get("limit")
+            if limit is not None:
+                kwargs["first"] = limit
+            offset = kwargs.get("offset")
+            if offset is not None:
+                kwargs["after"] = offset_to_cursor(offset - 1)
+
+        return super().connection_resolver(*args, **kwargs)
+
+
 class Query:
-    children = DjangoFilterConnectionField(ChildNode)
+    children = DjangoFilterAndOffsetConnectionField(ChildNode, projectId=graphene.ID())
     child = relay.Node.Field(ChildNode)
 
 
