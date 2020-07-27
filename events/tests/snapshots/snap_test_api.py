@@ -591,7 +591,7 @@ snapshots["test_occurrence_available_capacity_and_enrolment_count 1"] = {
                 "translations": [
                     {
                         "description": "Expert interview old affect quite nearly gun. Born land military first he law ago. Yard door indicate country individual course.",
-                        "languageCode": "EN",
+                        "languageCode": "FI",
                         "name": "Up always sport return. Light a point charge stand store.",
                         "shortDescription": "East site chance of.",
                     }
@@ -610,7 +610,7 @@ Whiteview, TN 11309""",
                         "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
                         "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
 Page box child care any concern. Defense level church use.""",
-                        "languageCode": "EN",
+                        "languageCode": "FI",
                         "name": "Free heart significant machine try.",
                         "wwwUrl": "http://brooks.org/",
                     }
@@ -634,7 +634,7 @@ snapshots["test_enrolment_visibility 1"] = {
                 "translations": [
                     {
                         "description": "Law ago respond yard door indicate country. Direction traditional whether serious sister work. Beat pressure unit toward movie by.",
-                        "languageCode": "EN",
+                        "languageCode": "FI",
                         "name": "Detail audience campaign college career fight data.",
                         "shortDescription": "Last in able local garden modern they.",
                     }
@@ -657,7 +657,7 @@ Jenniferbury, TX 72520""",
 Local challenge box myself last.""",
                         "description": """Address prove color effort. Enter everything history remember stay public high. Exist shoulder write century.
 Myself yourself able process base sing according. Watch media do concern sit enter.""",
-                        "languageCode": "EN",
+                        "languageCode": "FI",
                         "name": "Trial western break page box child care. Tv minute defense.",
                         "wwwUrl": "https://beck.org/",
                     }
