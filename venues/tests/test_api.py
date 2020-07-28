@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 import pytest
+from django.utils import translation
 from graphql_relay import to_global_id
 
 from common.tests.utils import assert_permission_denied
@@ -316,3 +317,32 @@ def test_delete_venue_project_user(project_user_api_client, venue):
         variables={"input": {"id": to_global_id("VenueNode", venue.id)}},
     )
     assert Venue.objects.count() == 0
+
+
+@pytest.mark.parametrize("request_language", ("fi", "en"))
+def test_venues_query_ordering(snapshot, project_user_api_client, request_language):
+    venue = VenueFactory(name="3 in Finnish")
+    VenueFactory(name="4 in Finnish")
+    VenueFactory(name="2 in Finnish")
+
+    # this should not affect the ordering
+    venue.set_current_language("en")
+    venue.name = "1 in English"
+    venue.save()
+
+    with translation.override(request_language):
+        executed = project_user_api_client.execute(
+            """
+    query Venues {
+      venues {
+        edges {
+          node {
+            name
+          }
+        }
+      }
+    }
+    """
+        )
+
+    snapshot.assert_match(executed)

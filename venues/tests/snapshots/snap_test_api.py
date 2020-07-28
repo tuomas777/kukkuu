@@ -133,3 +133,27 @@ snapshots["test_update_venue_project_user 1"] = {
 snapshots["test_venues_project_filter 1"] = {
     "data": {"venues": {"edges": [{"node": {"name": "Should be returned"}}]}}
 }
+
+snapshots["test_venues_query_ordering[fi] 1"] = {
+    "data": {
+        "venues": {
+            "edges": [
+                {"node": {"name": "2 in Finnish"}},
+                {"node": {"name": "3 in Finnish"}},
+                {"node": {"name": "4 in Finnish"}},
+            ]
+        }
+    }
+}
+
+snapshots["test_venues_query_ordering[en] 1"] = {
+    "data": {
+        "venues": {
+            "edges": [
+                {"node": {"name": "2 in Finnish"}},
+                {"node": {"name": "1 in English"}},
+                {"node": {"name": "4 in Finnish"}},
+            ]
+        }
+    }
+}

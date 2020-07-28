@@ -52,7 +52,10 @@ class VenueNode(DjangoObjectType):
     # TODO: For now only logged in users can see venues
     def get_queryset(cls, queryset, info):
         lang = get_language()
-        return queryset.order_by("-created_at").language(lang)
+        # always order venues by their name in Finnish, because that is all we need ATM
+        # in Kukkuu FE and Kukkuu admin, and properly supporting ordering by the other
+        # languages isn't trivial
+        return queryset.translated("fi").order_by("translations__name").language(lang)
 
     @classmethod
     @login_required
