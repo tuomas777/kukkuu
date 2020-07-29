@@ -1,21 +1,5 @@
 from anymail.signals import pre_send
-from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-from events.models import Enrolment
-from events.notifications import NotificationType
-from events.utils import send_event_notifications_to_guardians
-
-
-@receiver(post_save, sender=Enrolment, dispatch_uid="send_enrolment_email")
-def send_enrolment_email(instance, created, **kwargs):
-    if created:
-        send_event_notifications_to_guardians(
-            instance.occurrence.event,
-            NotificationType.OCCURRENCE_ENROLMENT,
-            instance.child,
-            occurrence=instance.occurrence,
-        )
 
 
 @receiver(pre_send)
