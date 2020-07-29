@@ -30,7 +30,7 @@ Whiteview, TN 11309""",
                                 "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
                                 "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
 Page box child care any concern. Defense level church use.""",
-                                "languageCode": "EN",
+                                "languageCode": "FI",
                                 "name": "Free heart significant machine try.",
                                 "wwwUrl": "http://brooks.org/",
                             }
@@ -68,7 +68,7 @@ Whiteview, TN 11309""",
                     "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
                     "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
 Page box child care any concern. Defense level church use.""",
-                    "languageCode": "EN",
+                    "languageCode": "FI",
                     "name": "Free heart significant machine try.",
                     "wcAndFacilities": """State social believe policy. Score think turn argue present.
 Prevent pressure point. Voice radio happen color scene.
@@ -132,4 +132,28 @@ snapshots["test_update_venue_project_user 1"] = {
 
 snapshots["test_venues_project_filter 1"] = {
     "data": {"venues": {"edges": [{"node": {"name": "Should be returned"}}]}}
+}
+
+snapshots["test_venues_query_ordering[fi] 1"] = {
+    "data": {
+        "venues": {
+            "edges": [
+                {"node": {"name": "2 in Finnish"}},
+                {"node": {"name": "3 in Finnish"}},
+                {"node": {"name": "4 in Finnish"}},
+            ]
+        }
+    }
+}
+
+snapshots["test_venues_query_ordering[en] 1"] = {
+    "data": {
+        "venues": {
+            "edges": [
+                {"node": {"name": "2 in Finnish"}},
+                {"node": {"name": "1 in English"}},
+                {"node": {"name": "4 in Finnish"}},
+            ]
+        }
+    }
 }

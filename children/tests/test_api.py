@@ -6,6 +6,7 @@ import pytz
 from django.conf import settings
 from django.utils import timezone
 from django.utils.timezone import localtime, now
+from freezegun import freeze_time
 from graphene.utils.str_converters import to_snake_case
 from graphql_relay import to_global_id
 from projects.factories import ProjectFactory
@@ -879,6 +880,45 @@ query Children($projectId: ID!, $limit: Int, $first: Int) {
   }
 }""",
         variables=variables,
+    )
+
+    snapshot.assert_match(executed)
+
+
+def test_children_query_ordering(snapshot, project, project_user_api_client):
+    with freeze_time("2020-12-12"):
+        ChildWithGuardianFactory(
+            first_name="Alpha", last_name="Virtanen", project=project
+        )
+        ChildWithGuardianFactory(
+            first_name="Beta", last_name="Virtanen", project=project
+        )
+        ChildWithGuardianFactory(
+            first_name="Beta", last_name="Korhonen", project=project
+        )
+        ChildWithGuardianFactory(first_name="Beta", last_name="", project=project)
+        ChildWithGuardianFactory(first_name="Alpha", last_name="", project=project)
+        ChildWithGuardianFactory(first_name="", last_name="Virtanen", project=project)
+        ChildWithGuardianFactory(first_name="", last_name="Korhonen", project=project)
+        ChildWithGuardianFactory(first_name="", last_name="", project=project)
+    with freeze_time("2020-11-11"):
+        ChildWithGuardianFactory(first_name="", last_name="", project=project)
+        ChildWithGuardianFactory(first_name="", last_name="Korhonen", project=project)
+
+    executed = project_user_api_client.execute(
+        """
+    query Children {
+      children {
+        edges {
+          node {
+            createdAt
+            firstName
+            lastName
+          }
+        }
+      }
+    }
+    """
     )
 
     snapshot.assert_match(executed)

@@ -6,7 +6,7 @@ import pytest
 from django.apps import apps
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
-from django.utils import timezone
+from django.utils import timezone, translation
 from freezegun import freeze_time
 from graphene.test import Client
 from projects.factories import ProjectFactory
@@ -26,7 +26,7 @@ def setup_test_environment(settings):
     settings.DEFAULT_FROM_EMAIL = "kukkuu@example.com"
     settings.ILMOITIN_TRANSLATED_FROM_EMAIL = {}
     settings.MEDIA_ROOT = "test_media"
-    with freeze_time("2020-12-12"):
+    with translation.override("fi"), freeze_time("2020-12-12"):
         yield
     shutil.rmtree("test_media", ignore_errors=True)
 

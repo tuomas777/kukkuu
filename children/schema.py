@@ -57,7 +57,9 @@ class ChildNode(DjangoObjectType):
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        return queryset.user_can_view(info.context.user).order_by("last_name")
+        return queryset.user_can_view(info.context.user).order_by(
+            "last_name", "first_name", "created_at"
+        )
 
     @classmethod
     @login_required

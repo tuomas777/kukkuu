@@ -460,3 +460,82 @@ snapshots["test_children_total_count[None] 1"] = {"data": {"children": {"count":
 snapshots["test_children_total_count[limit] 1"] = {"data": {"children": {"count": 5}}}
 
 snapshots["test_children_total_count[first] 1"] = {"data": {"children": {"count": 5}}}
+
+snapshots["test_children_query_ordering 1"] = {
+    "data": {
+        "children": {
+            "edges": [
+                {
+                    "node": {
+                        "createdAt": "2020-11-11T00:00:00+00:00",
+                        "firstName": "",
+                        "lastName": "",
+                    }
+                },
+                {
+                    "node": {
+                        "createdAt": "2020-12-12T00:00:00+00:00",
+                        "firstName": "",
+                        "lastName": "",
+                    }
+                },
+                {
+                    "node": {
+                        "createdAt": "2020-12-12T00:00:00+00:00",
+                        "firstName": "Alpha",
+                        "lastName": "",
+                    }
+                },
+                {
+                    "node": {
+                        "createdAt": "2020-12-12T00:00:00+00:00",
+                        "firstName": "Beta",
+                        "lastName": "",
+                    }
+                },
+                {
+                    "node": {
+                        "createdAt": "2020-11-11T00:00:00+00:00",
+                        "firstName": "",
+                        "lastName": "Korhonen",
+                    }
+                },
+                {
+                    "node": {
+                        "createdAt": "2020-12-12T00:00:00+00:00",
+                        "firstName": "",
+                        "lastName": "Korhonen",
+                    }
+                },
+                {
+                    "node": {
+                        "createdAt": "2020-12-12T00:00:00+00:00",
+                        "firstName": "Beta",
+                        "lastName": "Korhonen",
+                    }
+                },
+                {
+                    "node": {
+                        "createdAt": "2020-12-12T00:00:00+00:00",
+                        "firstName": "",
+                        "lastName": "Virtanen",
+                    }
+                },
+                {
+                    "node": {
+                        "createdAt": "2020-12-12T00:00:00+00:00",
+                        "firstName": "Alpha",
+                        "lastName": "Virtanen",
+                    }
+                },
+                {
+                    "node": {
+                        "createdAt": "2020-12-12T00:00:00+00:00",
+                        "firstName": "Beta",
+                        "lastName": "Virtanen",
+                    }
+                },
+            ]
+        }
+    }
+}
