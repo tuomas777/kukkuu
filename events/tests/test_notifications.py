@@ -12,10 +12,15 @@ from common.tests.utils import (
     assert_mails_match_snapshot,
     create_notification_template_in_language,
 )
-from events.factories import OccurrenceFactory
+from common.utils import get_global_id
+from events.factories import EnrolmentFactory, OccurrenceFactory
 from events.models import Enrolment, Occurrence
 from events.notifications import NotificationType
-from events.tests.test_api import PUBLISH_EVENT_MUTATION, PUBLISH_EVENT_VARIABLES
+from events.tests.test_api import (
+    PUBLISH_EVENT_MUTATION,
+    PUBLISH_EVENT_VARIABLES,
+    UNENROL_OCCURRENCE_MUTATION,
+)
 from users.factories import GuardianFactory
 
 
@@ -99,7 +104,7 @@ def test_event_publish_notification(
 
 
 @pytest.mark.django_db
-def test_occurrence_enrolment_notifications(
+def test_occurrence_enrolment_notifications_on_model_level(
     snapshot,
     user_api_client,
     notification_template_occurrence_unenrolment_fi,
@@ -111,8 +116,36 @@ def test_occurrence_enrolment_notifications(
         relationship__guardian__user=user_api_client.user, project=project
     )
     Enrolment.objects.create(child=child, occurrence=occurrence)
+    # unenrolling on model level should NOT trigger a notification
     occurrence.children.remove(child)
-    assert len(mail.outbox) == 2
+    assert len(mail.outbox) == 1
+    assert_mails_match_snapshot(snapshot)
+
+
+@pytest.mark.django_db
+def test_unenrol_occurrence_notification(
+    guardian_api_client,
+    snapshot,
+    project,
+    occurrence,
+    notification_template_occurrence_unenrolment_fi,
+):
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user, project=project,
+    )
+    EnrolmentFactory(occurrence=occurrence, child=child)
+    unenrolment_variables = {
+        "input": {
+            "occurrenceId": get_global_id(occurrence),
+            "childId": get_global_id(child),
+        },
+    }
+
+    guardian_api_client.execute(
+        UNENROL_OCCURRENCE_MUTATION, variables=unenrolment_variables
+    )
+
+    assert len(mail.outbox) == 1
     assert_mails_match_snapshot(snapshot)
 
 

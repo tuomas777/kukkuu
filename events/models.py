@@ -194,5 +194,17 @@ class Enrolment(TimestampedModel):
     def __str__(self):
         return f"{self.pk} {self.child_id}"
 
+    def delete_and_send_notification(self):
+        child = self.child
+        occurrence = self.occurrence
+        self.delete()
+
+        send_event_notifications_to_guardians(
+            occurrence.event,
+            NotificationType.OCCURRENCE_UNENROLMENT,
+            child,
+            occurrence=occurrence,
+        )
+
     def can_user_administer(self, user):
         return self.occurrence.can_user_administer(user)

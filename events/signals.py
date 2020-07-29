@@ -1,5 +1,5 @@
 from anymail.signals import pre_send
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from events.models import Enrolment
@@ -16,16 +16,6 @@ def send_enrolment_email(instance, created, **kwargs):
             instance.child,
             occurrence=instance.occurrence,
         )
-
-
-@receiver(post_delete, sender=Enrolment, dispatch_uid="send_unenrolment_email")
-def send_unenrolment_email(instance, **kwargs):
-    send_event_notifications_to_guardians(
-        instance.occurrence.event,
-        NotificationType.OCCURRENCE_UNENROLMENT,
-        instance.child,
-        occurrence=instance.occurrence,
-    )
 
 
 @receiver(pre_send)

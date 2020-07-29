@@ -291,11 +291,16 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
             child = Child.objects.user_can_update(user).get(pk=child_id)
         except Child.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
+
         try:
-            occurrence = child.occurrences.get(pk=occurrence_id)
-            occurrence.children.remove(child)
-        except Occurrence.DoesNotExist as e:
+            enrolment = child.enrolments.select_related("occurrence").get(
+                occurrence_id=occurrence_id
+            )
+        except Enrolment.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
+
+        occurrence = enrolment.occurrence
+        enrolment.delete_and_send_notification()
 
         logger.info(
             f"user {user.uuid} unenrolled child {child.pk} from occurrence {occurrence}"
