@@ -15,17 +15,31 @@ class EventAdmin(TranslatableAdmin):
     list_display = (
         "id",
         "name",
-        "short_description",
         "capacity_per_occurrence",
         "participants_per_invite",
         "is_published",
+        "get_project_year",
+        "created_at",
+        "updated_at",
     )
     list_display_links = ("id", "name")
-    exclude = ("id", "created_at", "updated_at", "published_at")
+    list_select_related = ("project",)
+    fields = (
+        "project",
+        "name",
+        "short_description",
+        "description",
+        "capacity_per_occurrence",
+        "duration",
+        "image",
+        "image_alt_text",
+        "published_at",
+    )
     inlines = [
         OccurrencesInline,
     ]
     actions = ["publish"]
+    readonly_fields = ("published_at",)
 
     def publish(self, request, queryset):
         for obj in queryset:
@@ -33,6 +47,11 @@ class EventAdmin(TranslatableAdmin):
         self.message_user(request, _("%s successfully published.") % queryset.count())
 
     publish.short_description = _("Publish selected events")
+
+    def get_project_year(self, obj):
+        return obj.project.year
+
+    get_project_year.short_description = _("project")
 
 
 class EnrolmentsInline(admin.TabularInline):
@@ -47,6 +66,7 @@ class OccurrenceAdmin(admin.ModelAdmin):
         "id",
         "time",
         "event",
+        "venue",
         "occurrence_language",
         "created_at",
         "updated_at",

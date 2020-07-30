@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
 
 from events.models import Enrolment
 
@@ -29,8 +30,15 @@ class ChildAdmin(admin.ModelAdmin):
         "last_name",
         "birthdate",
         "postal_code",
+        "get_project_year",
         "created_at",
         "updated_at",
     )
-    fields = ("first_name", "last_name", "birthdate", "postal_code")
+    list_select_related = ("project",)
+    fields = ("project", "first_name", "last_name", "birthdate", "postal_code")
     inlines = (RelationshipInline, EnrolmentInline)
+
+    def get_project_year(self, obj):
+        return obj.project.year
+
+    get_project_year.short_description = _("project")

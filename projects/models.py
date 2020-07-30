@@ -19,7 +19,7 @@ class Project(TranslatableModel):
         ordering = ["year"]
 
     def __str__(self):
-        return f"#{self.pk} {self.year}"
+        return f"{self.name} {self.year}".strip()
 
     def can_user_administer(self, user):
         return user.projects.filter(pk=self.pk).exists()
