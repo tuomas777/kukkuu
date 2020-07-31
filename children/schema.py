@@ -72,6 +72,7 @@ class ChildNode(DjangoObjectType):
     def resolve_past_events(self, info, **kwargs):
         return (
             self.project.events.user_can_view(info.context.user)
+            .published()
             .exclude(occurrences__time__gte=timezone.now())
             .distinct()
         )
@@ -79,6 +80,7 @@ class ChildNode(DjangoObjectType):
     def resolve_available_events(self, info, **kwargs):
         return (
             self.project.events.user_can_view(info.context.user)
+            .published()
             .filter(occurrences__time__gte=timezone.now())
             .distinct()
             .exclude(occurrences__in=self.occurrences.all())

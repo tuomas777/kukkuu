@@ -20,6 +20,9 @@ class EventQueryset(TranslatableQuerySet):
             Q(project__users=user) | Q(published_at__isnull=False)
         ).distinct()
 
+    def published(self):
+        return self.filter(published_at__isnull=False)
+
 
 class Event(TimestampedModel, TranslatableModel):
     CHILD_AND_GUARDIAN = "child_and_guardian"
