@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.forms import BaseInlineFormSet
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 
@@ -35,10 +36,17 @@ class EventAdmin(TranslatableAdmin):
     publish.short_description = _("Publish selected events")
 
 
+class EnrolmentsInlineFormSet(BaseInlineFormSet):
+    def delete_existing(self, obj, commit=True):
+        if commit:
+            obj.delete_and_send_notification()
+
+
 class EnrolmentsInline(admin.TabularInline):
     model = Enrolment
     extra = 0
     readonly_fields = ("created_at", "updated_at")
+    formset = EnrolmentsInlineFormSet
 
 
 @admin.register(Occurrence)
