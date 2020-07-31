@@ -759,6 +759,15 @@ def test_get_available_events(
     assert len(executed["data"]["child"]["availableEvents"]["edges"]) == 1
     snapshot.assert_match(executed)
 
+    guardian_api_client.user.projects.add(project)
+    executed2 = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
+
+    # having admin rights on the project should not affect available events
+    assert (
+        executed2["data"]["child"]["availableEvents"]
+        == executed["data"]["child"]["availableEvents"]
+    )
+
 
 def test_get_past_events(
     snapshot, guardian_api_client, child_with_user_guardian, project, venue
@@ -812,6 +821,15 @@ def test_get_past_events(
     # Should only return past events from current project
     assert len(executed["data"]["child"]["pastEvents"]["edges"]) == 1
     snapshot.assert_match(executed)
+
+    guardian_api_client.user.projects.add(project)
+    executed2 = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
+
+    # having admin rights on the project should not affect past events
+    assert (
+        executed2["data"]["child"]["pastEvents"]
+        == executed["data"]["child"]["pastEvents"]
+    )
 
 
 CHILDREN_PAGINATION_QUERY = """
