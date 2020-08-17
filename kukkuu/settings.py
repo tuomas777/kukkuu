@@ -219,8 +219,15 @@ KUKKUU_UI_BASE_URL = env("KUKKUU_UI_BASE_URL")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "loggers": {"django": {"handlers": ["console"], "level": "ERROR"}},
+    "formatters": {
+        "timestamped_named": {
+            "format": "%(asctime)s %(name)s %(levelname)s: %(message)s"
+        }
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "timestamped_named"}
+    },
+    "loggers": {"": {"handlers": ["console"], "level": "INFO"}},
 }
 
 # local_settings.py can be used to override environment-specific settings

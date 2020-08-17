@@ -1,18 +1,25 @@
+import logging
+
 import graphene
 from django.apps import apps
 from django.db import transaction
 from django.db.models import Count
 from django.utils.translation import get_language
 from graphene import relay
-from graphene_django import DjangoConnectionField, DjangoObjectType
-from graphql_jwt.decorators import login_required, staff_member_required
-from graphql_relay import from_global_id
+from graphene_django import DjangoObjectType
+from graphene_django.filter import DjangoFilterConnectionField
+from graphql_jwt.decorators import login_required
 from projects.models import Project
 
-from common.utils import update_object_with_translations
-from kukkuu.exceptions import ObjectDoesNotExistError
+from common.utils import (
+    get_obj_if_user_can_administer,
+    project_user_required,
+    update_object_with_translations,
+)
 from users.schema import LanguageEnum
 from venues.models import Venue
+
+logger = logging.getLogger(__name__)
 
 VenueTranslation = apps.get_model("venues", "VenueTranslation")
 
@@ -38,13 +45,17 @@ class VenueNode(DjangoObjectType):
     class Meta:
         model = Venue
         interfaces = (relay.Node,)
+        filter_fields = ("project_id",)
 
     @classmethod
     @login_required
     # TODO: For now only logged in users can see venues
     def get_queryset(cls, queryset, info):
         lang = get_language()
-        return queryset.order_by("-created_at").language(lang)
+        # always order venues by their name in Finnish, because that is all we need ATM
+        # in Kukkuu FE and Kukkuu admin, and properly supporting ordering by the other
+        # languages isn't trivial
+        return queryset.translated("fi").order_by("translations__name").language(lang)
 
     @classmethod
     @login_required
@@ -81,17 +92,18 @@ class AddVenueMutation(graphene.relay.ClientIDMutation):
     venue = graphene.Field(VenueNode)
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Add validation
-        project_global_id = kwargs.pop("project_id")
-        try:
-            project = Project.objects.get(pk=from_global_id(project_global_id)[1])
-            kwargs["project_id"] = project.id
-        except Project.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        kwargs["project_id"] = get_obj_if_user_can_administer(
+            info, kwargs["project_id"], Project
+        ).pk
         venue = Venue.objects.create_translatable_object(**kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} added venue {venue} with data {kwargs}"
+        )
+
         return AddVenueMutation(venue=venue)
 
 
@@ -104,23 +116,21 @@ class UpdateVenueMutation(graphene.relay.ClientIDMutation):
     venue = graphene.Field(VenueNode)
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Add validation
-        venue_global_id = kwargs.pop("id")
         project_global_id = kwargs.pop("project_id", None)
         if project_global_id:
-            try:
-                project = Project.objects.get(pk=from_global_id(project_global_id)[1])
-                kwargs["project_id"] = project.id
-            except Project.DoesNotExist as e:
-                raise ObjectDoesNotExistError(e)
-        try:
-            venue = Venue.objects.get(pk=from_global_id(venue_global_id)[1])
-            update_object_with_translations(venue, kwargs)
-        except Venue.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+            kwargs["project_id"] = get_obj_if_user_can_administer(
+                info, project_global_id, Project
+            )
+        venue = get_obj_if_user_can_administer(info, kwargs.pop("id"), Venue)
+        update_object_with_translations(venue, kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} updated venue {venue} with data {kwargs}"
+        )
+
         return UpdateVenueMutation(venue=venue)
 
 
@@ -129,22 +139,21 @@ class DeleteVenueMutation(graphene.relay.ClientIDMutation):
         id = graphene.GlobalID()
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Validate data
-        venue_id = from_global_id(kwargs["id"])[1]
-        try:
-            venue = Venue.objects.get(pk=venue_id)
-            venue.delete()
-        except Venue.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        venue = get_obj_if_user_can_administer(info, kwargs["id"], Venue)
+        log_text = f"user {info.context.user.uuid} deleted venue {venue}"
+        venue.delete()
+
+        logger.info(log_text)
+
         return DeleteVenueMutation()
 
 
 class Query:
     venue = relay.Node.Field(VenueNode)
-    venues = DjangoConnectionField(VenueNode)
+    venues = DjangoFilterConnectionField(VenueNode)
 
 
 class Mutation:

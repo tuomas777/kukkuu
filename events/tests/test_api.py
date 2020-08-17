@@ -6,6 +6,7 @@ import pytest
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
+from django.utils.timezone import now
 from django.utils.translation import activate
 from graphql_relay import to_global_id
 from parler.utils.context import switch_language
@@ -13,6 +14,7 @@ from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
+from common.utils import get_global_id
 from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from events.models import Enrolment, Event, Occurrence
 from kukkuu.consts import (
@@ -130,6 +132,18 @@ query Event($id:ID!) {
 }
 """
 
+EVENTS_FILTER_QUERY = """
+query Events($projectId: ID) {
+  events(projectId: $projectId) {
+    edges {
+      node {
+        name
+      }
+    }
+  }
+}
+"""
+
 OCCURRENCES_QUERY = """
 query Occurrences {
   occurrences {
@@ -171,9 +185,10 @@ query Occurrences {
 
 OCCURRENCES_FILTER_QUERY = """
 query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String,
-                  $eventId: String, $occurrenceLanguage: String) {
+                  $eventId: String, $occurrenceLanguage: String, $projectId: String) {
   occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId,
-              eventId: $eventId, occurrenceLanguage: $occurrenceLanguage) {
+              eventId: $eventId, occurrenceLanguage: $occurrenceLanguage,
+              projectId: $projectId) {
     edges {
       node {
         time
@@ -378,6 +393,8 @@ mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
       }
       time
       occurrenceLanguage
+      enrolmentCount
+      remainingCapacity
     }
   }
 }
@@ -436,6 +453,17 @@ mutation UnenrolOccurrence($input: UnenrolOccurrenceMutationInput!) {
 
 """
 
+SET_ENROLMENT_ATTENDANCE_MUTATION = """
+mutation SetEnrolmentAttendance($input: SetEnrolmentAttendanceMutationInput!) {
+  setEnrolmentAttendance(input: $input) {
+    enrolment {
+      attended
+    }
+  }
+}
+
+"""
+
 
 def test_events_query_unauthenticated(api_client):
     executed = api_client.execute(EVENTS_QUERY)
@@ -450,12 +478,15 @@ def test_events_query_normal_user(snapshot, user_api_client, event, venue):
     snapshot.assert_match(executed)
 
 
-def test_events_query_staff_user(
-    snapshot, staff_api_client, event, unpublished_event, venue
+def test_events_query_project_user(
+    snapshot, project_user_api_client, event, unpublished_event, venue, another_project
 ):
     OccurrenceFactory(event=event, venue=venue)
     OccurrenceFactory(event=unpublished_event, venue=venue)
-    executed = staff_api_client.execute(EVENTS_QUERY)
+    # unpublished event from another project, should not be returned
+    OccurrenceFactory(event=EventFactory(project=another_project), venue=venue)
+
+    executed = project_user_api_client.execute(EVENTS_QUERY)
 
     snapshot.assert_match(executed)
 
@@ -489,10 +520,10 @@ def test_occurrences_query_normal_user(
     snapshot.assert_match(executed)
 
 
-def test_occurrences_query_staff_user(
-    snapshot, staff_api_client, occurrence, unpublished_occurrence
+def test_occurrences_query_project_user(
+    snapshot, project_user_api_client, occurrence, unpublished_occurrence
 ):
-    executed = staff_api_client.execute(OCCURRENCES_QUERY)
+    executed = project_user_api_client.execute(OCCURRENCES_QUERY)
 
     snapshot.assert_match(executed)
 
@@ -521,30 +552,29 @@ def test_add_event_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_add_event_staff_user(snapshot, staff_api_client, project):
+def test_add_event_project_user(snapshot, project_user_api_client, project):
     variables = deepcopy(ADD_EVENT_VARIABLES)
     variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
-    executed = staff_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
+    executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
     snapshot.assert_match(executed)
 
 
-def test_add_occurrence_permission_denied(api_client, user_api_client):
-    executed = api_client.execute(
-        ADD_OCCURRENCE_MUTATION, variables=ADD_OCCURRENCE_VARIABLES
-    )
-    assert_permission_denied(executed)
-
-    executed = user_api_client.execute(
-        ADD_OCCURRENCE_MUTATION, variables=ADD_OCCURRENCE_VARIABLES
-    )
-    assert_permission_denied(executed)
-
-
-def test_add_occurrence_staff_user(snapshot, staff_api_client, event, venue):
+def test_add_occurrence_permission_denied(unauthorized_user_api_client, event, venue):
     occurrence_variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
     occurrence_variables["input"]["eventId"] = to_global_id("EventNode", event.id)
     occurrence_variables["input"]["venueId"] = to_global_id("VenueNode", venue.id)
-    executed = staff_api_client.execute(
+
+    executed = unauthorized_user_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=occurrence_variables
+    )
+    assert_permission_denied(executed)
+
+
+def test_add_occurrence_project_user(snapshot, project_user_api_client, event, venue):
+    occurrence_variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    occurrence_variables["input"]["eventId"] = to_global_id("EventNode", event.id)
+    occurrence_variables["input"]["venueId"] = to_global_id("VenueNode", venue.id)
+    executed = project_user_api_client.execute(
         ADD_OCCURRENCE_MUTATION, variables=occurrence_variables
     )
     snapshot.assert_match(executed)
@@ -562,7 +592,7 @@ def test_update_occurrence_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_update_occurrence_staff_user(snapshot, staff_api_client, occurrence):
+def test_update_occurrence_project_user(snapshot, project_user_api_client, occurrence):
     occurrence_variables = deepcopy(UPDATE_OCCURRENCE_VARIABLES)
     occurrence_variables["input"]["id"] = to_global_id("OccurrenceNode", occurrence.id)
     occurrence_variables["input"]["eventId"] = to_global_id(
@@ -571,7 +601,7 @@ def test_update_occurrence_staff_user(snapshot, staff_api_client, occurrence):
     occurrence_variables["input"]["venueId"] = to_global_id(
         "VenueNode", occurrence.venue.id
     )
-    executed = staff_api_client.execute(
+    executed = project_user_api_client.execute(
         UPDATE_OCCURRENCE_MUTATION, variables=occurrence_variables
     )
     snapshot.assert_match(executed)
@@ -589,8 +619,8 @@ def test_delete_occurrence_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_delete_occurrence_staff_user(staff_api_client, occurrence):
-    staff_api_client.execute(
+def test_delete_occurrence_project_user(project_user_api_client, occurrence):
+    project_user_api_client.execute(
         DELETE_OCCURRENCE_MUTATION,
         variables={"input": {"id": to_global_id("OccurrenceNode", occurrence.id)}},
     )
@@ -609,10 +639,10 @@ def test_update_event_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_update_event_staff_user(snapshot, staff_api_client, event):
+def test_update_event_project_user(snapshot, project_user_api_client, event):
     event_variables = deepcopy(UPDATE_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", event.id)
-    executed = staff_api_client.execute(
+    executed = project_user_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
     )
     snapshot.assert_match(executed)
@@ -630,15 +660,15 @@ def test_delete_event_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_delete_event_staff_user(staff_api_client, event):
-    staff_api_client.execute(
+def test_delete_event_project_user(project_user_api_client, event):
+    project_user_api_client.execute(
         DELETE_EVENT_MUTATION,
         variables={"input": {"id": to_global_id("EventNode", event.id)}},
     )
     assert Event.objects.count() == 0
 
 
-def test_update_event_translations(staff_api_client, event):
+def test_update_event_translations(project_user_api_client, event):
     assert event.translations.count() == 1
     event_variables = deepcopy(UPDATE_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", event.id)
@@ -651,12 +681,12 @@ def test_update_event_translations(staff_api_client, event):
         "languageCode": "SV",
     }
     event_variables["input"]["translations"].append(new_translation)
-    staff_api_client.execute(UPDATE_EVENT_MUTATION, variables=event_variables)
+    project_user_api_client.execute(UPDATE_EVENT_MUTATION, variables=event_variables)
     assert event.has_translation(new_translation["languageCode"].lower())
 
     # Test invalid translation
     new_translation["languageCode"] = "foo"
-    executed = staff_api_client.execute(
+    executed = project_user_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
     )
 
@@ -665,7 +695,7 @@ def test_update_event_translations(staff_api_client, event):
     assert "languageCode" in str(executed["errors"])
 
 
-def test_upload_image_to_event(staff_api_client, snapshot, project):
+def test_upload_image_to_event(project_user_api_client, snapshot, project):
     add_event_variables = deepcopy(ADD_EVENT_VARIABLES)
     add_event_variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
     # noinspection PyTypeChecker
@@ -673,26 +703,42 @@ def test_upload_image_to_event(staff_api_client, snapshot, project):
         "sample.jpg", content=None, content_type="image/jpeg"
     )
 
-    staff_api_client.execute(ADD_EVENT_MUTATION, variables=add_event_variables)
+    project_user_api_client.execute(ADD_EVENT_MUTATION, variables=add_event_variables)
     assert Event.objects.count() == 1
     event = Event.objects.first()
     assert event.image
 
 
-def test_staff_publish_event(snapshot, staff_api_client, unpublished_event):
+def test_project_user_publish_event(
+    snapshot, project_user_api_client, unpublished_event
+):
     assert not unpublished_event.is_published()
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", unpublished_event.id)
-    executed = staff_api_client.execute(
+    executed = project_user_api_client.execute(
         PUBLISH_EVENT_MUTATION, variables=event_variables
     )
     snapshot.assert_match(executed)
 
-    executed = staff_api_client.execute(
+    executed = project_user_api_client.execute(
         PUBLISH_EVENT_MUTATION, variables=event_variables
     )
 
     assert_match_error_code(executed, EVENT_ALREADY_PUBLISHED_ERROR)
+
+
+def test_event_filter_by_project(
+    two_project_user_api_client, project, another_project, snapshot
+):
+    EventFactory(name="Should be visible", project=project)
+    EventFactory(name="Should NOT be visible", project=another_project)
+    variables = {"projectId": get_global_id(project)}
+
+    executed = two_project_user_api_client.execute(
+        EVENTS_FILTER_QUERY, variables=variables
+    )
+
+    snapshot.assert_match(executed)
 
 
 def test_enrol_occurrence(
@@ -988,6 +1034,28 @@ def test_occurrences_filter_by_language(user_api_client, snapshot, event, venue)
     snapshot.assert_match(executed)
 
 
+def test_occurrences_filter_by_project(
+    two_project_user_api_client, snapshot, project, another_project
+):
+    OccurrenceFactory(
+        event__project=project,
+        event__published_at=now(),
+        time=datetime(1970, 1, 1, 12, tzinfo=timezone.now().tzinfo),
+    )
+    OccurrenceFactory(
+        event__project=another_project,
+        event__published_at=now(),
+        time=datetime(1981, 2, 18, 12, tzinfo=timezone.now().tzinfo),
+    )
+    variables = {"projectId": get_global_id(project)}
+
+    executed = two_project_user_api_client.execute(
+        OCCURRENCES_FILTER_QUERY, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+
+
 def test_occurrence_available_capacity_and_enrolment_count(
     user_api_client, snapshot, occurrence, project
 ):
@@ -1019,15 +1087,52 @@ def test_enrolment_visibility(
     snapshot.assert_match(executed)
 
 
-def test_required_translation(staff_api_client, snapshot, project):
+def test_enrolment_visibility_project_user(
+    project_user_api_client, snapshot, project, another_project
+):
+    enrolment = EnrolmentFactory(
+        child__first_name="ME ME ME",
+        child__project=project,
+        occurrence__event__project=project,
+    )
+    EnrolmentFactory(
+        child__first_name="NOT me",
+        child__project=another_project,
+        occurrence__event__project=another_project,
+    )
+    variables = {"id": get_global_id(enrolment.occurrence)}
+
+    executed = project_user_api_client.execute(
+        """
+        query Occurrence($id: ID!) {
+          occurrence(id: $id){
+            enrolments {
+              edges {
+                node {
+                  child {
+                    firstName
+                  }
+                }
+              }
+            }
+          }
+        }
+        """,
+        variables=variables,
+    )
+
+    snapshot.assert_match(executed)
+
+
+def test_required_translation(project_user_api_client, snapshot, project):
     # Finnish translation required when creating event
     variable = deepcopy(ADD_EVENT_VARIABLES)
     variable["input"]["projectId"] = to_global_id("ProjectNode", project.id)
     variable["input"]["translations"][0]["languageCode"] = "SV"
-    executed = staff_api_client.execute(ADD_EVENT_MUTATION, variables=variable)
+    executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variable)
     assert_match_error_code(executed, MISSING_DEFAULT_TRANSLATION_ERROR)
     variable["input"]["translations"][0]["languageCode"] = "FI"
-    executed = staff_api_client.execute(ADD_EVENT_MUTATION, variables=variable)
+    executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variable)
     snapshot.assert_match(executed)
 
     # Test delete default translation
@@ -1052,13 +1157,13 @@ def test_required_translation(staff_api_client, snapshot, project):
         }
     }
     event_variables["input"]["id"] = to_global_id("EventNode", event.id)
-    executed = staff_api_client.execute(
+    executed = project_user_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
     )
     assert_match_error_code(executed, MISSING_DEFAULT_TRANSLATION_ERROR)
 
 
-def test_update_field_with_null_value(staff_api_client, project):
+def test_update_field_with_null_value(project_user_api_client, project):
     event = EventFactory(project=project)
     # To make sure event has Finnish translation and bypass the language validation
     if not event.has_translation("fi"):
@@ -1067,7 +1172,7 @@ def test_update_field_with_null_value(staff_api_client, project):
     event_variables["input"]["id"] = to_global_id("EventNode", event.id)
     # Null value for not-nullable field
     event_variables["input"]["participantsPerInvite"] = None
-    executed = staff_api_client.execute(
+    executed = project_user_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
     )
     assert_match_error_code(executed, DATA_VALIDATION_ERROR)
@@ -1131,3 +1236,48 @@ def test_api_query_depth(snapshot, guardian_api_client, event):
     backend = DepthAnalysisBackend(max_depth=6)
     document = backend.document_from_string(schema=schema, document_string=query)
     assert document is not None
+
+
+@pytest.mark.parametrize("expected_attended", [True, None])
+def test_set_enrolment_attendance(
+    snapshot,
+    project_user_api_client,
+    occurrence,
+    child_with_user_guardian,
+    expected_attended,
+):
+    enrolment = EnrolmentFactory(
+        occurrence=occurrence,
+        child=child_with_user_guardian,
+        attended=None if expected_attended else True,
+    )
+    variables = {
+        "input": {
+            "enrolmentId": get_global_id(enrolment),
+            "attended": expected_attended,
+        }
+    }
+
+    executed = project_user_api_client.execute(
+        SET_ENROLMENT_ATTENDANCE_MUTATION, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+    enrolment.refresh_from_db()
+    assert enrolment.attended == expected_attended
+
+
+def test_set_enrolment_attendance_another_project_child(
+    project_user_api_client, occurrence, another_project,
+):
+    another_project_child = ChildWithGuardianFactory(project=another_project)
+    enrolment = EnrolmentFactory(
+        occurrence=occurrence, child=another_project_child, attended=None
+    )
+    variables = {"input": {"enrolmentId": get_global_id(enrolment), "attended": True}}
+
+    executed = project_user_api_client.execute(
+        SET_ENROLMENT_ATTENDANCE_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)

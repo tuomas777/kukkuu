@@ -1,3 +1,5 @@
+import logging
+
 import graphene
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -7,10 +9,11 @@ from django.utils import timezone
 from django.utils.timezone import localtime, now
 from django_ilmoitin.utils import send_notification
 from graphene import relay
-from graphene_django import DjangoConnectionField
+from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
+from graphql_relay.connection.arrayconnection import offset_to_cursor
 from projects.models import Project
 
 from children.notifications import NotificationType
@@ -28,6 +31,18 @@ from .models import Child, postal_code_validator, Relationship
 
 User = get_user_model()
 
+logger = logging.getLogger(__name__)
+
+
+class ChildrenConnection(graphene.Connection):
+    class Meta:
+        abstract = True
+
+    count = graphene.Int(required=True)
+
+    def resolve_count(self, info, **kwargs):
+        return self.length
+
 
 class ChildNode(DjangoObjectType):
     available_events = relay.ConnectionField("events.schema.EventConnection")
@@ -36,11 +51,15 @@ class ChildNode(DjangoObjectType):
     class Meta:
         model = Child
         interfaces = (relay.Node,)
+        connection_class = ChildrenConnection
+        filter_fields = ("project_id",)
 
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        return queryset.user_can_view(info.context.user).order_by("last_name")
+        return queryset.user_can_view(info.context.user).order_by(
+            "last_name", "first_name", "created_at"
+        )
 
     @classmethod
     @login_required
@@ -53,6 +72,7 @@ class ChildNode(DjangoObjectType):
     def resolve_past_events(self, info, **kwargs):
         return (
             self.project.events.user_can_view(info.context.user)
+            .published()
             .exclude(occurrences__time__gte=timezone.now())
             .distinct()
         )
@@ -60,6 +80,7 @@ class ChildNode(DjangoObjectType):
     def resolve_available_events(self, info, **kwargs):
         return (
             self.project.events.user_can_view(info.context.user)
+            .published()
             .filter(occurrences__time__gte=timezone.now())
             .distinct()
             .exclude(occurrences__in=self.occurrences.all())
@@ -84,6 +105,19 @@ class RelationshipNode(DjangoObjectType):
         fields = ("type", "child", "guardian")
 
     type = graphene.Field(RelationshipTypeEnum)
+
+    @classmethod
+    @login_required
+    def get_queryset(cls, queryset, info):
+        return queryset.user_can_view(info.context.user).order_by("id")
+
+    @classmethod
+    @login_required
+    def get_node(cls, info, id):
+        try:
+            return cls._meta.model.objects.user_can_view(info.context.user).get(id=id)
+        except cls._meta.model.DoesNotExist:
+            return None
 
 
 class RelationshipInput(graphene.InputObjectType):
@@ -175,6 +209,11 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
 
             children.append(child)
 
+        logger.info(
+            f"user {user.uuid} submitted children {[c.pk for c in children]} "
+            f"and guardian {guardian.pk}"
+        )
+
         send_notification(
             guardian.email,
             NotificationType.SIGNUP,
@@ -220,6 +259,10 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
             type=relationship_data.get("type"), child=child, guardian=user.guardian
         )
 
+        logger.info(
+            f"user {user.uuid} added child {child.pk} to guardian {user.guardian.pk}"
+        )
+
         return AddChildMutation(child=child)
 
 
@@ -257,6 +300,8 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
 
         update_object(child, kwargs)
 
+        logger.info(f"user {user.uuid} updated child {child.pk}")
+
         return UpdateChildMutation(child=child)
 
 
@@ -277,13 +322,41 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
         except Child.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
+        log_text = f"user {user.uuid} deleted child {child.pk}"
         child.delete()
+
+        logger.info(log_text)
 
         return DeleteChildMutation()
 
 
+class DjangoFilterAndOffsetConnectionField(DjangoFilterConnectionField):
+    def __init__(self, type, *args, **kwargs):
+        kwargs.setdefault("limit", graphene.Int())
+        kwargs.setdefault("offset", graphene.Int())
+        super().__init__(type, *args, **kwargs)
+
+    @classmethod
+    def connection_resolver(cls, *args, **kwargs):
+        has_limit_or_offset = "limit" in kwargs or "offset" in kwargs
+        has_cursor = any(arg in kwargs for arg in ("first", "last", "after", "before"))
+
+        if has_limit_or_offset:
+            if has_cursor:
+                raise ApiUsageError("Cannot use both offset and cursor pagination.")
+
+            limit = kwargs.get("limit")
+            if limit is not None:
+                kwargs["first"] = limit
+            offset = kwargs.get("offset")
+            if offset is not None:
+                kwargs["after"] = offset_to_cursor(offset - 1)
+
+        return super().connection_resolver(*args, **kwargs)
+
+
 class Query:
-    children = DjangoConnectionField(ChildNode)
+    children = DjangoFilterAndOffsetConnectionField(ChildNode, projectId=graphene.ID())
     child = relay.Node.Field(ChildNode)
 
 

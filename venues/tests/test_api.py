@@ -1,9 +1,12 @@
 from copy import deepcopy
 
 import pytest
+from django.utils import translation
 from graphql_relay import to_global_id
 
 from common.tests.utils import assert_permission_denied
+from common.utils import get_global_id
+from venues.factories import VenueFactory
 from venues.models import Venue
 
 
@@ -204,6 +207,33 @@ mutation DeleteVenue($input: DeleteVenueMutationInput!) {
 }
 """
 
+VENUES_FILTER_QUERY = """
+query Venues($projectId: ID!) {
+  venues(projectId: $projectId) {
+    edges {
+      node {
+        name
+      }
+    }
+  }
+}
+"""
+
+
+def test_venues_project_filter(
+    snapshot, two_project_user_api_client, project, another_project
+):
+    VenueFactory(name="Should be returned", project=project)
+    VenueFactory(name="Should NOT be returned", project=another_project)
+
+    variables = {"projectId": get_global_id(project)}
+
+    executed = two_project_user_api_client.execute(
+        VENUES_FILTER_QUERY, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+
 
 def test_venues_query_unauthenticated(api_client):
     executed = api_client.execute(VENUES_QUERY)
@@ -213,7 +243,6 @@ def test_venues_query_unauthenticated(api_client):
 
 def test_venues_query_normal_user(snapshot, user_api_client, venue):
     executed = user_api_client.execute(VENUES_QUERY)
-
     snapshot.assert_match(executed)
 
 
@@ -227,24 +256,25 @@ def test_venue_query_unauthenticated(api_client, venue):
 def test_venue_query_normal_user(snapshot, user_api_client, venue):
     variables = {"id": to_global_id("VenueNode", venue.id)}
     executed = user_api_client.execute(VENUE_QUERY, variables=variables)
-
     snapshot.assert_match(executed)
 
 
-def test_add_venue_permission_denied(api_client, user_api_client):
-    executed = api_client.execute(ADD_VENUE_MUTATION, variables=ADD_VENUE_VARIABLES)
-    assert_permission_denied(executed)
+def test_add_venue_permission_denied(unauthorized_user_api_client, project):
+    venue_variables = deepcopy(ADD_VENUE_VARIABLES)
+    venue_variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
 
-    executed = user_api_client.execute(
-        ADD_VENUE_MUTATION, variables=ADD_VENUE_VARIABLES
+    executed = unauthorized_user_api_client.execute(
+        ADD_VENUE_MUTATION, variables=venue_variables
     )
     assert_permission_denied(executed)
 
 
-def test_add_venue_staff_user(snapshot, staff_api_client, project):
+def test_add_venue_project_user(snapshot, project_user_api_client, project):
     venue_variables = deepcopy(ADD_VENUE_VARIABLES)
     venue_variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
-    executed = staff_api_client.execute(ADD_VENUE_MUTATION, variables=venue_variables)
+    executed = project_user_api_client.execute(
+        ADD_VENUE_MUTATION, variables=venue_variables
+    )
     snapshot.assert_match(executed)
 
 
@@ -260,10 +290,10 @@ def test_update_venue_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_update_venue_staff_user(snapshot, staff_api_client, venue):
+def test_update_venue_project_user(snapshot, project_user_api_client, venue):
     venue_variables = deepcopy(UPDATE_VENUE_VARIABLES)
     venue_variables["input"]["id"] = to_global_id("VenueNode", venue.id)
-    executed = staff_api_client.execute(
+    executed = project_user_api_client.execute(
         UPDATE_VENUE_MUTATION, variables=venue_variables
     )
     snapshot.assert_match(executed)
@@ -281,9 +311,38 @@ def test_delete_venue_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_delete_venue_staff_user(staff_api_client, venue):
-    staff_api_client.execute(
+def test_delete_venue_project_user(project_user_api_client, venue):
+    project_user_api_client.execute(
         DELETE_VENUE_MUTATION,
         variables={"input": {"id": to_global_id("VenueNode", venue.id)}},
     )
     assert Venue.objects.count() == 0
+
+
+@pytest.mark.parametrize("request_language", ("fi", "en"))
+def test_venues_query_ordering(snapshot, project_user_api_client, request_language):
+    venue = VenueFactory(name="3 in Finnish")
+    VenueFactory(name="4 in Finnish")
+    VenueFactory(name="2 in Finnish")
+
+    # this should not affect the ordering
+    venue.set_current_language("en")
+    venue.name = "1 in English"
+    venue.save()
+
+    with translation.override(request_language):
+        executed = project_user_api_client.execute(
+            """
+    query Venues {
+      venues {
+        edges {
+          node {
+            name
+          }
+        }
+      }
+    }
+    """
+        )
+
+    snapshot.assert_match(executed)

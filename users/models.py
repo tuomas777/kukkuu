@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from helusers.models import AbstractUser
 
@@ -15,11 +16,7 @@ class User(AbstractUser):
 
 class GuardianQuerySet(models.QuerySet):
     def user_can_view(self, user):
-        # TODO we'll probably need more fine-grained control than this
-        if user.is_staff:
-            return self
-        else:
-            return self.filter(user=user)
+        return self.filter(Q(user=user) | Q(children__project__users=user)).distinct()
 
 
 class Guardian(UUIDPrimaryKeyModel, TimestampedModel):

@@ -1,25 +1,33 @@
+import logging
+
 import graphene
 from django.apps import apps
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, relay
-from graphene_django import DjangoConnectionField, DjangoObjectType
+from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_file_upload.scalars import Upload
-from graphql_jwt.decorators import login_required, staff_member_required
+from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from projects.models import Project
 
 from children.models import Child
 from children.schema import ChildNode
 from common.schema import LanguageEnum
-from common.utils import update_object, update_object_with_translations
+from common.utils import (
+    get_obj_if_user_can_administer,
+    project_user_required,
+    update_object,
+    update_object_with_translations,
+)
 from events.filters import OccurrenceFilter
 from events.models import Enrolment, Event, Occurrence
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
+    DataValidationError,
     EventAlreadyPublishedError,
     IneligibleOccurrenceEnrolment,
     ObjectDoesNotExistError,
@@ -27,6 +35,8 @@ from kukkuu.exceptions import (
     PastOccurrenceError,
 )
 from venues.models import Venue
+
+logger = logging.getLogger(__name__)
 
 EventTranslation = apps.get_model("events", "EventTranslation")
 
@@ -67,6 +77,7 @@ class EventNode(DjangoObjectType):
     class Meta:
         model = Event
         interfaces = (relay.Node,)
+        filter_fields = ("project_id",)
 
     @classmethod
     @login_required
@@ -120,7 +131,10 @@ class OccurrenceNode(DjangoObjectType):
         return super().get_node(info, id)
 
     def resolve_remaining_capacity(self, info, **kwargs):
-        return self.event.capacity_per_occurrence - self.enrolment_count
+        return self.event.capacity_per_occurrence - self.get_enrolment_count()
+
+    def resolve_enrolment_count(self, info, **kwargs):
+        return self.get_enrolment_count()
 
     class Meta:
         model = Occurrence
@@ -132,13 +146,15 @@ class EnrolmentNode(DjangoObjectType):
     class Meta:
         model = Enrolment
         interfaces = (relay.Node,)
-        fields = ("occurrence", "child", "created_at")
+        fields = ("occurrence", "child", "attended", "created_at", "updated_at")
 
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        # Should only return enrolments of guardian's children
-        return queryset.filter(child__guardians__user=info.context.user)
+        user = info.context.user
+        return queryset.filter(
+            Q(child__guardians__user=info.context.user) | Q(child__project__users=user)
+        ).distinct()
 
 
 class EventTranslationsInput(graphene.InputObjectType):
@@ -161,17 +177,18 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
     event = graphene.Field(EventNode)
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Add validation
-        project_global_id = kwargs.pop("project_id")
-        try:
-            project = Project.objects.get(pk=from_global_id(project_global_id)[1])
-            kwargs["project_id"] = project.id
-        except Project.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        kwargs["project_id"] = get_obj_if_user_can_administer(
+            info, kwargs.pop("project_id"), Project
+        ).pk
         event = Event.objects.create_translatable_object(**kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} added event {event} with data {kwargs}"
+        )
+
         return AddEventMutation(event=event)
 
 
@@ -188,23 +205,22 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
     event = graphene.Field(EventNode)
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Add validation
         project_global_id = kwargs.pop("project_id", None)
         if project_global_id:
-            try:
-                project = Project.objects.get(pk=from_global_id(project_global_id)[1])
-                kwargs["project_id"] = project.id
-            except Project.DoesNotExist as e:
-                raise ObjectDoesNotExistError(e)
-        event_global_id = kwargs.pop("id")
-        try:
-            event = Event.objects.get(pk=from_global_id(event_global_id)[1])
-            update_object_with_translations(event, kwargs)
-        except Event.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+            kwargs["project_id"] = get_obj_if_user_can_administer(
+                info, project_global_id, Project
+            ).pk
+
+        event = get_obj_if_user_can_administer(info, kwargs.pop("id"), Event)
+        update_object_with_translations(event, kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} updated event {event} with data {kwargs}"
+        )
+
         return UpdateEventMutation(event=event)
 
 
@@ -213,16 +229,14 @@ class DeleteEventMutation(graphene.relay.ClientIDMutation):
         id = graphene.GlobalID()
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Validate data
-        event_id = from_global_id(kwargs["id"])[1]
-        try:
-            event = Event.objects.get(pk=event_id)
-            event.delete()
-        except Event.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        event = get_obj_if_user_can_administer(info, kwargs["id"], Event)
+        event.delete()
+
+        logger.info(f"user {info.context.user.uuid} deleted event {event}")
+
         return DeleteEventMutation()
 
 
@@ -251,6 +265,10 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
         validate_enrolment(child, occurrence)
         enrolment = Enrolment.objects.create(child=child, occurrence=occurrence)
 
+        logger.info(
+            f"user {user.uuid} enrolled child {child.pk} to occurrence {occurrence}"
+        )
+
         return EnrolOccurrenceMutation(enrolment=enrolment)
 
 
@@ -273,12 +291,53 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
             child = Child.objects.user_can_update(user).get(pk=child_id)
         except Child.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
+
         try:
-            occurrence = child.occurrences.get(pk=occurrence_id)
-            occurrence.children.remove(child)
-        except Occurrence.DoesNotExist as e:
+            enrolment = child.enrolments.select_related("occurrence").get(
+                occurrence_id=occurrence_id
+            )
+        except Enrolment.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
+
+        occurrence = enrolment.occurrence
+        enrolment.delete_and_send_notification()
+
+        logger.info(
+            f"user {user.uuid} unenrolled child {child.pk} from occurrence {occurrence}"
+        )
+
         return UnenrolOccurrenceMutation(child=child, occurrence=occurrence)
+
+
+class SetEnrolmentAttendanceMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        enrolment_id = graphene.GlobalID()
+        attended = graphene.Boolean(
+            description="This field is required (but it can be null)."
+        )
+
+    enrolment = graphene.Field(EnrolmentNode)
+
+    @classmethod
+    @login_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        if "attended" not in kwargs:
+            raise DataValidationError('"attended" is required.')
+
+        enrolment = get_obj_if_user_can_administer(
+            info, kwargs["enrolment_id"], Enrolment
+        )
+
+        enrolment.attended = kwargs["attended"]
+        enrolment.save()
+
+        logger.info(
+            f"user {info.context.user.uuid} set enrolment {enrolment} attendance to "
+            f"{kwargs['attended']}"
+        )
+
+        return SetEnrolmentAttendanceMutation(enrolment=enrolment)
 
 
 class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
@@ -291,28 +350,25 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
     occurrence = graphene.Field(OccurrenceNode)
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Validate data
-        event_id = from_global_id(kwargs["event_id"])[1]
-        try:
-            Event.objects.get(pk=event_id)
-            kwargs["event_id"] = event_id
-        except Event.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
-
-        venue_id = from_global_id(kwargs["venue_id"])[1]
-        try:
-            Venue.objects.get(pk=venue_id)
-            kwargs["venue_id"] = venue_id
-        except Venue.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        kwargs["event_id"] = get_obj_if_user_can_administer(
+            info, kwargs["event_id"], Event
+        ).pk
+        kwargs["venue_id"] = get_obj_if_user_can_administer(
+            info, kwargs["venue_id"], Venue
+        ).pk
 
         occurrence = Occurrence.objects.create(**kwargs)
 
         # needed because enrolment_count is an annotated field
         occurrence.enrolment_count = 0
+
+        logger.info(
+            f"user {info.context.user.uuid} added occurrence {occurrence} with data "
+            f"{kwargs}"
+        )
 
         return AddOccurrenceMutation(occurrence=occurrence)
 
@@ -328,34 +384,28 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
     occurrence = graphene.Field(OccurrenceNode)
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Validate data
-        occurrence_id = from_global_id(kwargs["id"])[1]
-        try:
-            occurrence = Occurrence.objects.get(pk=occurrence_id)
-            kwargs["id"] = occurrence_id
-        except Occurrence.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        occurrence = get_obj_if_user_can_administer(info, kwargs.pop("id"), Occurrence)
 
-        if kwargs.get("event_id", None):
-            event_id = from_global_id(kwargs["event_id"])[1]
-            try:
-                Event.objects.get(pk=event_id)
-                kwargs["event_id"] = event_id
-            except Event.DoesNotExist as e:
-                raise ObjectDoesNotExistError(e)
+        if kwargs.get("event_id"):
+            kwargs["event_id"] = get_obj_if_user_can_administer(
+                info, kwargs["event_id"], Event
+            ).pk
 
-        if kwargs.get("venue_id", None):
-            venue_id = from_global_id(kwargs["venue_id"])[1]
-            try:
-                Venue.objects.get(pk=venue_id)
-                kwargs["venue_id"] = venue_id
-            except Venue.DoesNotExist as e:
-                raise ObjectDoesNotExistError(e)
+        if kwargs.get("venue_id"):
+            kwargs["venue_id"] = get_obj_if_user_can_administer(
+                info, kwargs["venue_id"], Venue
+            ).pk
 
         update_object(occurrence, kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} updated occurrence {occurrence} "
+            f"of event {occurrence.event} with data {kwargs}"
+        )
+
         return UpdateOccurrenceMutation(occurrence=occurrence)
 
 
@@ -364,16 +414,18 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
         id = graphene.GlobalID()
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Validate data
-        occurrence_id = from_global_id(kwargs["id"])[1]
-        try:
-            occurrence = Occurrence.objects.get(pk=occurrence_id)
-            occurrence.delete()
-        except Occurrence.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        occurrence = get_obj_if_user_can_administer(info, kwargs["id"], Occurrence)
+        log_text = (
+            f"user {info.context.user.uuid} deleted occurrence {occurrence} "
+            f"of event {occurrence.event}"
+        )
+        occurrence.delete()
+
+        logger.info(log_text)
+
         return DeleteOccurrenceMutation()
 
 
@@ -384,24 +436,23 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
     event = graphene.Field(EventNode)
 
     @classmethod
-    @staff_member_required
+    @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        # TODO: Add validation
-        event_global_id = kwargs.pop("id")
-        try:
-            event = Event.objects.get(pk=from_global_id(event_global_id)[1])
-            if event.is_published():
-                raise EventAlreadyPublishedError("Event is already published")
-            event.publish()
+        event = get_obj_if_user_can_administer(info, kwargs["id"], Event)
 
-        except Event.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        if event.is_published():
+            raise EventAlreadyPublishedError("Event is already published")
+
+        event.publish()
+
+        logger.info(f"user {info.context.user.uuid} published event {event}")
+
         return PublishEventMutation(event=event)
 
 
 class Query:
-    events = DjangoConnectionField(EventNode)
+    events = DjangoFilterConnectionField(EventNode)
     occurrences = DjangoFilterConnectionField(OccurrenceNode)
 
     event = relay.Node.Field(EventNode)
@@ -419,3 +470,4 @@ class Mutation:
     delete_occurrence = DeleteOccurrenceMutation.Field()
     enrol_occurrence = EnrolOccurrenceMutation.Field()
     unenrol_occurrence = UnenrolOccurrenceMutation.Field()
+    set_enrolment_attendance = SetEnrolmentAttendanceMutation.Field()

@@ -13,6 +13,7 @@ notifications.register(NotificationType.OCCURRENCE_ENROLMENT, _("occurrence enro
 notifications.register(
     NotificationType.OCCURRENCE_UNENROLMENT, _("occurrence unenrolment")
 )
+notifications.register(NotificationType.OCCURRENCE_CANCELLED, _("occurrence cancelled"))
 
 event = EventFactory.build()
 guardian = GuardianFactory.build()
@@ -33,6 +34,11 @@ dummy_context.update(
             "child": child,
         },
         NotificationType.OCCURRENCE_UNENROLMENT: {
+            "guardian": guardian,
+            "occurrence": occurrence,
+            "child": child,
+        },
+        NotificationType.OCCURRENCE_CANCELLED: {
             "guardian": guardian,
             "occurrence": occurrence,
             "child": child,

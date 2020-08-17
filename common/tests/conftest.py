@@ -1,13 +1,15 @@
 import shutil
+from datetime import timedelta
 
 import factory.random
 import pytest
 from django.apps import apps
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
-from django.utils import timezone
+from django.utils import timezone, translation
 from freezegun import freeze_time
 from graphene.test import Client
+from projects.factories import ProjectFactory
 from projects.models import Project
 
 from children.factories import ChildWithGuardianFactory
@@ -24,7 +26,7 @@ def setup_test_environment(settings):
     settings.DEFAULT_FROM_EMAIL = "kukkuu@example.com"
     settings.ILMOITIN_TRANSLATED_FROM_EMAIL = {}
     settings.MEDIA_ROOT = "test_media"
-    with freeze_time("2020-12-12"):
+    with translation.override("fi"), freeze_time("2020-12-12"):
         yield
     shutil.rmtree("test_media", ignore_errors=True)
 
@@ -38,6 +40,11 @@ def project():
         master_id=project.pk, language_code="fi", name="Testiprojekti",
     )
     return project
+
+
+@pytest.fixture
+def another_project():
+    return ProjectFactory(year=2030, name="Toinen testiprojekti")
 
 
 @pytest.fixture
@@ -56,13 +63,15 @@ def user_api_client():
 
 
 @pytest.fixture
-def staff_api_client():
-    return create_api_client_with_user(UserFactory(is_staff=True))
-
-
-@pytest.fixture
 def guardian_api_client():
     return create_api_client_with_user(UserFactory(guardian=GuardianFactory()))
+
+
+@pytest.fixture()
+def project_user_api_client(project):
+    user = UserFactory()
+    user.projects.set([project])
+    return create_api_client_with_user(user)
 
 
 @pytest.fixture
@@ -99,7 +108,32 @@ def occurrence(venue, event):
 
 @pytest.fixture
 def unpublished_occurrence(venue, unpublished_event):
-    return OccurrenceFactory(time=timezone.now(), venue=venue, event=unpublished_event)
+    return OccurrenceFactory(
+        time=timezone.now() + timedelta(hours=6), venue=venue, event=unpublished_event
+    )
+
+
+@pytest.fixture()
+def wrong_project_api_client(another_project):
+    user = UserFactory()
+    user.projects.set([another_project])
+    return create_api_client_with_user(user)
+
+
+@pytest.fixture
+def two_project_user_api_client(project, another_project):
+    user = UserFactory()
+    user.projects.set([project, another_project])
+    return create_api_client_with_user(user)
+
+
+@pytest.fixture(
+    params=range(3), ids=["unauthenticated_user", "normal_user", "wrong_project_user"]
+)
+def unauthorized_user_api_client(
+    api_client, user_api_client, wrong_project_api_client, request
+):
+    return (api_client, user_api_client, wrong_project_api_client)[request.param]
 
 
 def create_api_client_with_user(user):

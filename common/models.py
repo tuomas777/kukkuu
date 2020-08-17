@@ -1,4 +1,5 @@
 import uuid
+from copy import deepcopy
 
 from django.conf import settings
 from django.db import models, transaction
@@ -49,6 +50,7 @@ class TranslatableModel(ParlerTranslatableModel):
             raise MissingDefaultTranslationError("Default translation is missing")
         self.clear_translations()
         for translation in translations:
+            translation = deepcopy(translation)
             language_code = translation.pop("language_code")
             if language_code not in settings.PARLER_SUPPORTED_LANGUAGE_CODES:
                 continue

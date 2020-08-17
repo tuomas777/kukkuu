@@ -6,12 +6,14 @@ import pytz
 from django.conf import settings
 from django.utils import timezone
 from django.utils.timezone import localtime, now
+from freezegun import freeze_time
 from graphene.utils.str_converters import to_snake_case
 from graphql_relay import to_global_id
 from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
+from common.utils import get_global_id
 from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from kukkuu.consts import (
     API_USAGE_ERROR,
@@ -21,6 +23,7 @@ from kukkuu.consts import (
     MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
 )
+from users.factories import GuardianFactory
 from users.models import Guardian
 
 from ..models import Child, Relationship
@@ -299,14 +302,86 @@ def test_children_query_normal_user(snapshot, user_api_client, project):
     snapshot.assert_match(executed)
 
 
-def test_children_query_staff_user(
-    snapshot, staff_api_client, project, child_with_random_guardian
+def test_children_query_project_user(
+    snapshot, project_user_api_client, project, another_project
 ):
     ChildWithGuardianFactory(
-        relationship__guardian__user=staff_api_client.user, project=project
+        first_name="Same project", last_name="Should be returned 1/1", project=project
+    )
+    ChildWithGuardianFactory(
+        first_name="Another project",
+        last_name="Should NOT be returned",
+        project=another_project,
     )
 
-    executed = staff_api_client.execute(CHILDREN_QUERY)
+    executed = project_user_api_client.execute(CHILDREN_QUERY)
+
+    snapshot.assert_match(executed)
+
+
+def test_children_query_project_user_and_guardian(
+    snapshot, project_user_api_client, project, another_project
+):
+    guardian = GuardianFactory(user=project_user_api_client.user)
+
+    ChildWithGuardianFactory(
+        first_name="Own child same project",
+        last_name="Should be returned 1/3",
+        project=project,
+        relationship__guardian=guardian,
+    )
+    ChildWithGuardianFactory(
+        first_name="Own child another project",
+        last_name="Should be returned 2/3",
+        project=project,
+        relationship__guardian=guardian,
+    )
+    ChildWithGuardianFactory(
+        first_name="Not own child same project",
+        last_name="Should be returned 3/3",
+        project=project,
+    )
+    ChildWithGuardianFactory(
+        first_name="Not own child another project",
+        last_name="Should NOT be returned",
+        project=another_project,
+    )
+
+    executed = project_user_api_client.execute(CHILDREN_QUERY)
+
+    snapshot.assert_match(executed)
+
+
+CHILDREN_FILTER_QUERY = """
+query Children($projectId: ID!) {
+  children(projectId: $projectId) {
+    edges {
+      node {
+        firstName
+        lastName
+      }
+    }
+  }
+}
+"""
+
+
+def test_children_project_filter(
+    snapshot, two_project_user_api_client, project, another_project
+):
+    ChildWithGuardianFactory(
+        first_name="Only I", last_name="Should be returned", project=project
+    )
+    ChildWithGuardianFactory(
+        first_name="I certainly",
+        last_name="Should NOT be returned",
+        project=another_project,
+    )
+    variables = {"projectId": get_global_id(project)}
+
+    executed = two_project_user_api_client.execute(
+        CHILDREN_FILTER_QUERY, variables=variables
+    )
 
     snapshot.assert_match(executed)
 
@@ -405,12 +480,12 @@ def test_child_query_not_own_child(user_api_client, child_with_random_guardian):
     assert executed["data"]["child"] is None
 
 
-def test_child_query_not_own_child_staff_user(
-    snapshot, staff_api_client, child_with_random_guardian
+def test_child_query_not_own_child_project_user(
+    snapshot, project_user_api_client, child_with_random_guardian
 ):
     variables = {"id": to_global_id("ChildNode", child_with_random_guardian.id)}
 
-    executed = staff_api_client.execute(CHILD_QUERY, variables=variables)
+    executed = project_user_api_client.execute(CHILD_QUERY, variables=variables)
 
     snapshot.assert_match(executed)
 
@@ -684,6 +759,15 @@ def test_get_available_events(
     assert len(executed["data"]["child"]["availableEvents"]["edges"]) == 1
     snapshot.assert_match(executed)
 
+    guardian_api_client.user.projects.add(project)
+    executed2 = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
+
+    # having admin rights on the project should not affect available events
+    assert (
+        executed2["data"]["child"]["availableEvents"]
+        == executed["data"]["child"]["availableEvents"]
+    )
+
 
 def test_get_past_events(
     snapshot, guardian_api_client, child_with_user_guardian, project, venue
@@ -736,4 +820,123 @@ def test_get_past_events(
     # Still return enroled events if they are past events
     # Should only return past events from current project
     assert len(executed["data"]["child"]["pastEvents"]["edges"]) == 1
+    snapshot.assert_match(executed)
+
+    guardian_api_client.user.projects.add(project)
+    executed2 = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
+
+    # having admin rights on the project should not affect past events
+    assert (
+        executed2["data"]["child"]["pastEvents"]
+        == executed["data"]["child"]["pastEvents"]
+    )
+
+
+CHILDREN_PAGINATION_QUERY = """
+query Children($projectId: ID!, $limit: Int, $offset: Int, $after: String, $first: Int) {
+  children(projectId: $projectId, limit: $limit, offset: $offset, after: $after, first: $first) {
+    edges {
+      node {
+        lastName
+      }
+    }
+  }
+}
+"""  # noqa: E501
+
+
+def test_children_cursor_and_offset_pagination_cannot_be_combined(
+    project_user_api_client, project
+):
+    variables = {
+        "projectId": get_global_id(project),
+        "limit": 2,
+        "offset": 2,
+        "after": "foo",
+        "first": 2,
+    }
+
+    executed = project_user_api_client.execute(
+        CHILDREN_PAGINATION_QUERY, variables=variables,
+    )
+
+    assert_match_error_code(executed, API_USAGE_ERROR)
+
+
+@pytest.mark.parametrize(
+    "limit, offset", ((None, 2), (2, None), (2, 2), (10, None), (None, 5)),
+)
+def test_children_offset_pagination(
+    snapshot, project_user_api_client, project, limit, offset
+):
+    for i in range(5):
+        ChildWithGuardianFactory(last_name=i, project=project)
+    variables = {"projectId": get_global_id(project), "limit": limit, "offset": offset}
+
+    executed = project_user_api_client.execute(
+        CHILDREN_PAGINATION_QUERY, variables=variables,
+    )
+
+    snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize("pagination", (None, "limit", "first"))
+def test_children_total_count(
+    snapshot, project_user_api_client, project, another_project, pagination
+):
+    ChildWithGuardianFactory.create_batch(5, project=project)
+    ChildWithGuardianFactory.create_batch(5, project=another_project)
+    variables = {"projectId": get_global_id(project)}
+    if pagination:
+        variables.update({pagination: 2})
+
+    executed = project_user_api_client.execute(
+        """
+query Children($projectId: ID!, $limit: Int, $first: Int) {
+  children(projectId: $projectId, limit: $limit, first: $first) {
+    count
+  }
+}""",
+        variables=variables,
+    )
+
+    snapshot.assert_match(executed)
+
+
+def test_children_query_ordering(snapshot, project, project_user_api_client):
+    with freeze_time("2020-12-12"):
+        ChildWithGuardianFactory(
+            first_name="Alpha", last_name="Virtanen", project=project
+        )
+        ChildWithGuardianFactory(
+            first_name="Beta", last_name="Virtanen", project=project
+        )
+        ChildWithGuardianFactory(
+            first_name="Beta", last_name="Korhonen", project=project
+        )
+        ChildWithGuardianFactory(first_name="Beta", last_name="", project=project)
+        ChildWithGuardianFactory(first_name="Alpha", last_name="", project=project)
+        ChildWithGuardianFactory(first_name="", last_name="Virtanen", project=project)
+        ChildWithGuardianFactory(first_name="", last_name="Korhonen", project=project)
+        ChildWithGuardianFactory(first_name="", last_name="", project=project)
+    with freeze_time("2020-11-11"):
+        ChildWithGuardianFactory(first_name="", last_name="", project=project)
+        ChildWithGuardianFactory(first_name="", last_name="Korhonen", project=project)
+
+    executed = project_user_api_client.execute(
+        """
+    query Children {
+      children {
+        edges {
+          node {
+            createdAt
+            firstName
+            lastName
+          }
+        }
+      }
+    }
+    """
+    )
+
     snapshot.assert_match(executed)
