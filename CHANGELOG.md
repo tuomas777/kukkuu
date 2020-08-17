@@ -1,6 +1,22 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.2.0] - 17 Aug 2020
+### Added
+- Add project filter to children, venues, events and occurrences queries
+- Add nullable boolean field `attended` to `Enrolment` model and mutation `SetEnrolmentStatus` for updating it
+- Add logging of mutations
+- Add "occurrence cancelled" notification
+- Add limit/offset pagination to children query
+### Changed
+- Change guardians, children, events, occurrences and enrolments viewing and administrative mutations to be allowed only for project admins of the corresponding project. Previously `User` model's `is_staff` field was used to give permissions for all projects.
+- Order venues by Finnish name in API queries
+- Change default logging level to INFO
+- Hide unpublished events in `ChildNode` `past_events` and `available_events` fields for project admins as well
+### Fixed
+- Fix a bug in `OccurrenceNode` `remainingCapacity` field
+- Fix a bug in `OccurrenceNode` `enrolmentCount` field
+
 
 ## [1.1.0] - 29 May 2020
 ### Added
@@ -73,7 +89,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v0.1.0...v0.2.0
