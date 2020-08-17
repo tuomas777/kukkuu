@@ -322,9 +322,10 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
         except Child.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
+        log_text = f"user {user.uuid} deleted child {child.pk}"
         child.delete()
 
-        logger.info(f"user {user.uuid} deleted child {child.pk}")
+        logger.info(log_text)
 
         return DeleteChildMutation()
 

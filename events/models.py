@@ -73,7 +73,8 @@ class Event(TimestampedModel, TranslatableModel):
 
     def __str__(self):
         name = self.safe_translation_getter("name", super().__str__())
-        return f"{name} ({self.pk}) ({self.project.year})"
+        published_text = _("published") if self.published_at else _("unpublished")
+        return f"{name} ({self.pk}) ({self.project.year}) ({published_text})"
 
     def can_user_administer(self, user):
         return user.projects.filter(pk=self.project_id).exists()
@@ -138,7 +139,7 @@ class Occurrence(TimestampedModel):
         verbose_name_plural = _("occurrences")
 
     def __str__(self):
-        return f"{self.pk} {self.time}"
+        return f"{self.time} ({self.pk})"
 
     def delete(self, *args, **kwargs):
         if self.time >= now():
