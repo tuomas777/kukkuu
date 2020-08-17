@@ -402,8 +402,8 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
         update_object(occurrence, kwargs)
 
         logger.info(
-            f"user {info.context.user.uuid} updated occurrence {occurrence} with data "
-            f"{kwargs}"
+            f"user {info.context.user.uuid} updated occurrence {occurrence} "
+            f"of event {occurrence.event} with data {kwargs}"
         )
 
         return UpdateOccurrenceMutation(occurrence=occurrence)
@@ -418,9 +418,13 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         occurrence = get_obj_if_user_can_administer(info, kwargs["id"], Occurrence)
+        log_text = (
+            f"user {info.context.user.uuid} deleted occurrence {occurrence} "
+            f"of event {occurrence.event}"
+        )
         occurrence.delete()
 
-        logger.info(f"user {info.context.user.uuid} deleted occurrence {occurrence}")
+        logger.info(log_text)
 
         return DeleteOccurrenceMutation()
 

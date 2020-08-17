@@ -143,9 +143,10 @@ class DeleteVenueMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         venue = get_obj_if_user_can_administer(info, kwargs["id"], Venue)
+        log_text = f"user {info.context.user.uuid} deleted venue {venue}"
         venue.delete()
 
-        logger.info(f"user {info.context.user.uuid} deleted venue {venue}")
+        logger.info(log_text)
 
         return DeleteVenueMutation()
 
