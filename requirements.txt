@@ -52,6 +52,7 @@ protobuf==3.11.3          # via google-api-core, googleapis-common-protos
 psycopg2==2.8.4           # via -r requirements.in
 pyasn1-modules==0.2.8     # via google-auth
 pyasn1==0.4.7             # via pyasn1-modules, rsa
+pycountry==20.7.3         # via -r requirements.in
 pycparser==2.20           # via cffi
 pycryptodomex==3.9.0      # via pyjwkest
 pyjwkest==1.4.2           # via drf-oidc-auth
