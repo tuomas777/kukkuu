@@ -2,6 +2,7 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
+from languages.models import Language
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
 from users.models import Guardian
@@ -39,12 +40,17 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
         through="children.Relationship",
         blank=True,
     )
-
     project = models.ForeignKey(
         "projects.Project",
         verbose_name=_("project"),
         related_name="children",
         on_delete=models.PROTECT,
+    )
+    languages_spoken_at_home = models.ManyToManyField(
+        Language,
+        verbose_name=_("languages spoken at home"),
+        related_name="children",
+        blank=True,
     )
 
     objects = ChildQuerySet.as_manager()
