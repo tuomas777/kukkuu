@@ -45,6 +45,10 @@ Allow user to create test database
 
     sudo -u postgres psql -c "ALTER USER kukkuu CREATEDB;"
 
+Add default languages (optional)
+
+    python manage.py add_languages --default
+
 ### Cron jobs
 By default email sending won't be queued. In case you want to queue emails:
  - In `settings.py` configure `ILMOITIN_QUEUE_NOTIFICATIONS` to `True`
