@@ -9,11 +9,13 @@ from django.utils import timezone
 from django.utils.timezone import localtime, now
 from django_ilmoitin.utils import send_notification
 from graphene import relay
+from graphene_django import DjangoConnectionField
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from graphql_relay.connection.arrayconnection import offset_to_cursor
+from languages.schema import LanguageNode
 from projects.models import Project
 
 from children.notifications import NotificationType
@@ -47,6 +49,7 @@ class ChildrenConnection(graphene.Connection):
 class ChildNode(DjangoObjectType):
     available_events = relay.ConnectionField("events.schema.EventConnection")
     past_events = relay.ConnectionField("events.schema.EventConnection")
+    languages_spoken_at_home = DjangoConnectionField(LanguageNode)
 
     class Meta:
         model = Child
