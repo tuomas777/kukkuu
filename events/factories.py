@@ -13,7 +13,7 @@ class EventFactory(factory.django.DjangoModelFactory):
     description = factory.Faker("text")
     image = factory.Faker("file_name", extension="jpg")
     participants_per_invite = factory.Faker(
-        "random_element", elements=[x[0] for x in Event.PARTICIPANT_AMOUNT_CHOICES]
+        "random_element", elements=[x[0] for x in Event.PARTICIPANTS_PER_INVITE_CHOICES]
     )
     capacity_per_occurrence = factory.Faker("random_int", max=50)
     project = factory.SubFactory(ProjectFactory)

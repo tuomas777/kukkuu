@@ -26,9 +26,11 @@ class EventQueryset(TranslatableQuerySet):
 
 class Event(TimestampedModel, TranslatableModel):
     CHILD_AND_GUARDIAN = "child_and_guardian"
+    CHILD_AND_1_OR_2_GUARDIANS = "child_and_1_or_2_guardians"
     FAMILY = "family"
-    PARTICIPANT_AMOUNT_CHOICES = (
-        (CHILD_AND_GUARDIAN, _("Child and Guardian")),
+    PARTICIPANTS_PER_INVITE_CHOICES = (
+        (CHILD_AND_GUARDIAN, _("Child and guardian")),
+        (CHILD_AND_1_OR_2_GUARDIANS, _("Child and 1-2 guardians")),
         (FAMILY, _("Family")),
     )
 
@@ -45,7 +47,7 @@ class Event(TimestampedModel, TranslatableModel):
     image = models.ImageField(blank=True, verbose_name=_("image"))
     participants_per_invite = models.CharField(
         max_length=255,
-        choices=PARTICIPANT_AMOUNT_CHOICES,
+        choices=PARTICIPANTS_PER_INVITE_CHOICES,
         verbose_name=_("participants per invite"),
     )
     duration = models.PositiveSmallIntegerField(
