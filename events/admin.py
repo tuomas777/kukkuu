@@ -31,6 +31,7 @@ class EventAdmin(TranslatableAdmin):
         "short_description",
         "description",
         "capacity_per_occurrence",
+        "participants_per_invite",
         "duration",
         "image",
         "image_alt_text",

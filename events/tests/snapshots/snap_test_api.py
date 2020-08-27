@@ -40,7 +40,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                                 }
                             ]
                         },
-                        "participantsPerInvite": "FAMILY",
+                        "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                         "project": {"year": 2020},
                         "publishedAt": "2020-12-12T00:00:00+00:00",
                         "shortDescription": "Perform in weight success answer.",
@@ -96,7 +96,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                                 }
                             ]
                         },
-                        "participantsPerInvite": "FAMILY",
+                        "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                         "project": {"year": 2020},
                         "publishedAt": "2020-12-12T00:00:00+00:00",
                         "shortDescription": "Perform in weight success answer.",
@@ -196,7 +196,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                     }
                 ]
             },
-            "participantsPerInvite": "FAMILY",
+            "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
             "project": {"year": 2020},
             "publishedAt": "2020-12-12T00:00:00+00:00",
             "shortDescription": "Perform in weight success answer.",
@@ -226,7 +226,7 @@ snapshots["test_occurrences_query_normal_user 1"] = {
                             "capacityPerOccurrence": 43,
                             "duration": 112,
                             "image": "http://testserver/media/send.jpg",
-                            "participantsPerInvite": "CHILD_AND_GUARDIAN",
+                            "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                             "publishedAt": "2020-12-12T00:00:00+00:00",
                             "translations": [
                                 {
@@ -273,7 +273,7 @@ snapshots["test_occurrences_query_project_user 1"] = {
                             "capacityPerOccurrence": 43,
                             "duration": 112,
                             "image": "http://testserver/media/send.jpg",
-                            "participantsPerInvite": "CHILD_AND_GUARDIAN",
+                            "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                             "publishedAt": "2020-12-12T00:00:00+00:00",
                             "translations": [
                                 {
@@ -357,7 +357,7 @@ snapshots["test_occurrence_query_normal_user 1"] = {
                 "capacityPerOccurrence": 43,
                 "duration": 112,
                 "image": "http://testserver/media/send.jpg",
-                "participantsPerInvite": "CHILD_AND_GUARDIAN",
+                "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                 "publishedAt": "2020-12-12T00:00:00+00:00",
                 "translations": [
                     {
@@ -586,7 +586,7 @@ snapshots["test_occurrence_available_capacity_and_enrolment_count 1"] = {
                 "capacityPerOccurrence": 43,
                 "duration": 112,
                 "image": "http://testserver/media/send.jpg",
-                "participantsPerInvite": "CHILD_AND_GUARDIAN",
+                "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                 "publishedAt": "2020-12-12T00:00:00+00:00",
                 "translations": [
                     {
@@ -629,7 +629,7 @@ snapshots["test_enrolment_visibility 1"] = {
                 "capacityPerOccurrence": 5,
                 "duration": 1,
                 "image": "http://testserver/media/response.jpg",
-                "participantsPerInvite": "CHILD_AND_GUARDIAN",
+                "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                 "publishedAt": "2020-12-12T00:00:00+00:00",
                 "translations": [
                     {

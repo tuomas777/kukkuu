@@ -56,6 +56,7 @@ def validate_enrolment(child, occurrence):
 
 class EventParticipantsPerInvite(graphene.Enum):
     CHILD_AND_GUARDIAN = "child_and_guardian"
+    CHILD_AND_1_OR_2_GUARDIANS = "child_and_1_or_2_guardians"
     FAMILY = "family"
 
 
