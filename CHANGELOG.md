@@ -1,6 +1,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.3.0] - 2 Sep 2020
+### Added
+- Add occurrence url to event notifications' contexts
+- Add general support for database stored languages and an API for fetching those
+- Add languages spoken at home for children and an API for handling those
+- Add new choice "1 child and 1 or 2 adults" to participants per invite choices
+
 ## [1.2.0] - 17 Aug 2020
 ### Added
 - Add project filter to children, venues, events and occurrences queries
@@ -89,7 +96,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v0.2.0...v1.0.0
