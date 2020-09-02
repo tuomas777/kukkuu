@@ -149,6 +149,7 @@ INSTALLED_APPS = [
     "projects",
     "events",
     "venues",
+    "languages",
     "django_cleanup.apps.CleanupConfig",  # This must be included last
 ]
 

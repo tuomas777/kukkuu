@@ -9,15 +9,18 @@ from django.utils import timezone
 from django.utils.timezone import localtime, now
 from django_ilmoitin.utils import send_notification
 from graphene import relay
+from graphene_django import DjangoConnectionField
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from graphql_relay.connection.arrayconnection import offset_to_cursor
+from languages.models import Language
+from languages.schema import LanguageNode
 from projects.models import Project
 
 from children.notifications import NotificationType
-from common.utils import update_object
+from common.utils import get_obj_from_global_id, update_object
 from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
@@ -47,6 +50,7 @@ class ChildrenConnection(graphene.Connection):
 class ChildNode(DjangoObjectType):
     available_events = relay.ConnectionField("events.schema.EventConnection")
     past_events = relay.ConnectionField("events.schema.EventConnection")
+    languages_spoken_at_home = DjangoConnectionField(LanguageNode)
 
     class Meta:
         model = Child
@@ -138,6 +142,7 @@ class ChildInput(graphene.InputObjectType):
     birthdate = graphene.Date(required=True)
     postal_code = graphene.String(required=True)
     relationship = RelationshipInput()
+    languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
 
 
 def validate_child_data(child_data):
@@ -155,6 +160,15 @@ def validate_child_data(child_data):
         ):
             raise DataValidationError("Illegal birthdate.")
     return child_data
+
+
+def set_child_languages_spoken_at_home(info, child, language_global_ids):
+    child.languages_spoken_at_home.clear()
+
+    for language_global_id in language_global_ids:
+        child.languages_spoken_at_home.add(
+            get_obj_from_global_id(info, language_global_id, Language)
+        )
 
 
 class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
@@ -198,14 +212,18 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         children = []
         for child_data in children_data:
             validate_child_data(child_data)
+
             relationship_data = child_data.pop("relationship", {})
             child_data["project_id"] = Project.objects.get(
                 year=child_data["birthdate"].year
             ).pk
+            languages = child_data.pop("languages_spoken_at_home", [])
+
             child = Child.objects.create(**child_data)
             Relationship.objects.create(
                 type=relationship_data.get("type"), child=child, guardian=guardian
             )
+            set_child_languages_spoken_at_home(info, child, languages)
 
             children.append(child)
 
@@ -231,6 +249,7 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
         birthdate = graphene.Date(required=True)
         postal_code = graphene.String(required=True)
         relationship = RelationshipInput()
+        languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
 
     child = graphene.Field(ChildNode)
 
@@ -250,14 +269,17 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
             raise MaxNumberOfChildrenPerGuardianError("Too many children.")
 
         validate_child_data(kwargs)
+
         kwargs["project_id"] = Project.objects.get(year=kwargs["birthdate"].year).pk
         user = info.context.user
         relationship_data = kwargs.pop("relationship", {})
+        languages = kwargs.pop("languages_spoken_at_home", [])
 
         child = Child.objects.create(**kwargs)
         Relationship.objects.create(
             type=relationship_data.get("type"), child=child, guardian=user.guardian
         )
+        set_child_languages_spoken_at_home(info, child, languages)
 
         logger.info(
             f"user {user.uuid} added child {child.pk} to guardian {user.guardian.pk}"
@@ -274,6 +296,7 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
         birthdate = graphene.Date()
         postal_code = graphene.String()
         relationship = RelationshipInput()
+        languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
 
     child = graphene.Field(ChildNode)
 
@@ -297,6 +320,11 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
             update_object(relationship, kwargs.pop("relationship", None))
         except Relationship.DoesNotExist:
             pass
+
+        if "languages_spoken_at_home" in kwargs:
+            set_child_languages_spoken_at_home(
+                info, child, kwargs.pop("languages_spoken_at_home")
+            )
 
         update_object(child, kwargs)
 

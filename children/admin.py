@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
+from languages.models import Language
 
 from events.models import Enrolment
 
@@ -22,6 +23,13 @@ class EnrolmentInline(admin.TabularInline):
     readonly_fields = ("created_at",)
 
 
+class LanguagesSpokenAtHomeInline(admin.TabularInline):
+    model = Language.children.through
+    extra = 0
+    verbose_name = _("Language spoken at home")
+    verbose_name_plural = _("Languages spoken at home")
+
+
 @admin.register(Child)
 class ChildAdmin(admin.ModelAdmin):
     list_display = (
@@ -36,7 +44,7 @@ class ChildAdmin(admin.ModelAdmin):
     )
     list_select_related = ("project",)
     fields = ("project", "first_name", "last_name", "birthdate", "postal_code")
-    inlines = (RelationshipInline, EnrolmentInline)
+    inlines = (RelationshipInline, EnrolmentInline, LanguagesSpokenAtHomeInline)
 
     def get_project_year(self, obj):
         return obj.project.year

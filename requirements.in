@@ -14,3 +14,4 @@ graphene-file-upload
 psycopg2
 sentry-sdk
 Pillow
+pycountry

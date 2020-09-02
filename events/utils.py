@@ -21,6 +21,11 @@ def send_event_notifications_to_guardians(event, notification_type, children, **
                 "event_url": get_event_ui_url(event, child, guardian.language),
                 **kwargs,
             }
+            occurrence = kwargs.get("occurrence")
+            if occurrence:
+                context["occurrence_url"] = get_occurrence_ui_url(
+                    occurrence, child, guardian.language
+                )
 
             send_notification(
                 guardian.email,
@@ -45,4 +50,13 @@ def get_event_ui_url(event, child, language):
         language,
         get_global_id(child),
         get_global_id(event),
+    )
+
+
+def get_occurrence_ui_url(occurrence, child, language):
+    return "{}/{}/profile/child/{}/occurrence/{}".format(
+        settings.KUKKUU_UI_BASE_URL,
+        language,
+        get_global_id(child),
+        get_global_id(occurrence),
     )

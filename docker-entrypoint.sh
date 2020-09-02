@@ -23,6 +23,12 @@ if [[ "$CREATE_SUPERUSER" = "1" ]]; then
     echo "Admin user created with credentials admin:admin (email: admin@example.com)"
 fi
 
+# Add default languages
+if [[ "$ADD_DEFAULT_LANGUAGES" = "1" ]]; then
+    echo "Adding default languages..."
+    ./manage.py add_languages --default
+fi
+
 # Start server
 if [[ ! -z "$@" ]]; then
     "$@"

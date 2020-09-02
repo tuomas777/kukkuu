@@ -49,6 +49,7 @@ def notification_template_occurrence_enrolment_fi():
         Guardian FI: {{ guardian }}
         Occurrence: {{ occurrence.time }}
         Child: {{ child }}
+        Occurrence URL: {{ occurrence_url }}
 """,
     )
 
@@ -113,7 +114,9 @@ def test_occurrence_enrolment_notifications_on_model_level(
     project,
 ):
     child = ChildWithGuardianFactory(
-        relationship__guardian__user=user_api_client.user, project=project
+        pk="545c5fe5-235b-46fd-aa2a-cd5de6fdd0fc",
+        relationship__guardian__user=user_api_client.user,
+        project=project,
     )
     Enrolment.objects.create(child=child, occurrence=occurrence)
     # unenrolling on model level should NOT trigger a notification

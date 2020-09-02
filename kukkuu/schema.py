@@ -1,4 +1,5 @@
 import graphene
+import languages.schema
 import projects.schema
 
 import children.schema
@@ -23,6 +24,7 @@ class Query(
     projects.schema.Query,
     events.schema.Query,
     venues.schema.Query,
+    languages.schema.Query,
     graphene.ObjectType,
 ):
     pass
