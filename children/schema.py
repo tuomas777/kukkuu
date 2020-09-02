@@ -163,7 +163,7 @@ def validate_child_data(child_data):
 
 
 def set_child_languages_spoken_at_home(info, child, language_global_ids):
-    child.languages_spoken_at_home.all().delete()
+    child.languages_spoken_at_home.clear()
 
     for language_global_id in language_global_ids:
         child.languages_spoken_at_home.add(

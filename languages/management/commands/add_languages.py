@@ -1,5 +1,3 @@
-import sys
-
 from django.core.management import BaseCommand
 from django.db import transaction
 from django.utils import translation
@@ -32,7 +30,7 @@ class Command(BaseCommand):
     @transaction.atomic
     @translation.override("en")
     def handle(self, *args, **options):
-        if not len(sys.argv) > 2:
+        if not any(options[a] for a in ("flush", "default", "codes")):
             self.stdout.write("Nothing to do. Hint: try --help.")
             return
 

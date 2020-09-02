@@ -82,6 +82,6 @@ def get_pycountry_language(language_code):
     ) or pycountry.language_families.get(alpha_3=language_code)
 
     if not language:
-        raise InvalidLanguageCodeError('Invalid language code "{language_code}"')
+        raise InvalidLanguageCodeError(f'Invalid language code "{language_code}"')
 
     return language
