@@ -366,6 +366,7 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
         event_id = graphene.GlobalID()
         venue_id = graphene.GlobalID()
         occurrence_language = LanguageEnum()
+        capacity_override = graphene.Int()
 
     occurrence = graphene.Field(OccurrenceNode)
 
@@ -400,6 +401,7 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
         event_id = graphene.GlobalID(required=False)
         venue_id = graphene.GlobalID(required=False)
         occurrence_language = LanguageEnum()
+        capacity_override = graphene.Int()
 
     occurrence = graphene.Field(OccurrenceNode)
 

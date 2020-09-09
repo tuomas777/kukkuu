@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 from snapshottest import Snapshot
 
-
 snapshots = Snapshot()
 
 snapshots["test_events_query_normal_user 1"] = {
@@ -421,6 +420,8 @@ snapshots["test_add_occurrence_project_user 1"] = {
     "data": {
         "addOccurrence": {
             "occurrence": {
+                "capacity": 50,
+                "capacityOverride": None,
                 "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
                 "occurrenceLanguage": "FI",
                 "time": "1986-12-12T16:40:48+00:00",
@@ -434,10 +435,12 @@ snapshots["test_update_occurrence_project_user 1"] = {
     "data": {
         "updateOccurrence": {
             "occurrence": {
+                "capacity": 5,
+                "capacityOverride": 5,
                 "enrolmentCount": 0,
                 "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
                 "occurrenceLanguage": "SV",
-                "remainingCapacity": 43,
+                "remainingCapacity": 5,
                 "time": "1986-12-12T16:40:48+00:00",
                 "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
             }

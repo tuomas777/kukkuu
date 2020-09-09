@@ -371,6 +371,8 @@ mutation AddOccurrence($input: AddOccurrenceMutationInput!) {
       }
       time
       occurrenceLanguage
+      capacity
+      capacityOverride
     }
   }
 }
@@ -395,6 +397,8 @@ mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
       occurrenceLanguage
       enrolmentCount
       remainingCapacity
+      capacity
+      capacityOverride
     }
   }
 }
@@ -408,6 +412,7 @@ UPDATE_OCCURRENCE_VARIABLES = {
         "venueId": "",
         "time": "1986-12-12T16:40:48+00:00",
         "occurrenceLanguage": "SV",
+        "capacityOverride": 5,
     }
 }
 
