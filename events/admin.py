@@ -72,14 +72,18 @@ class EnrolmentsInline(admin.TabularInline):
 @admin.register(Occurrence)
 class OccurrenceAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "time",
         "event",
         "venue",
+        "get_enrolments",
         "occurrence_language",
         "created_at",
         "updated_at",
     )
-    list_display_links = ("id", "time")
-    fields = ("time", "event", "venue", "occurrence_language")
+    fields = ("time", "event", "venue", "occurrence_language", "capacity_override")
     inlines = [EnrolmentsInline]
+
+    def get_enrolments(self, obj):
+        return f"{obj.get_enrolment_count()} / {obj.get_capacity()}"
+
+    get_enrolments.short_description = _("enrolments")
