@@ -48,7 +48,7 @@ def validate_enrolment(child, occurrence):
         )
     if child.occurrences.filter(event=occurrence.event).exists():
         raise ChildAlreadyJoinedEventError("Child already joined this event")
-    if occurrence.enrolments.count() >= occurrence.event.capacity_per_occurrence:
+    if occurrence.enrolments.count() >= occurrence.get_capacity():
         raise OccurrenceIsFullError("Maximum enrolments created")
     if occurrence.time < timezone.now():
         raise PastOccurrenceError("Cannot join occurrence in the past")
@@ -116,6 +116,7 @@ class OccurrenceNode(DjangoObjectType):
     remaining_capacity = graphene.Int()
     occurrence_language = LanguageEnum(required=True)
     enrolment_count = graphene.Int(required=True)
+    capacity = graphene.Int()
 
     @classmethod
     @login_required
@@ -132,15 +133,33 @@ class OccurrenceNode(DjangoObjectType):
         return super().get_node(info, id)
 
     def resolve_remaining_capacity(self, info, **kwargs):
-        return self.event.capacity_per_occurrence - self.get_enrolment_count()
+        return max(self.get_capacity() - self.get_enrolment_count(), 0)
 
     def resolve_enrolment_count(self, info, **kwargs):
         return self.get_enrolment_count()
+
+    def resolve_capacity(self, info, **kwargs):
+        return self.get_capacity()
 
     class Meta:
         model = Occurrence
         interfaces = (relay.Node,)
         filterset_class = OccurrenceFilter
+        fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "time",
+            "event",
+            "venue",
+            "children",
+            "occurrence_language",
+            "enrolments",
+            "capacity",
+            "capacity_override",
+            "remaining_capacity",
+            "enrolment_count",
+        )
 
 
 class EnrolmentNode(DjangoObjectType):
