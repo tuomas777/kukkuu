@@ -24,10 +24,10 @@ snapshots["test_occurrence_cancelled_notification[False] 1"] = [
 
 snapshots["test_occurrence_enrolment_notifications_on_model_level 1"] = [
     """kukkuu@example.com|['mperez@cox.com']|Occurrence enrolment FI|
-        Event FI: Up always sport return. Light a point charge stand store.
-        Guardian FI: Kathryn Scott
+        Event FI: Free heart significant machine try.
+        Guardian FI: Willie Frey
         Occurrence: 2020-12-12 00:00:00+00:00
-        Child: Jessica Sanders (2020-09-25)
+        Child: Andrea Ward (2020-06-23)
         Occurrence URL: http://localhost:3000/fi/profile/child/Q2hpbGROb2RlOjU0NWM1ZmU1LTIzNWItNDZmZC1hYTJhLWNkNWRlNmZkZDBmYw==/occurrence/T2NjdXJyZW5jZU5vZGU6NzQ="""
 ]
 
