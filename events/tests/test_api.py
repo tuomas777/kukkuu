@@ -371,6 +371,8 @@ mutation AddOccurrence($input: AddOccurrenceMutationInput!) {
       }
       time
       occurrenceLanguage
+      capacity
+      capacityOverride
     }
   }
 }
@@ -395,6 +397,8 @@ mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
       occurrenceLanguage
       enrolmentCount
       remainingCapacity
+      capacity
+      capacityOverride
     }
   }
 }
@@ -408,6 +412,7 @@ UPDATE_OCCURRENCE_VARIABLES = {
         "venueId": "",
         "time": "1986-12-12T16:40:48+00:00",
         "occurrenceLanguage": "SV",
+        "capacityOverride": 5,
     }
 }
 
@@ -1281,3 +1286,38 @@ def test_set_enrolment_attendance_another_project_child(
     )
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+
+
+@pytest.mark.parametrize(
+    "capacity_override, enrolment_count",
+    ((5, 0), (5, 4), (5, 5), (5, 6), (None, 0), (None, 9), (None, 10), (None, 11),),
+)
+def test_occurrence_capacity(
+    snapshot, guardian_api_client, project, capacity_override, enrolment_count
+):
+    occurrence = OccurrenceFactory(
+        event__project=project,
+        venue__project=project,
+        event__published_at=now(),
+        event__capacity_per_occurrence=10,
+        capacity_override=capacity_override,
+    )
+    EnrolmentFactory.create_batch(
+        enrolment_count, occurrence=occurrence, child__project=project
+    )
+
+    executed = guardian_api_client.execute(
+        """
+            query OccurrenceCapacity($id: ID!) {
+              occurrence(id: $id){
+                capacity
+                capacityOverride
+                enrolmentCount
+                remainingCapacity
+              }
+            }
+        """,
+        variables={"id": get_global_id(occurrence)},
+    )
+
+    snapshot.assert_match(executed)

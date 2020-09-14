@@ -134,6 +134,16 @@ class Occurrence(TimestampedModel):
         verbose_name=_("occurrence language"),
         default=settings.LANGUAGES[0][0],
     )
+    capacity_override = models.PositiveSmallIntegerField(
+        verbose_name=_("capacity override"),
+        null=True,
+        blank=True,
+        help_text=_(
+            "When set will be used as the capacity of this occurrence instead of "
+            "the value coming from the event."
+        ),
+    )
+
     objects = OccurrenceQueryset.as_manager()
 
     class Meta:
@@ -166,6 +176,9 @@ class Occurrence(TimestampedModel):
             return self.enrolment_count
         except AttributeError:
             return self.enrolments.count()
+
+    def get_capacity(self):
+        return self.capacity_override or self.event.capacity_per_occurrence
 
     def can_user_administer(self, user):
         # There shouldn't ever be a situation where event.project != venue.project
