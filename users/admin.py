@@ -36,6 +36,7 @@ class GuardianAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    search_fields = ("first_name", "last_name", "user__email")
     form = GuardianForm
     inlines = (RelationshipInline,)
 
