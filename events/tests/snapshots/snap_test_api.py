@@ -420,6 +420,8 @@ snapshots["test_add_occurrence_project_user 1"] = {
     "data": {
         "addOccurrence": {
             "occurrence": {
+                "capacity": 50,
+                "capacityOverride": None,
                 "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
                 "occurrenceLanguage": "FI",
                 "time": "1986-12-12T16:40:48+00:00",
@@ -433,10 +435,12 @@ snapshots["test_update_occurrence_project_user 1"] = {
     "data": {
         "updateOccurrence": {
             "occurrence": {
+                "capacity": 5,
+                "capacityOverride": 5,
                 "enrolmentCount": 0,
                 "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
                 "occurrenceLanguage": "SV",
-                "remainingCapacity": 43,
+                "remainingCapacity": 5,
                 "time": "1986-12-12T16:40:48+00:00",
                 "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
             }
@@ -718,4 +722,92 @@ snapshots["test_set_enrolment_attendance[True] 1"] = {
 
 snapshots["test_set_enrolment_attendance[None] 1"] = {
     "data": {"setEnrolmentAttendance": {"enrolment": {"attended": None}}}
+}
+
+snapshots["test_occurrence_capacity[5-0] 1"] = {
+    "data": {
+        "occurrence": {
+            "capacity": 5,
+            "capacityOverride": 5,
+            "enrolmentCount": 0,
+            "remainingCapacity": 5,
+        }
+    }
+}
+
+snapshots["test_occurrence_capacity[5-4] 1"] = {
+    "data": {
+        "occurrence": {
+            "capacity": 5,
+            "capacityOverride": 5,
+            "enrolmentCount": 4,
+            "remainingCapacity": 1,
+        }
+    }
+}
+
+snapshots["test_occurrence_capacity[5-5] 1"] = {
+    "data": {
+        "occurrence": {
+            "capacity": 5,
+            "capacityOverride": 5,
+            "enrolmentCount": 5,
+            "remainingCapacity": 0,
+        }
+    }
+}
+
+snapshots["test_occurrence_capacity[5-6] 1"] = {
+    "data": {
+        "occurrence": {
+            "capacity": 5,
+            "capacityOverride": 5,
+            "enrolmentCount": 6,
+            "remainingCapacity": 0,
+        }
+    }
+}
+
+snapshots["test_occurrence_capacity[None-0] 1"] = {
+    "data": {
+        "occurrence": {
+            "capacity": 10,
+            "capacityOverride": None,
+            "enrolmentCount": 0,
+            "remainingCapacity": 10,
+        }
+    }
+}
+
+snapshots["test_occurrence_capacity[None-9] 1"] = {
+    "data": {
+        "occurrence": {
+            "capacity": 10,
+            "capacityOverride": None,
+            "enrolmentCount": 9,
+            "remainingCapacity": 1,
+        }
+    }
+}
+
+snapshots["test_occurrence_capacity[None-10] 1"] = {
+    "data": {
+        "occurrence": {
+            "capacity": 10,
+            "capacityOverride": None,
+            "enrolmentCount": 10,
+            "remainingCapacity": 0,
+        }
+    }
+}
+
+snapshots["test_occurrence_capacity[None-11] 1"] = {
+    "data": {
+        "occurrence": {
+            "capacity": 10,
+            "capacityOverride": None,
+            "enrolmentCount": 11,
+            "remainingCapacity": 0,
+        }
+    }
 }

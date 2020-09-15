@@ -1,6 +1,11 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.4.0] - 15 Sep 2020
+### Added
+- Add nullable field `capacityOverride` and API for it which allows setting capacity per occurrence
+- Add ability to search children and guardians in admin UI
+
 ## [1.3.0] - 2 Sep 2020
 ### Added
 - Add occurrence url to event notifications' contexts
@@ -96,7 +101,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.0.0...v1.1.0

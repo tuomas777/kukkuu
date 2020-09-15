@@ -110,9 +110,9 @@ def test_occurrence_enrolment_notifications_on_model_level(
     user_api_client,
     notification_template_occurrence_unenrolment_fi,
     notification_template_occurrence_enrolment_fi,
-    occurrence,
     project,
 ):
+    occurrence = OccurrenceFactory(id=74, time=now())
     child = ChildWithGuardianFactory(
         pk="545c5fe5-235b-46fd-aa2a-cd5de6fdd0fc",
         relationship__guardian__user=user_api_client.user,

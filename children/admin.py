@@ -44,6 +44,7 @@ class ChildAdmin(admin.ModelAdmin):
     )
     list_select_related = ("project",)
     fields = ("project", "first_name", "last_name", "birthdate", "postal_code")
+    search_fields = ("first_name", "last_name")
     inlines = (RelationshipInline, EnrolmentInline, LanguagesSpokenAtHomeInline)
 
     def get_project_year(self, obj):
