@@ -811,3 +811,20 @@ snapshots["test_occurrence_capacity[None-11] 1"] = {
         }
     }
 }
+
+snapshots["test_occurrences_filter_by_upcoming_with_leeway[True] 1"] = {
+    "data": {
+        "occurrences": {"edges": [{"node": {"time": "2020-12-11T23:31:00+00:00"}}]}
+    }
+}
+
+snapshots["test_occurrences_filter_by_upcoming_with_leeway[False] 1"] = {
+    "data": {
+        "occurrences": {
+            "edges": [
+                {"node": {"time": "2020-12-11T23:29:00+00:00"}},
+                {"node": {"time": "2020-12-11T23:31:00+00:00"}},
+            ]
+        }
+    }
+}

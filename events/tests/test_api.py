@@ -1,5 +1,5 @@
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict
 
 import pytest
@@ -185,10 +185,11 @@ query Occurrences {
 
 OCCURRENCES_FILTER_QUERY = """
 query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String,
-                  $eventId: String, $occurrenceLanguage: String, $projectId: String) {
+                  $eventId: String, $occurrenceLanguage: String, $projectId: String,
+                  $upcomingWithLeeway: Boolean) {
   occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId,
               eventId: $eventId, occurrenceLanguage: $occurrenceLanguage,
-              projectId: $projectId) {
+              projectId: $projectId, upcomingWithLeeway: $upcomingWithLeeway) {
     edges {
       node {
         time
@@ -986,6 +987,30 @@ def test_occurrences_filter_by_upcoming(user_api_client, snapshot, event, venue)
     executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
     assert len(executed["data"]["occurrences"]["edges"]) == 2
 
+    snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize("filter_value", (True, False))
+def test_occurrences_filter_by_upcoming_with_leeway(
+    user_api_client, snapshot, event, venue, filter_value
+):
+
+    OccurrenceFactory(
+        time=timezone.now()
+        - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY + 1),
+        event=event,
+        venue=venue,
+    )
+    OccurrenceFactory(
+        time=timezone.now()
+        - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY - 1),
+        event=event,
+        venue=venue,
+    )
+
+    executed = user_api_client.execute(
+        OCCURRENCES_FILTER_QUERY, variables={"upcomingWithLeeway": filter_value}
+    )
     snapshot.assert_match(executed)
 
 
