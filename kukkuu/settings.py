@@ -53,6 +53,7 @@ env = environ.Env(
     AZURE_CONTAINER=(str, ""),
     ENABLE_GRAPHIQL=(bool, False),
     KUKKUU_UI_BASE_URL=(str, "http://localhost:3000"),
+    KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY=(int, 30),
 )
 
 if os.path.exists(env_file):
@@ -217,6 +218,11 @@ GRAPHQL_JWT = {"JWT_AUTH_HEADER_PREFIX": "Bearer"}
 KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN = 100
 KUKKUU_QUERY_MAX_DEPTH = 12
 KUKKUU_UI_BASE_URL = env("KUKKUU_UI_BASE_URL")
+# How much an enrolled occurrence can be in the past and still be considered as
+# not being in the past. In minutes.
+KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY = env(
+    "KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY"
+)
 
 LOGGING = {
     "version": 1,
