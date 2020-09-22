@@ -1,3 +1,4 @@
+import binascii
 from copy import deepcopy
 
 from django.db import transaction
@@ -39,7 +40,13 @@ def get_global_id(obj):
 
 
 def get_node_id_from_global_id(global_id, expected_node_name):
-    name, id = from_global_id(global_id)
+    try:
+        name, id = from_global_id(global_id)
+    except (
+        binascii.Error,
+        UnicodeDecodeError,
+    ):  # invalid global ID
+        return None
     return id if name == expected_node_name else None
 
 

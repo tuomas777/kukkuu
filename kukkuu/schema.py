@@ -1,6 +1,7 @@
 import graphene
 import languages.schema
 import projects.schema
+import subscriptions.schema
 
 import children.schema
 import events.schema
@@ -13,6 +14,7 @@ class Mutation(
     users.schema.Mutation,
     events.schema.Mutation,
     venues.schema.Mutation,
+    subscriptions.schema.Mutation,
     graphene.ObjectType,
 ):
     pass

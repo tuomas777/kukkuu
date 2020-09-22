@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.forms import BaseInlineFormSet
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
+from subscriptions.models import FreeSpotNotificationSubscription
 
 from .models import Enrolment, Event, Occurrence
 
@@ -69,6 +70,13 @@ class EnrolmentsInline(admin.TabularInline):
     formset = EnrolmentsInlineFormSet
 
 
+class FreeSpotNotificationSubscriptionInline(admin.TabularInline):
+    model = FreeSpotNotificationSubscription
+    extra = 0
+    fields = ("child", "created_at")
+    readonly_fields = ("created_at",)
+
+
 @admin.register(Occurrence)
 class OccurrenceAdmin(admin.ModelAdmin):
     list_display = (
@@ -76,14 +84,19 @@ class OccurrenceAdmin(admin.ModelAdmin):
         "event",
         "venue",
         "get_enrolments",
+        "get_free_spot_notification_subscriptions",
         "occurrence_language",
         "created_at",
         "updated_at",
     )
     fields = ("time", "event", "venue", "occurrence_language", "capacity_override")
-    inlines = [EnrolmentsInline]
+    inlines = [EnrolmentsInline, FreeSpotNotificationSubscriptionInline]
 
     def get_enrolments(self, obj):
         return f"{obj.get_enrolment_count()} / {obj.get_capacity()}"
 
+    def get_free_spot_notification_subscriptions(self, obj):
+        return obj.free_spot_notification_subscriptions.count()
+
     get_enrolments.short_description = _("enrolments")
+    get_free_spot_notification_subscriptions.short_description = _("subscriptions")
