@@ -56,6 +56,24 @@ class ChildNode(DjangoObjectType):
         model = Child
         interfaces = (relay.Node,)
         connection_class = ChildrenConnection
+        fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "first_name",
+            "last_name",
+            "postal_code",
+            "birthdate",
+            "guardians",
+            "project",
+            "languages_spoken_at_home",
+            "relationships",
+            "occurrences",
+            "enrolments",
+            "available_events",
+            "past_events",
+            "free_spot_notification_subscriptions",
+        )
         filter_fields = ("project_id",)
 
     @classmethod

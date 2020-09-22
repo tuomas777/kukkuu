@@ -18,6 +18,7 @@ from children.models import Child
 from children.schema import ChildNode
 from common.schema import LanguageEnum
 from common.utils import (
+    get_node_id_from_global_id,
     get_obj_if_user_can_administer,
     project_user_required,
     update_object,
@@ -117,6 +118,9 @@ class OccurrenceNode(DjangoObjectType):
     occurrence_language = LanguageEnum(required=True)
     enrolment_count = graphene.Int(required=True)
     capacity = graphene.Int()
+    child_has_free_spot_notification_subscription = graphene.Boolean(
+        child_id=graphene.ID()
+    )
 
     @classmethod
     @login_required
@@ -141,6 +145,21 @@ class OccurrenceNode(DjangoObjectType):
     def resolve_capacity(self, info, **kwargs):
         return self.get_capacity()
 
+    def resolve_child_has_free_spot_notification_subscription(self, info, **kwargs):
+        child_id = get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
+        if not child_id:
+            return None
+
+        try:
+            return (
+                Child.objects.user_can_view(info.context.user)
+                .get(pk=child_id)
+                .free_spot_notification_subscriptions.filter(occurrence_id=self.id)
+                .exists()
+            )
+        except Child.DoesNotExist:
+            return None
+
     class Meta:
         model = Occurrence
         interfaces = (relay.Node,)
@@ -159,6 +178,8 @@ class OccurrenceNode(DjangoObjectType):
             "capacity_override",
             "remaining_capacity",
             "enrolment_count",
+            "free_spot_notification_subscriptions",
+            "child_has_free_spot_notification_subscription",
         )
 
 

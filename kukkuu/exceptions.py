@@ -54,3 +54,7 @@ class QueryTooDeepError(KukkuuGraphQLError):
 
 class InvalidEmailFormatError(KukkuuGraphQLError):
     """Invalid email format"""
+
+
+class AlreadySubscribedError(KukkuuGraphQLError):
+    """Already subscribed"""
