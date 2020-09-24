@@ -1,6 +1,8 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
+from django.db.models import F, Q
 from django.utils import timezone
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
@@ -186,6 +188,27 @@ class Occurrence(TimestampedModel):
         return user.projects.filter(pk=self.event.project.pk).exists()
 
 
+class EnrolmentQueryset(models.QuerySet):
+    def send_reminder_notifications(self):
+        today = timezone.localtime().date()
+        close_enough = today + timedelta(days=settings.KUKKUU_REMINDER_DAYS_IN_ADVANCE)
+        tomorrow = today + timedelta(days=1)
+
+        count = 0
+        for enrolment in self.filter(
+            reminder_sent_at=None,
+            created_at__date__lt=F("occurrence__time__date")
+            - timedelta(days=settings.KUKKUU_REMINDER_DAYS_IN_ADVANCE),
+            occurrence__time__date__lte=close_enough,
+            occurrence__time__date__gte=tomorrow,
+            child__guardians__isnull=False,
+        ):
+            enrolment.send_reminder_notification()
+            count += 1
+
+        return count
+
+
 class Enrolment(TimestampedModel):
     child = models.ForeignKey(
         Child,
@@ -200,6 +223,11 @@ class Enrolment(TimestampedModel):
         verbose_name=_("occurrence"),
     )
     attended = models.NullBooleanField(verbose_name=_("attended"))
+    reminder_sent_at = models.DateTimeField(
+        verbose_name=_("reminder sent at"), null=True, blank=True
+    )
+
+    objects = EnrolmentQueryset.as_manager()
 
     class Meta:
         verbose_name = _("enrolment")
@@ -239,3 +267,15 @@ class Enrolment(TimestampedModel):
 
     def can_user_administer(self, user):
         return self.occurrence.can_user_administer(user)
+
+    def send_reminder_notification(self):
+        self.reminder_sent_at = timezone.now()
+        self.save()
+
+        send_event_notifications_to_guardians(
+            self.occurrence.event,
+            NotificationType.OCCURRENCE_REMINDER,
+            self.child,
+            occurrence=self.occurrence,
+            enrolment=self,
+        )

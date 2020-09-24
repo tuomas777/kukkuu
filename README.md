@@ -50,18 +50,28 @@ Add default languages (optional)
     python manage.py add_languages --default
 
 ### Cron jobs
-By default email sending won't be queued. In case you want to queue emails:
- - In `settings.py` configure `ILMOITIN_QUEUE_NOTIFICATIONS` to `True`
- - Install `cron` in your host machine
- - Add a crontab to execute the email delivery, here is an example:
-   
-    ```
-    *       * * * * (/path/to/your/python path/to/your/app/manage.py send_mail > /var/log/cron.log 2>&1)
-    0,20,40 * * * * (/path/to/your/python path/to/your/app/manage.py retry_deferred > /var/log/cron.log 2>&1)
-    0 0 * * * (/path/to/your/python path/to/your/app/manage.py purge_mail_log 7 > /var/log/cron.log 2>&1)
+`cron` is required for sending reminder notifications, and for sending emails queued (optional).
+
+#### Reminder notifications
+
+To send reminder notifications on time, `send_reminder_notifications` management command needs to be executed (at least) daily.
+
+Example crontab for sending reminder notifications every day at 12am:
+
+    0 12 * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
     # An empty line is required at the end of this file for a valid cron file.
 
-    ```
+#### Queued email sending
+
+By default email sending won't be queued. To enable queued emails, configure setting `ILMOITIN_QUEUE_NOTIFICATIONS` to `True`, and set `send_mail` and `retry_deferred` to be executed periodically.
+
+Example crontab for queued emails (includes reminder notification sending as well):
+   
+    * * * * * (/path/to/your/python path/to/your/app/manage.py send_mail > /var/log/cron.log 2>&1)
+    0,20,40 * * * * (/path/to/your/python path/to/your/app/manage.py retry_deferred > /var/log/cron.log 2>&1)
+    0 0 * * * (/path/to/your/python path/to/your/app/manage.py purge_mail_log 7 > /var/log/cron.log 2>&1)
+    0 12 * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
+    # An empty line is required at the end of this file for a valid cron file.
 
 ### Daily running, Debugging
 
