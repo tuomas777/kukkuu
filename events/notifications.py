@@ -4,7 +4,7 @@ from django_ilmoitin.registry import notifications
 
 from children.factories import ChildWithGuardianFactory
 from events.consts import NotificationType
-from events.factories import EventFactory, OccurrenceFactory
+from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from events.utils import get_event_ui_url
 from users.factories import GuardianFactory
 
@@ -14,11 +14,13 @@ notifications.register(
     NotificationType.OCCURRENCE_UNENROLMENT, _("occurrence unenrolment")
 )
 notifications.register(NotificationType.OCCURRENCE_CANCELLED, _("occurrence cancelled"))
+notifications.register(NotificationType.OCCURRENCE_REMINDER, _("occurrence reminder"))
 
 event = EventFactory.build()
 guardian = GuardianFactory.build()
 child = ChildWithGuardianFactory.build(relationship__guardian=guardian)
 occurrence = OccurrenceFactory.build(event=event)
+enrolment = EnrolmentFactory.build(occurrence=occurrence, child=child)
 
 dummy_context.update(
     {
@@ -42,6 +44,12 @@ dummy_context.update(
             "guardian": guardian,
             "occurrence": occurrence,
             "child": child,
+        },
+        NotificationType.OCCURRENCE_REMINDER: {
+            "guardian": guardian,
+            "occurrence": occurrence,
+            "child": child,
+            "enrolment": enrolment,
         },
     }
 )

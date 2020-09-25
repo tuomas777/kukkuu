@@ -3,7 +3,9 @@ from datetime import timedelta
 
 import pytest
 from django.core import mail
+from django.core.management import call_command
 from django.utils.timezone import now
+from freezegun import freeze_time
 from graphql_relay import to_global_id
 from projects.factories import ProjectFactory
 
@@ -80,6 +82,22 @@ def notification_template_occurrence_cancelled_fi():
         Guardian FI: {{ guardian }}
         Occurrence: {{ occurrence.time }}
         Child: {{ child }}
+""",
+    )
+
+
+@pytest.fixture
+def notification_template_occurrence_reminder_fi():
+    return create_notification_template_in_language(
+        NotificationType.OCCURRENCE_REMINDER,
+        "fi",
+        subject="Occurrence reminder FI",
+        body_text="""
+        Event FI: {{ occurrence.event.name }}
+        Guardian FI: {{ guardian }}
+        Occurrence: {{ occurrence.time }}
+        Child: {{ child }}
+        Enrolment: {{ enrolment.occurrence.time }}
 """,
     )
 
@@ -192,3 +210,74 @@ def test_occurrence_cancelled_notification(
 
     assert len(mail.outbox) == 1
     assert_mails_match_snapshot(snapshot)
+
+
+@pytest.mark.django_db
+def test_occurrence_reminder_notification(
+    snapshot, notification_template_occurrence_reminder_fi, project,
+):
+    actual_now = now()
+
+    # time frozen so that the Enrolments will get created_at in the past
+    with freeze_time(actual_now - timedelta(days=8)):
+
+        # occurrences 7 and 1 days away (and reminder not sent already),
+        # both should create a reminder notification
+        for delta in (timedelta(days=7), timedelta(days=1)):
+            child = ChildWithGuardianFactory(
+                relationship__guardian__first_name="I Should",
+                relationship__guardian__last_name="Receive A Notification",
+                project=project,
+            )
+            EnrolmentFactory(
+                child=child,
+                occurrence__time=actual_now + delta,
+                occurrence__event__project=project,
+            )
+
+        # these should not create a reminder notification
+        for delta in (
+            timedelta(days=8),  # too far in the future
+            timedelta(hours=12),  # too close
+            timedelta(days=-1),  # in the past
+        ):
+            child = ChildWithGuardianFactory(
+                relationship__guardian__first_name="I Should NOT",
+                relationship__guardian__last_name="Receive A Notification",
+                project=project,
+            )
+            EnrolmentFactory(
+                child=child,
+                occurrence__time=actual_now + delta,
+                occurrence__event__project=project,
+            )
+
+    # otherwise a fine reminder creator but the Enrolment hasn't been created enough in
+    # the past
+    child = ChildWithGuardianFactory(
+        relationship__guardian__first_name="I Should NOT",
+        relationship__guardian__last_name="Receive A Notification",
+        project=project,
+    )
+    EnrolmentFactory(
+        child=child,
+        occurrence__time=actual_now + timedelta(days=7),
+        occurrence__event__project=project,
+    )
+
+    call_command("send_reminder_notifications")
+
+    assert len(mail.outbox) == 2
+    assert_mails_match_snapshot(snapshot)
+
+    enrolments = Enrolment.objects.order_by("id")
+    assert all(e.reminder_sent_at == now() for e in enrolments[0:2])
+    assert all(e.reminder_sent_at is None for e in enrolments[2:6])
+
+    # second call should not change anything
+    call_command("send_reminder_notifications")
+
+    assert len(mail.outbox) == 2
+    enrolments = Enrolment.objects.order_by("id")
+    assert all(e.reminder_sent_at == now() for e in enrolments[0:2])
+    assert all(e.reminder_sent_at is None for e in enrolments[2:6])

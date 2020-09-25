@@ -38,3 +38,18 @@ snapshots["test_unenrol_occurrence_notification 1"] = [
         Occurrence: 2020-12-12 00:00:00+00:00
         Child: Mary Brown (2020-10-12)"""
 ]
+
+snapshots["test_occurrence_reminder_notification 1"] = [
+    """kukkuu@example.com|['shannon76@yahoo.com']|Occurrence reminder FI|
+        Event FI: Success answer entire increase thank. Least then top sing.
+        Guardian FI: I Should Receive A Notification
+        Occurrence: 2020-12-19 00:00:00+00:00
+        Child: Alexis Black (2020-07-29)
+        Enrolment: 2020-12-19 00:00:00+00:00""",
+    """kukkuu@example.com|['ppatrick@yahoo.com']|Occurrence reminder FI|
+        Event FI: Positive cold start rest tonight including believe.
+        Guardian FI: I Should Receive A Notification
+        Occurrence: 2020-12-13 00:00:00+00:00
+        Child: Jason Morris (2020-10-27)
+        Enrolment: 2020-12-13 00:00:00+00:00""",
+]
