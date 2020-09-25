@@ -378,27 +378,6 @@ snapshots["test_get_available_events 1"] = {
     }
 }
 
-snapshots["test_get_past_events 1"] = {
-    "data": {
-        "child": {
-            "availableEvents": {"edges": []},
-            "occurrences": {"edges": [{"node": {"time": "1969-12-31T22:20:00+00:00"}}]},
-            "pastEvents": {
-                "edges": [
-                    {
-                        "node": {
-                            "createdAt": "2020-12-12T00:00:00+00:00",
-                            "occurrences": {
-                                "edges": [{"node": {"remainingCapacity": 0}}]
-                            },
-                        }
-                    }
-                ]
-            },
-        }
-    }
-}
-
 snapshots["test_children_project_filter 1"] = {
     "data": {
         "children": {
@@ -536,6 +515,62 @@ snapshots["test_children_query_ordering 1"] = {
                     }
                 },
             ]
+        }
+    }
+}
+
+snapshots["test_get_past_events 1"] = {
+    "data": {
+        "child": {
+            "availableEvents": {
+                "edges": [
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "occurrences": {
+                                "edges": [
+                                    {"node": {"remainingCapacity": 0}},
+                                    {"node": {"remainingCapacity": 0}},
+                                ]
+                            },
+                        }
+                    }
+                ]
+            },
+            "occurrences": {
+                "edges": [
+                    {"node": {"time": "2020-12-11T23:29:00+00:00"}},
+                    {"node": {"time": "2020-12-11T23:31:00+00:00"}},
+                ]
+            },
+            "pastEvents": {
+                "edges": [
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "name": "enrolled occurrence in the past",
+                            "occurrences": {
+                                "edges": [
+                                    {"node": {"remainingCapacity": 23}},
+                                    {"node": {"remainingCapacity": 24}},
+                                ]
+                            },
+                        }
+                    },
+                    {
+                        "node": {
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "name": "event in the past",
+                            "occurrences": {
+                                "edges": [
+                                    {"node": {"remainingCapacity": 32}},
+                                    {"node": {"remainingCapacity": 32}},
+                                ]
+                            },
+                        }
+                    },
+                ]
+            },
         }
     }
 }

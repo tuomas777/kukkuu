@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 
 import graphene
 from django.conf import settings
@@ -92,12 +93,29 @@ class ChildNode(DjangoObjectType):
             return None
 
     def resolve_past_events(self, info, **kwargs):
-        return (
-            self.project.events.user_can_view(info.context.user)
-            .published()
-            .exclude(occurrences__time__gte=timezone.now())
-            .distinct()
+        """
+        Past events include:
+
+        1) Events the user has not enrolled AND are completely (all occurrences) in the
+           past
+        2) Events the user has enrolled AND the occurrence of the enrolment is more than
+           KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY mins in the past.
+        """
+        events = self.project.events.user_can_view(info.context.user).published()
+
+        past_unparticipated_events = events.exclude(
+            occurrences__in=self.occurrences.all()
+        ).exclude(occurrences__time__gte=timezone.now())
+
+        past_enough_enrolled_occurrences = self.occurrences.filter(
+            time__lt=timezone.now()
+            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
         )
+        past_enough_participated_events = events.filter(
+            occurrences__in=past_enough_enrolled_occurrences
+        )
+
+        return past_unparticipated_events | past_enough_participated_events
 
     def resolve_available_events(self, info, **kwargs):
         return (
