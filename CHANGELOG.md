@@ -1,6 +1,15 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.5.0] - 30 Sep 2020
+### Added
+- Add upcoming occurrence reminder notification
+- Add `upcoming_with_leeway` occurrence filter
+- Add enrolled events past enough (default 30 mins from the start) to a child's past events
+- Add initial API for subscribing and viewing free spot subscriptions (N.B. the functionality itself has NOT been implemented yet, just the API)
+### Changed
+- Do not purge email logs by default in CI/CD config
+
 ## [1.4.0] - 15 Sep 2020
 ### Added
 - Add nullable field `capacityOverride` and API for it which allows setting capacity per occurrence
@@ -101,7 +110,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.5.0...HEAD
+[1.4.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.1.0...v1.2.0
