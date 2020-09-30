@@ -1,6 +1,10 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.5.1] - 30 Sep 2020
+### Added
+- Add localtime function to event notification templates
+
 ## [1.5.0] - 30 Sep 2020
 ### Added
 - Add upcoming occurrence reminder notification
@@ -110,8 +114,9 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.5.0...HEAD
-[1.4.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.4.0...v1.5.0
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.5.0...v1.5.1
+[1.5.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.1.0...v1.2.0
