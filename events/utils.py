@@ -19,6 +19,7 @@ def send_event_notifications_to_guardians(event, notification_type, children, **
                 "child": child,
                 "guardian": guardian,
                 "event_url": get_event_ui_url(event, child, guardian.language),
+                "localtime": timezone.template_localtime,
                 **kwargs,
             }
             occurrence = kwargs.get("occurrence")
