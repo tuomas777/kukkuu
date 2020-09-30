@@ -32,7 +32,7 @@ def update_object_with_translations(model, model_data):
 
 
 def get_api_version():
-    return " | ".join((__version__, REVISION.decode("utf-8")))
+    return " | ".join((__version__, REVISION))
 
 
 def get_global_id(obj):
