@@ -12,6 +12,7 @@ from graphql.language.ast import (
 from graphql_jwt.exceptions import PermissionDenied as JwtPermissionDenied
 
 from kukkuu.consts import (
+    ALREADY_SUBSCRIBED_ERROR,
     API_USAGE_ERROR,
     CHILD_ALREADY_JOINED_EVENT_ERROR,
     DATA_VALIDATION_ERROR,
@@ -28,6 +29,7 @@ from kukkuu.consts import (
     QUERY_TOO_DEEP_ERROR,
 )
 from kukkuu.exceptions import (
+    AlreadySubscribedError,
     ApiUsageError,
     ChildAlreadyJoinedEventError,
     DataValidationError,
@@ -62,6 +64,7 @@ error_codes_kukkuu = {
     EventAlreadyPublishedError: EVENT_ALREADY_PUBLISHED_ERROR,
     MissingDefaultTranslationError: MISSING_DEFAULT_TRANSLATION_ERROR,
     IneligibleOccurrenceEnrolment: INELIGIBLE_OCCURRENCE_ENROLMENT,
+    AlreadySubscribedError: ALREADY_SUBSCRIBED_ERROR,
 }
 
 sentry_ignored_errors = (

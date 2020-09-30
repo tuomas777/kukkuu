@@ -431,6 +431,7 @@ query Child($id: ID!) {
       edges{
         node{
           createdAt
+          name
           occurrences{
             edges{
               node{
@@ -776,50 +777,71 @@ def test_get_past_events(
 
     next_project = ProjectFactory(year=2021)
 
-    # Unpublished occurrences
-    OccurrenceFactory.create_batch(
-        2, time=timezone.now(), event=EventFactory(project=project), venue=venue
+    past = timezone.now() - timedelta(
+        minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY + 1
+    )
+    not_enough_past = timezone.now() - timedelta(
+        minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY - 1
+    )
+    future = timezone.now() + timedelta(minutes=1)
+
+    # Enrolled occurrence in the past, event should be visible
+    event = EventFactory(
+        published_at=timezone.now(),
+        project=project,
+        name="enrolled occurrence in the past",
+    )
+    OccurrenceFactory(time=future, event=event, venue=venue)
+    the_past_occurrence = OccurrenceFactory(time=past, event=event, venue=venue)
+    EnrolmentFactory(child=child_with_user_guardian, occurrence=the_past_occurrence)
+
+    # Enrolled occurrence in the past but not enough, event should be NOT visible
+    event_2 = EventFactory(
+        published_at=timezone.now(),
+        project=project,
+        name="enrolled occurrence in the past but not enough",
+    )
+    OccurrenceFactory(time=future, event=event_2, venue=venue)
+    the_not_so_past_occurrence = OccurrenceFactory(
+        time=not_enough_past, event=event_2, venue=venue
+    )
+    EnrolmentFactory(
+        child=child_with_user_guardian, occurrence=the_not_so_past_occurrence
     )
 
-    # Published occurrences in the past
-    event = EventFactory(published_at=timezone.now(), project=project)
-    past_occurrence_1 = OccurrenceFactory(
-        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)),
-        event=event,
-        venue=venue,
+    # Event without an enrolment in the past, should be visible
+    event_3 = EventFactory(
+        published_at=timezone.now(), project=project, name="event in the past"
     )
+    OccurrenceFactory(time=past, event=event_3, venue=venue)
+    OccurrenceFactory(time=not_enough_past, event=event_3, venue=venue)
 
-    OccurrenceFactory(
-        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)),
-        event__published_at=timezone.now(),
-        event__project=project,
-        venue=venue,
+    # Event without an enrolment in the future, should NOT be visible
+    event_4 = EventFactory(
+        published_at=timezone.now(), project=project, name="event in the future"
     )
-    # Past occurrence but from another project
+    OccurrenceFactory(time=not_enough_past, event=event_4, venue=venue)
+    OccurrenceFactory(time=future, event=event_4, venue=venue)
+
+    # Past occurrence but from another project, should NOT be visible
     OccurrenceFactory(
-        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)),
+        time=past,
         event__published_at=timezone.now(),
         event__project=next_project,
+        event__name="another project event",
         venue=venue,
     )
 
-    # Recent published occurrence
-    OccurrenceFactory(time=timezone.now(), event=event, venue=venue)
-
-    # Unpublished occurrences in the past
+    # Unpublished occurrences in the past, should NOT be visible
     OccurrenceFactory.create_batch(
         3,
         time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)),
         event__project=project,
+        event__name="unpublished event in the past",
         venue=venue,
     )
 
-    EnrolmentFactory(child=child_with_user_guardian, occurrence=past_occurrence_1)
-
     executed = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
-    # Still return enroled events if they are past events
-    # Should only return past events from current project
-    assert len(executed["data"]["child"]["pastEvents"]["edges"]) == 1
     snapshot.assert_match(executed)
 
     guardian_api_client.user.projects.add(project)
