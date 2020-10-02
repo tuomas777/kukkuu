@@ -88,7 +88,11 @@ ILMOITIN_TRANSLATED_FROM_EMAIL = env("ILMOITIN_TRANSLATED_FROM_EMAIL")
 ILMOITIN_QUEUE_NOTIFICATIONS = env("ILMOITIN_QUEUE_NOTIFICATIONS")
 
 try:
-    REVISION = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
+    REVISION = (
+        subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+        .strip()
+        .decode("utf-8")
+    )
 except Exception:
     REVISION = "n/a"
 
