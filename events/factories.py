@@ -1,6 +1,6 @@
 import factory
 import pytz
-from projects.factories import ProjectFactory
+from projects.models import Project
 
 from events.models import Enrolment, Event, Occurrence
 from venues.factories import VenueFactory
@@ -16,7 +16,7 @@ class EventFactory(factory.django.DjangoModelFactory):
         "random_element", elements=[x[0] for x in Event.PARTICIPANTS_PER_INVITE_CHOICES]
     )
     capacity_per_occurrence = factory.Faker("random_int", max=50)
-    project = factory.SubFactory(ProjectFactory)
+    project = factory.LazyFunction(lambda: Project.objects.get(year=2020))
 
     class Meta:
         model = Event

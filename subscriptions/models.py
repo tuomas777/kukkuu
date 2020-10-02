@@ -1,9 +1,12 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 from django.utils.translation import ugettext_lazy as _
+from subscriptions.consts import NotificationType
 
 from children.models import Child
 from events.models import Occurrence
+from events.utils import send_event_notifications_to_guardians
 
 
 class FreeSpotNotificationSubscriptionQueryset(models.QuerySet):
@@ -11,6 +14,21 @@ class FreeSpotNotificationSubscriptionQueryset(models.QuerySet):
         return self.filter(
             Q(child__guardians__user=user) | Q(child__project__users=user)
         ).distinct()
+
+    def send_notification(self):
+        for subscription in self.select_related("occurrence__event"):
+            child = subscription.child
+            occurrence = subscription.occurrence
+
+            subscription.delete()
+
+            send_event_notifications_to_guardians(
+                subscription.occurrence.event,
+                NotificationType.FREE_SPOT,
+                child,
+                occurrence=occurrence,
+                subscription=subscription,
+            )
 
 
 class FreeSpotNotificationSubscription(models.Model):
@@ -42,3 +60,10 @@ class FreeSpotNotificationSubscription(models.Model):
 
     def __str__(self):
         return f"{self.child} {self.occurrence} subscription"
+
+    def clean(self):
+        if self.occurrence.get_remaining_capacity():
+            raise ValidationError(
+                "Cannot create a free spot subscription for an occurrence that still "
+                "has free spots."
+            )

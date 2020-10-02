@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F, Q
 from django.utils import timezone
 from django.utils.timezone import now
@@ -80,6 +80,24 @@ class Event(TimestampedModel, TranslatableModel):
         published_text = _("published") if self.published_at else _("unpublished")
         return f"{name} ({self.pk}) ({self.project.year}) ({published_text})"
 
+    def save(self, *args, **kwargs):
+        try:
+            old_capacity_per_occurrence = Event.objects.get(
+                pk=self.pk
+            ).capacity_per_occurrence
+        except Event.DoesNotExist:
+            old_capacity_per_occurrence = None
+
+        super().save(*args, **kwargs)
+
+        # This event's occurrences might get their capacity from this event, so here it
+        # can be potentially changed if capacity per occurrence has been increased.
+        if (
+            old_capacity_per_occurrence is not None
+            and self.capacity_per_occurrence > old_capacity_per_occurrence
+        ):
+            self.occurrences.send_free_spot_notifications_if_needed()
+
     def can_user_administer(self, user):
         return user.projects.filter(pk=self.project_id).exists()
 
@@ -106,6 +124,10 @@ class OccurrenceQueryset(models.QuerySet):
     def delete(self, *args, **kwargs):
         for obj in self:
             obj.delete()
+
+    def send_free_spot_notifications_if_needed(self):
+        for obj in self:
+            obj.send_free_spot_notifications_if_needed()
 
 
 class Occurrence(TimestampedModel):
@@ -155,6 +177,12 @@ class Occurrence(TimestampedModel):
     def __str__(self):
         return f"{self.time} ({self.pk})"
 
+    def save(self, *args, **kwargs):
+        created = self.pk is None
+        super().save(*args, **kwargs)
+        if not created:
+            self.send_free_spot_notifications_if_needed()
+
     def delete(self, *args, **kwargs):
         if self.time >= now():
             # this QS needs to be evaluated here, it would not work after the
@@ -182,10 +210,24 @@ class Occurrence(TimestampedModel):
     def get_capacity(self):
         return self.capacity_override or self.event.capacity_per_occurrence
 
+    def get_remaining_capacity(self):
+        return max(self.get_capacity() - self.get_enrolment_count(), 0)
+
     def can_user_administer(self, user):
         # There shouldn't ever be a situation where event.project != venue.project
         # so we can just check one of them
         return user.projects.filter(pk=self.event.project.pk).exists()
+
+    def send_free_spot_notifications_if_needed(self):
+        if (
+            self.get_remaining_capacity()
+            # Normally the event shouldn't be unpublished or in the past ever when
+            # coming here. These checks are just for making sure no notifications are
+            # sent in possible abnormal situations either for those events.
+            and self.event.is_published()
+            and timezone.now() < self.time
+        ):
+            self.free_spot_notification_subscriptions.send_notification()
 
 
 class EnrolmentQueryset(models.QuerySet):
@@ -243,7 +285,14 @@ class Enrolment(TimestampedModel):
 
     def save(self, *args, **kwargs):
         created = self.pk is None
-        super().save(*args, **kwargs)
+
+        with transaction.atomic():
+            super().save(*args, **kwargs)
+
+            if created:
+                self.child.free_spot_notification_subscriptions.filter(
+                    occurrence__event=self.occurrence.event
+                ).delete()
 
         if created:
             send_event_notifications_to_guardians(
@@ -252,6 +301,10 @@ class Enrolment(TimestampedModel):
                 self.child,
                 occurrence=self.occurrence,
             )
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        self.occurrence.send_free_spot_notifications_if_needed()
 
     def delete_and_send_notification(self):
         child = self.child

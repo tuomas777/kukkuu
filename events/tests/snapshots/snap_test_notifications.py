@@ -25,9 +25,9 @@ snapshots["test_occurrence_cancelled_notification[False] 1"] = [
 snapshots["test_occurrence_enrolment_notifications_on_model_level 1"] = [
     """kukkuu@example.com|['mperez@cox.com']|Occurrence enrolment FI|
         Event FI: Free heart significant machine try.
-        Guardian FI: Willie Frey
+        Guardian FI: Victoria Moon
         Occurrence: 2020-12-12 00:00:00+00:00
-        Child: Andrea Ward (2020-06-23)
+        Child: Alice Hobbs (2020-03-28)
         Occurrence URL: http://localhost:3000/fi/profile/child/Q2hpbGROb2RlOjU0NWM1ZmU1LTIzNWItNDZmZC1hYTJhLWNkNWRlNmZkZDBmYw==/occurrence/T2NjdXJyZW5jZU5vZGU6NzQ="""
 ]
 
@@ -46,10 +46,10 @@ snapshots["test_occurrence_reminder_notification 1"] = [
         Occurrence: 2020-12-19 00:00:00+00:00
         Child: Alexis Black (2020-07-29)
         Enrolment: 2020-12-19 00:00:00+00:00""",
-    """kukkuu@example.com|['ppatrick@yahoo.com']|Occurrence reminder FI|
-        Event FI: Positive cold start rest tonight including believe.
+    """kukkuu@example.com|['laurensmith@davidson.com']|Occurrence reminder FI|
+        Event FI: Difficult special respond.
         Guardian FI: I Should Receive A Notification
         Occurrence: 2020-12-13 00:00:00+00:00
-        Child: Jason Morris (2020-10-27)
+        Child: Robert Williams (2020-06-11)
         Enrolment: 2020-12-13 00:00:00+00:00""",
 ]
