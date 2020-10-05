@@ -7,6 +7,7 @@ from subscriptions.consts import NotificationType
 from children.models import Child
 from events.models import Occurrence
 from events.utils import send_event_notifications_to_guardians
+from kukkuu.consts import OCCURRENCE_IS_NOT_FULL_ERROR
 
 
 class FreeSpotNotificationSubscriptionQueryset(models.QuerySet):
@@ -65,5 +66,6 @@ class FreeSpotNotificationSubscription(models.Model):
         if self.occurrence.get_remaining_capacity():
             raise ValidationError(
                 "Cannot create a free spot subscription for an occurrence that still "
-                "has free spots."
+                "has free spots.",
+                code=OCCURRENCE_IS_NOT_FULL_ERROR,
             )

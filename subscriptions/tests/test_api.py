@@ -9,7 +9,11 @@ from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code
 from common.utils import get_global_id
 from events.factories import EventFactory, OccurrenceFactory
-from kukkuu.consts import ALREADY_SUBSCRIBED_ERROR, OBJECT_DOES_NOT_EXIST_ERROR
+from kukkuu.consts import (
+    ALREADY_SUBSCRIBED_ERROR,
+    OBJECT_DOES_NOT_EXIST_ERROR,
+    OCCURRENCE_IS_NOT_FULL_ERROR,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -172,6 +176,26 @@ def test_cannot_subscribe_to_free_spot_notification_with_someone_elses_child(
     )
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+
+
+def test_cannot_subscribe_to_free_spot_notification_when_occurrence_not_full(
+    guardian_api_client, guardian_child
+):
+    occurrence = OccurrenceFactory(
+        event__published_at=now(), time=now() + timedelta(days=14), capacity_override=1,
+    )
+
+    executed = guardian_api_client.execute(
+        SUBSCRIBE_TO_FREE_SPOT_NOTIFICATION_MUTATION,
+        variables={
+            "input": {
+                "occurrenceId": get_global_id(occurrence),
+                "childId": get_global_id(guardian_child),
+            }
+        },
+    )
+
+    assert_match_error_code(executed, OCCURRENCE_IS_NOT_FULL_ERROR)
 
 
 UNSUBSCRIBE_FROM_FREE_SPOT_NOTIFICATION_MUTATION = """
