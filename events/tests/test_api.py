@@ -1315,7 +1315,17 @@ def test_set_enrolment_attendance_another_project_child(
 
 @pytest.mark.parametrize(
     "capacity_override, enrolment_count",
-    ((5, 0), (5, 4), (5, 5), (5, 6), (None, 0), (None, 9), (None, 10), (None, 11),),
+    (
+        (5, 0),
+        (5, 4),
+        (5, 5),
+        (5, 6),
+        (None, 0),
+        (None, 9),
+        (None, 10),
+        (None, 11),
+        (0, 0),
+    ),
 )
 def test_occurrence_capacity(
     snapshot, guardian_api_client, project, capacity_override, enrolment_count
