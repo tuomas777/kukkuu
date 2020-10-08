@@ -1,6 +1,7 @@
 import logging
 
 import graphene
+from django.core.exceptions import ValidationError
 from graphene import relay
 from graphene_django import DjangoObjectType
 from graphql_jwt.decorators import login_required
@@ -11,7 +12,12 @@ from children.schema import ChildNode
 from common.utils import get_node_id_from_global_id
 from events.models import Occurrence
 from events.schema import OccurrenceNode
-from kukkuu.exceptions import AlreadySubscribedError, ObjectDoesNotExistError
+from kukkuu.consts import OCCURRENCE_IS_NOT_FULL_ERROR
+from kukkuu.exceptions import (
+    AlreadySubscribedError,
+    ObjectDoesNotExistError,
+    OccurrenceIsNotFullError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +42,11 @@ def validate_free_spot_notification_subscription(child, occurrence):
         raise AlreadySubscribedError(
             "Child already subscribed to free spot notifications of this occurrence"
         )
+    try:
+        FreeSpotNotificationSubscription(child=child, occurrence=occurrence).clean()
+    except ValidationError as e:
+        if e.code == OCCURRENCE_IS_NOT_FULL_ERROR:
+            raise OccurrenceIsNotFullError(e.message)
 
 
 def _get_child_and_occurrence(info, **kwargs):

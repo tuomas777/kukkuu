@@ -137,7 +137,7 @@ class OccurrenceNode(DjangoObjectType):
         return super().get_node(info, id)
 
     def resolve_remaining_capacity(self, info, **kwargs):
-        return max(self.get_capacity() - self.get_enrolment_count(), 0)
+        return self.get_remaining_capacity()
 
     def resolve_enrolment_count(self, info, **kwargs):
         return self.get_enrolment_count()

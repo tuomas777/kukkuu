@@ -58,3 +58,7 @@ class InvalidEmailFormatError(KukkuuGraphQLError):
 
 class AlreadySubscribedError(KukkuuGraphQLError):
     """Already subscribed"""
+
+
+class OccurrenceIsNotFullError(KukkuuGraphQLError):
+    """Cannot subscribe to free spot notifications because the occurrence is not full"""

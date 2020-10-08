@@ -24,6 +24,7 @@ from kukkuu.consts import (
     MISSING_DEFAULT_TRANSLATION_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
     OCCURRENCE_IS_FULL_ERROR,
+    OCCURRENCE_IS_NOT_FULL_ERROR,
     PAST_OCCURRENCE_ERROR,
     PERMISSION_DENIED_ERROR,
     QUERY_TOO_DEEP_ERROR,
@@ -41,6 +42,7 @@ from kukkuu.exceptions import (
     MissingDefaultTranslationError,
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
+    OccurrenceIsNotFullError,
     PastOccurrenceError,
     QueryTooDeepError,
 )
@@ -65,6 +67,7 @@ error_codes_kukkuu = {
     MissingDefaultTranslationError: MISSING_DEFAULT_TRANSLATION_ERROR,
     IneligibleOccurrenceEnrolment: INELIGIBLE_OCCURRENCE_ENROLMENT,
     AlreadySubscribedError: ALREADY_SUBSCRIBED_ERROR,
+    OccurrenceIsNotFullError: OCCURRENCE_IS_NOT_FULL_ERROR,
 }
 
 sentry_ignored_errors = (
