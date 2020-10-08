@@ -208,7 +208,10 @@ class Occurrence(TimestampedModel):
             return self.enrolments.count()
 
     def get_capacity(self):
-        return self.capacity_override or self.event.capacity_per_occurrence
+        if self.capacity_override is not None:
+            return self.capacity_override
+        else:
+            return self.event.capacity_per_occurrence
 
     def get_remaining_capacity(self):
         return max(self.get_capacity() - self.get_enrolment_count(), 0)
