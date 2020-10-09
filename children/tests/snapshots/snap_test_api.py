@@ -56,6 +56,12 @@ snapshots["test_submit_children_and_guardian 1"] = {
             "guardian": {
                 "email": "mperez@cox.com",
                 "firstName": "Gulle",
+                "languagesSpokenAtHome": {
+                    "edges": [
+                        {"node": {"alpha3Code": "fin"}},
+                        {"node": {"alpha3Code": "swe"}},
+                    ]
+                },
                 "lastName": "Guardian",
                 "phoneNumber": "777-777777",
             },
@@ -113,6 +119,7 @@ snapshots["test_submit_children_and_guardian_with_email 1"] = {
             "guardian": {
                 "email": "updated_email@example.com",
                 "firstName": "Gulle",
+                "languagesSpokenAtHome": {"edges": []},
                 "lastName": "Guardian",
                 "phoneNumber": "777-777777",
             },

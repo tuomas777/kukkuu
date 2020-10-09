@@ -3,6 +3,8 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+from django.utils.translation import ugettext_lazy as _
+from languages.models import Language
 from projects.models import Project
 
 from children.models import Relationship
@@ -25,6 +27,13 @@ class GuardianForm(forms.ModelForm):
         self.fields["language"] = forms.ChoiceField(choices=settings.LANGUAGES)
 
 
+class LanguagesSpokenAtHomeInline(admin.TabularInline):
+    model = Language.guardians.through
+    extra = 0
+    verbose_name = _("Language spoken at home")
+    verbose_name_plural = _("Languages spoken at home")
+
+
 @admin.register(Guardian)
 class GuardianAdmin(admin.ModelAdmin):
     list_display = (
@@ -37,8 +46,9 @@ class GuardianAdmin(admin.ModelAdmin):
         "updated_at",
     )
     search_fields = ("first_name", "last_name", "user__email")
+    exclude = ("languages_spoken_at_home",)
     form = GuardianForm
-    inlines = (RelationshipInline,)
+    inlines = (RelationshipInline, LanguagesSpokenAtHomeInline)
 
 
 class ProjectInline(admin.TabularInline):
