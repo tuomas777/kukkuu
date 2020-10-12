@@ -28,6 +28,9 @@ def send_event_notifications_to_guardians(event, notification_type, children, **
                 context["occurrence_url"] = get_occurrence_ui_url(
                     occurrence, child, guardian.language
                 )
+                context["occurrence_enrol_url"] = get_occurrence_enrol_ui_url(
+                    occurrence, child, guardian.language
+                )
 
             send_notification(
                 guardian.email,
@@ -60,5 +63,15 @@ def get_occurrence_ui_url(occurrence, child, language):
         settings.KUKKUU_UI_BASE_URL,
         language,
         get_global_id(child),
+        get_global_id(occurrence),
+    )
+
+
+def get_occurrence_enrol_ui_url(occurrence, child, language):
+    return "{}/{}/profile/child/{}/event/{}/occurrence/{}/enrol".format(
+        settings.KUKKUU_UI_BASE_URL,
+        language,
+        get_global_id(child),
+        get_global_id(occurrence.event),
         get_global_id(occurrence),
     )

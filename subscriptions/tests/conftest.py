@@ -24,7 +24,7 @@ def notification_template_free_spot():
         Guardian FI: {{ guardian }}
         Event URL: {{ event_url }}
         Child: {{ child }}
-        Occurrence URL: {{ occurrence_url }}
+        Occurrence enrol URL: {{ occurrence_enrol_url }}
         Subscription created at: {{ subscription.created_at }}
 """,
     )
