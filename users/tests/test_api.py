@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import pytest
 from projects.factories import ProjectFactory
 
@@ -8,6 +10,7 @@ from children.tests.test_api import (
 )
 from common.tests.conftest import create_api_client_with_user
 from common.tests.utils import assert_match_error_code
+from common.utils import get_global_id
 from kukkuu.consts import INVALID_EMAIL_FORMAT_ERROR
 from users.factories import GuardianFactory
 from users.models import Guardian
@@ -124,6 +127,14 @@ query MyProfile {
         }
       }
     }
+    language
+    languagesSpokenAtHome {
+      edges {
+        node {
+          alpha3Code
+        }
+      }
+    }
   }
 }
 """
@@ -200,6 +211,13 @@ mutation UpdateMyProfile($input: UpdateMyProfileMutationInput!) {
       lastName
       phoneNumber
       language
+      languagesSpokenAtHome {
+        edges {
+          node {
+            alpha3Code
+          }
+        }
+      }
     }
   }
 }
@@ -211,6 +229,7 @@ UPDATE_MY_PROFILE_VARIABLES = {
         "lastName": "Updated Last Name",
         "phoneNumber": "Updated phone number",
         "language": "EN",
+        "languagesSpokenAtHome": [],
     }
 }
 
@@ -223,16 +242,18 @@ def test_update_my_profile_mutation_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_update_my_profile_mutation(snapshot, user_api_client):
+def test_update_my_profile_mutation(snapshot, user_api_client, languages):
     GuardianFactory(user=user_api_client.user, language="fi")
+    variables = deepcopy(UPDATE_MY_PROFILE_VARIABLES)
+    variables["input"]["languagesSpokenAtHome"] = [
+        get_global_id(language) for language in languages[0:2]
+    ]  # fin, swe
 
-    executed = user_api_client.execute(
-        UPDATE_MY_PROFILE_MUTATION, variables=UPDATE_MY_PROFILE_VARIABLES
-    )
+    executed = user_api_client.execute(UPDATE_MY_PROFILE_MUTATION, variables=variables)
 
     snapshot.assert_match(executed)
     guardian = Guardian.objects.get(user=user_api_client.user)
-    assert_guardian_matches_data(guardian, UPDATE_MY_PROFILE_VARIABLES["input"])
+    assert_guardian_matches_data(guardian, variables["input"])
 
 
 @pytest.mark.parametrize(

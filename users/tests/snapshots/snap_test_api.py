@@ -14,6 +14,12 @@ snapshots["test_update_my_profile_mutation 1"] = {
             "myProfile": {
                 "firstName": "Updated First Name",
                 "language": "EN",
+                "languagesSpokenAtHome": {
+                    "edges": [
+                        {"node": {"alpha3Code": "fin"}},
+                        {"node": {"alpha3Code": "swe"}},
+                    ]
+                },
                 "lastName": "Updated Last Name",
                 "phoneNumber": "Updated phone number",
             }
@@ -58,6 +64,8 @@ snapshots["test_my_profile_query 1"] = {
         "myProfile": {
             "email": "mperez@cox.com",
             "firstName": "Robin",
+            "language": "FI",
+            "languagesSpokenAtHome": {"edges": []},
             "lastName": "Moses",
             "phoneNumber": "910-232-0281",
             "relationships": {

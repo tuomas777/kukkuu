@@ -9,11 +9,12 @@ from django.utils.timezone import localtime, now
 from freezegun import freeze_time
 from graphene.utils.str_converters import to_snake_case
 from graphql_relay import to_global_id
+from languages.models import Language
 from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
-from common.utils import get_global_id
+from common.utils import get_global_id, get_node_id_from_global_id
 from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from kukkuu.consts import (
     API_USAGE_ERROR,
@@ -76,6 +77,15 @@ def assert_guardian_matches_data(guardian_obj, guardian_data):
     if "language" in guardian_data:
         assert guardian_obj.language == guardian_data["language"].lower()
 
+    if "languagesSpokenAtHome" in guardian_data:
+        language_ids = [
+            get_node_id_from_global_id(l, "LanguageNode")
+            for l in guardian_data["languagesSpokenAtHome"]
+        ]
+        assert set(guardian_obj.languages_spoken_at_home.all()) == set(
+            Language.objects.filter(id__in=language_ids)
+        )
+
 
 SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION = """
 mutation SubmitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInput!) {
@@ -104,6 +114,13 @@ mutation SubmitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInpu
       lastName
       phoneNumber
       email
+      languagesSpokenAtHome {
+        edges {
+          node {
+            alpha3Code
+          }
+        }
+      }
     }
   }
 }
@@ -146,8 +163,11 @@ def test_submit_children_and_guardian_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_submit_children_and_guardian(snapshot, user_api_client):
-    variables = SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES
+def test_submit_children_and_guardian(snapshot, user_api_client, languages):
+    variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
+    variables["input"]["guardian"]["languagesSpokenAtHome"] = [
+        get_global_id(language) for language in languages[0:2]
+    ]  # fin, swe
 
     executed = user_api_client.execute(
         SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables

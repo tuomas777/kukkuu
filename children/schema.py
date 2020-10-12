@@ -16,12 +16,12 @@ from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from graphql_relay.connection.arrayconnection import offset_to_cursor
-from languages.models import Language
 from languages.schema import LanguageNode
 from projects.models import Project
 
 from children.notifications import NotificationType
-from common.utils import get_obj_from_global_id, update_object
+from common.schema import set_obj_languages_spoken_at_home
+from common.utils import update_object
 from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
@@ -170,6 +170,7 @@ class GuardianInput(graphene.InputObjectType):
     phone_number = graphene.String()
     language = LanguageEnum(required=True)
     email = graphene.String()
+    languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
 
 
 class ChildInput(graphene.InputObjectType):
@@ -196,15 +197,6 @@ def validate_child_data(child_data):
         ):
             raise DataValidationError("Illegal birthdate.")
     return child_data
-
-
-def set_child_languages_spoken_at_home(info, child, language_global_ids):
-    child.languages_spoken_at_home.clear()
-
-    for language_global_id in language_global_ids:
-        child.languages_spoken_at_home.add(
-            get_obj_from_global_id(info, language_global_id, Language)
-        )
 
 
 class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
@@ -235,6 +227,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             raise MaxNumberOfChildrenPerGuardianError("Too many children.")
 
         guardian_data = kwargs["guardian"]
+        languages_spoken_at_home = guardian_data.pop("languages_spoken_at_home", [])
         validate_guardian_data(guardian_data)
         guardian = Guardian.objects.create(
             user=user,
@@ -244,6 +237,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             language=guardian_data["language"],
             email=guardian_data.get("email", ""),
         )
+        set_obj_languages_spoken_at_home(info, guardian, languages_spoken_at_home)
 
         children = []
         for child_data in children_data:
@@ -259,7 +253,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             Relationship.objects.create(
                 type=relationship_data.get("type"), child=child, guardian=guardian
             )
-            set_child_languages_spoken_at_home(info, child, languages)
+            set_obj_languages_spoken_at_home(info, child, languages)
 
             children.append(child)
 
@@ -315,7 +309,7 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
         Relationship.objects.create(
             type=relationship_data.get("type"), child=child, guardian=user.guardian
         )
-        set_child_languages_spoken_at_home(info, child, languages)
+        set_obj_languages_spoken_at_home(info, child, languages)
 
         logger.info(
             f"user {user.uuid} added child {child.pk} to guardian {user.guardian.pk}"
@@ -358,7 +352,7 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
             pass
 
         if "languages_spoken_at_home" in kwargs:
-            set_child_languages_spoken_at_home(
+            set_obj_languages_spoken_at_home(
                 info, child, kwargs.pop("languages_spoken_at_home")
             )
 
