@@ -15,7 +15,7 @@ class InvalidLanguageCodeError(Exception):
     pass
 
 
-class LanguageCodeAlreadyExistsError(Exception):
+class LanguageAlreadyExistsError(Exception):
     pass
 
 
@@ -31,7 +31,7 @@ class LanguageQueryset(TranslatableQuerySet):
                     name=pycountry_language.name,
                 )
             except IntegrityError as e:
-                raise LanguageCodeAlreadyExistsError(e)
+                raise LanguageAlreadyExistsError(e)
 
         for parler_language in PARLER_SUPPORTED_LANGUAGE_CODES:
             if parler_language == "en":
@@ -44,6 +44,21 @@ class LanguageQueryset(TranslatableQuerySet):
                 parler_language,
                 name=gettext_translation.gettext(pycountry_language.name),
             )
+
+        return obj
+
+    @transaction.atomic
+    def create_option_other(self):
+        obj, created = self.language("en").get_or_create(
+            alpha_3_code=None,
+            translations__name="Other language",
+            defaults={"name": "Other language"},
+        )
+        if not created:
+            raise LanguageAlreadyExistsError()
+
+        obj.create_translation("sv", name="Annat språk")
+        obj.create_translation("fi", name="muu kieli")
 
         return obj
 

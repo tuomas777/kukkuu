@@ -7,13 +7,9 @@ from snapshottest import Snapshot
 snapshots = Snapshot()
 
 snapshots[
-    "test_no_arguments 1"
-] = """Nothing to do. Hint: try --help.
-"""
-
-snapshots[
     "test_add_default_languages 1"
-] = """Created Afar (aar)
+] = """Created special language "Other"
+Created Afar (aar)
 Created Abkhazian (abk)
 Created Afrikaans (afr)
 Created Akan (aka)
@@ -179,6 +175,7 @@ All done!
 """
 
 snapshots["test_add_default_languages 2"] = {
+    None: {"en": "Other language", "fi": "muu kieli", "sv": "Annat språk"},
     "aar": {"en": "Afar", "fi": "afar", "sv": "Afar"},
     "abk": {"en": "Abkhazian", "fi": "abhaasi", "sv": "Abchaziska"},
     "afr": {"en": "Afrikaans", "fi": "afrikaans", "sv": "Afrikaans"},
@@ -399,3 +396,8 @@ snapshots["test_add_languages_and_flush 2"] = {
     "abd": {"en": "Manide", "fi": "Manide", "sv": "Manide"},
     "agh": {"en": "Ngelima", "fi": "Ngelima", "sv": "Ngelima"},
 }
+
+snapshots[
+    "test_no_arguments 1"
+] = """Nothing to do. Hint: try --help.
+"""

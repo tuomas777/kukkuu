@@ -6,6 +6,20 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
+snapshots["test_language_query 1"] = {
+    "data": {
+        "language": {
+            "alpha3Code": "fin",
+            "name": "suomi",
+            "translations": [
+                {"languageCode": "SV", "name": "Finska"},
+                {"languageCode": "FI", "name": "suomi"},
+                {"languageCode": "EN", "name": "Finnish"},
+            ],
+        }
+    }
+}
+
 snapshots["test_languages_query 1"] = {
     "data": {
         "languages": {
@@ -23,17 +37,6 @@ snapshots["test_languages_query 1"] = {
                 },
                 {
                     "node": {
-                        "alpha3Code": "fin",
-                        "name": "suomi",
-                        "translations": [
-                            {"languageCode": "EN", "name": "Finnish"},
-                            {"languageCode": "FI", "name": "suomi"},
-                            {"languageCode": "SV", "name": "Finska"},
-                        ],
-                    }
-                },
-                {
-                    "node": {
                         "alpha3Code": "swe",
                         "name": "ruotsi",
                         "translations": [
@@ -43,21 +46,18 @@ snapshots["test_languages_query 1"] = {
                         ],
                     }
                 },
+                {
+                    "node": {
+                        "alpha3Code": "fin",
+                        "name": "suomi",
+                        "translations": [
+                            {"languageCode": "EN", "name": "Finnish"},
+                            {"languageCode": "FI", "name": "suomi"},
+                            {"languageCode": "SV", "name": "Finska"},
+                        ],
+                    }
+                },
             ]
-        }
-    }
-}
-
-snapshots["test_language_query 1"] = {
-    "data": {
-        "language": {
-            "alpha3Code": "fin",
-            "name": "suomi",
-            "translations": [
-                {"languageCode": "SV", "name": "Finska"},
-                {"languageCode": "FI", "name": "suomi"},
-                {"languageCode": "EN", "name": "Finnish"},
-            ],
         }
     }
 }
