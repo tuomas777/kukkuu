@@ -54,26 +54,28 @@ class Language(TranslatableModel):
         verbose_name=_("alpha-3 code"),
         help_text=_("ISO 639-3 (language) or ISO 639-5 (language family) alpha-3 code"),
         unique=True,
+        null=True,
+        blank=True,
     )
     translations = TranslatedFields(
         name=models.CharField(verbose_name=_("name"), max_length=255, blank=True),
     )
 
+    objects = LanguageQueryset.as_manager()
+
     class Meta:
         verbose_name = _("language")
         verbose_name_plural = _("languages")
-        ordering = ("alpha_3_code",)
 
     def __str__(self):
         return f"{self.name} ({self.alpha_3_code})"
 
     def clean(self):
-        try:
-            get_pycountry_language(self.alpha_3_code)
-        except InvalidLanguageCodeError as e:
-            raise ValidationError({"alpha_3_code": e})
-
-    objects = LanguageQueryset.as_manager()
+        if self.alpha_3_code:
+            try:
+                get_pycountry_language(self.alpha_3_code)
+            except InvalidLanguageCodeError as e:
+                raise ValidationError({"alpha_3_code": e})
 
 
 def get_pycountry_language(language_code):
