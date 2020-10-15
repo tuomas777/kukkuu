@@ -63,7 +63,7 @@ class FreeSpotNotificationSubscription(models.Model):
         return f"{self.child} {self.occurrence} subscription"
 
     def clean(self):
-        if self.occurrence.get_remaining_capacity():
+        if not self.pk and self.occurrence.get_remaining_capacity():
             raise ValidationError(
                 "Cannot create a free spot subscription for an occurrence that still "
                 "has free spots.",
