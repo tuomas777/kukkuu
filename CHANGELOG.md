@@ -1,6 +1,21 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.6.0] - 16 Oct 2020
+### Added
+- Add Free spot notification functionality
+- Add languages spoken at home for guardians
+- Add `get_global_id()` to event notifications' contexts
+- Add occurrence enrol URL to event notifications' contexts
+- Add special language "Other language"
+
+### Changed
+- Update default languages
+
+### Fixed
+- Fix API version string when running `manage.py` outside the app directory
+- Fix occurrence remaining capacity when capacity override is 0
+
 ## [1.5.1] - 30 Sep 2020
 ### Added
 - Add localtime function to event notification templates
@@ -114,7 +129,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.3.0...v1.4.0
