@@ -9,6 +9,7 @@ from django.test import RequestFactory
 from django.utils import timezone, translation
 from freezegun import freeze_time
 from graphene.test import Client
+from languages.models import Language
 from projects.factories import ProjectFactory
 from projects.models import Project
 
@@ -30,6 +31,14 @@ def setup_test_environment(settings):
     with translation.override("fi"), freeze_time("2020-12-12"):
         yield
     shutil.rmtree("test_media", ignore_errors=True)
+
+
+@pytest.fixture
+def languages():
+    return [
+        Language.objects.create_from_language_code(code)
+        for code in ("fin", "swe", "eng")
+    ] + [Language.objects.create_option_other()]
 
 
 @pytest.fixture

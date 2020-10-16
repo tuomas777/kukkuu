@@ -49,6 +49,8 @@ Add default languages (optional)
 
     python manage.py add_languages --default
 
+**NOTE:** A few of the default languages may not have a properly translated name in all languages.
+
 ### Cron jobs
 `cron` is required for sending reminder notifications, and for sending emails queued (optional).
 

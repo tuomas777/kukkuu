@@ -828,3 +828,14 @@ snapshots["test_occurrences_filter_by_upcoming_with_leeway[False] 1"] = {
         }
     }
 }
+
+snapshots["test_occurrence_capacity[0-0] 1"] = {
+    "data": {
+        "occurrence": {
+            "capacity": 0,
+            "capacityOverride": 0,
+            "enrolmentCount": 0,
+            "remainingCapacity": 0,
+        }
+    }
+}

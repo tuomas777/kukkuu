@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from helusers.models import AbstractUser
+from languages.models import Language
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
 
@@ -35,6 +36,12 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
         _("email address"),
         blank=True,
         help_text=_("If left blank, will be populated with the user's email."),
+    )
+    languages_spoken_at_home = models.ManyToManyField(
+        Language,
+        verbose_name=_("languages spoken at home"),
+        related_name="guardians",
+        blank=True,
     )
 
     objects = GuardianQuerySet.as_manager()

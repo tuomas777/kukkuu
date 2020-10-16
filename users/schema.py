@@ -8,7 +8,7 @@ from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 
-from common.schema import LanguageEnum
+from common.schema import LanguageEnum, set_obj_languages_spoken_at_home
 from common.utils import update_object
 from kukkuu.exceptions import InvalidEmailFormatError, ObjectDoesNotExistError
 
@@ -32,6 +32,20 @@ class GuardianNode(DjangoObjectType):
 
     class Meta:
         model = Guardian
+        fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "user",
+            "first_name",
+            "last_name",
+            "phone_number",
+            "language",
+            "email",
+            "children",
+            "relationships",
+            "languages_spoken_at_home",
+        )
         interfaces = (relay.Node,)
 
     @classmethod
@@ -53,6 +67,7 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         phone_number = graphene.String()
         language = LanguageEnum()
         email = graphene.String()
+        languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
 
     my_profile = graphene.Field(GuardianNode)
 
@@ -67,9 +82,12 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         except Guardian.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
+        languages_spoken_at_home = kwargs.pop("languages_spoken_at_home", [])
         validate_guardian_data(kwargs)
+
         old_email = guardian.email
         update_object(guardian, kwargs)
+        set_obj_languages_spoken_at_home(info, guardian, languages_spoken_at_home)
 
         if guardian.email != old_email:
             send_guardian_email_changed_notification(guardian)
