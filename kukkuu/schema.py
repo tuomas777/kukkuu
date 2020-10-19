@@ -1,5 +1,6 @@
 import graphene
 import languages.schema
+import messaging.schema
 import projects.schema
 import subscriptions.schema
 
@@ -15,6 +16,7 @@ class Mutation(
     events.schema.Mutation,
     venues.schema.Mutation,
     subscriptions.schema.Mutation,
+    messaging.schema.Mutation,
     graphene.ObjectType,
 ):
     pass
@@ -27,6 +29,7 @@ class Query(
     events.schema.Query,
     venues.schema.Query,
     languages.schema.Query,
+    messaging.schema.Query,
     graphene.ObjectType,
 ):
     pass
