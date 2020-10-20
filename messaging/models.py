@@ -6,12 +6,12 @@ from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatedFields
 from projects.models import Project
 
-from common.models import TimestampedModel, TranslatableModel
+from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
 from events.models import Event, Occurrence
 from users.models import Guardian
 
 
-class MessageQuerySet(models.QuerySet):
+class MessageQuerySet(TranslatableQuerySet):
     def user_can_view(self, user):
         return self.filter(project__users=user)
 

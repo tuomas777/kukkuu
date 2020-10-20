@@ -5,7 +5,8 @@ import graphene
 from django.apps import apps
 from django.db import transaction
 from graphene import relay
-from graphene_django import DjangoConnectionField, DjangoObjectType
+from graphene_django import DjangoObjectType
+from graphene_django.filter import DjangoFilterConnectionField
 from graphql_jwt.decorators import login_required
 from projects.models import Project
 
@@ -61,6 +62,7 @@ class MessageNode(DjangoObjectType):
             "recipient_count",
             "translations",
         )
+        filter_fields = ("project_id",)
 
     @classmethod
     @login_required
@@ -247,7 +249,7 @@ class DeleteMessageMutation(graphene.relay.ClientIDMutation):
 
 class Query:
     message = relay.Node.Field(MessageNode)
-    messages = DjangoConnectionField(MessageNode)
+    messages = DjangoFilterConnectionField(MessageNode)
 
 
 class Mutation:
