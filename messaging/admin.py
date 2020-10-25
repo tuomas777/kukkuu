@@ -1,7 +1,8 @@
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 
-from .models import Message
+from .models import AlreadySentError, Message
 
 
 @admin.register(Message)
@@ -26,3 +27,14 @@ class MessageAdmin(TranslatableAdmin):
         "recipient_count",
     )
     readonly_fields = ("recipient_count", "created_at", "updated_at")
+    actions = ("send",)
+
+    def send(self, request, queryset):
+        sent_count = 0
+        for obj in queryset:
+            try:
+                obj.send()
+                sent_count += 1
+            except AlreadySentError:
+                pass
+        self.message_user(request, _("%s successfully sent.") % sent_count)

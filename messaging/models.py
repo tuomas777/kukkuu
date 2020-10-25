@@ -1,14 +1,23 @@
-from random import random
+from functools import reduce
 
+from django.conf import settings
 from django.db import models
-from django.utils.timezone import now
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django_ilmoitin.utils import send_mail
 from parler.models import TranslatedFields
+from parler.utils.context import switch_language
 from projects.models import Project
+from subscriptions.models import FreeSpotNotificationSubscription
 
+from children.models import Child
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
-from events.models import Event, Occurrence
+from events.models import Enrolment, Event, Occurrence
 from users.models import Guardian
+
+
+class AlreadySentError(Exception):
+    pass
 
 
 class MessageQuerySet(TranslatableQuerySet):
@@ -74,16 +83,94 @@ class Message(TimestampedModel, TranslatableModel):
     def __str__(self):
         return f"({self.pk}) {self.subject} ({self.sent_at or 'not sent'})"
 
-    def send(self):
-        self.recipient_count = (
-            Guardian.objects.filter(children__project=self.project).count()
-            if self.recipient_selection == Message.ALL
-            else random.randint(
-                0, 50
-            )  # TODO temporary thingy before actual send implementation
+    def send(self, *, force=False):
+        if self.sent_at and not force:
+            raise AlreadySentError()
+
+        guardians = self.get_recipient_guardians()
+
+        self.sent_at = timezone.now()
+        self.recipient_count = len(guardians)
+        self.save(update_fields=("sent_at", "recipient_count"))
+
+        for guardian in guardians:
+            with switch_language(self, guardian.language):
+                if guardian.language in getattr(
+                    settings, "ILMOITIN_TRANSLATED_FROM_EMAIL", {}
+                ):
+                    from_email = settings.ILMOITIN_TRANSLATED_FROM_EMAIL[
+                        guardian.language
+                    ]
+                else:
+                    from_email = settings.DEFAULT_FROM_EMAIL
+
+                send_mail(
+                    self.subject, self.body_text, guardian.email, from_email=from_email,
+                )
+
+    def get_recipient_guardians(self):
+        guardians = Guardian.objects.filter(children__project=self.project)
+
+        if self.recipient_selection == Message.ALL:
+            return guardians.distinct()
+
+        now = timezone.now()
+        upcoming_events = Event.objects.filter(
+            project=self.project, occurrences__time__gte=now
+        ).published()
+        if self.event_id:
+            upcoming_events = upcoming_events.filter(pk=self.event_id)
+
+        children = Child.objects.filter(project=self.project, guardians__isnull=False)
+        enrolments = Enrolment.objects.filter(child__in=children)
+        subscriptions = FreeSpotNotificationSubscription.objects.filter(
+            child__in=children
         )
-        self.sent_at = now()
-        self.save(update_fields=("recipient_count", "sent_at"))
+
+        if self.occurrences.exists():
+            occurrences = self.occurrences.all()
+            enrolments = enrolments.filter(occurrence__in=occurrences)
+            subscriptions = subscriptions.filter(occurrence__in=occurrences)
+        elif self.event_id:
+            occurrences = self.event.occurrences.all()
+            enrolments = enrolments.filter(occurrence__in=occurrences)
+            subscriptions = subscriptions.filter(occurrence__in=occurrences)
+
+        if self.recipient_selection == Message.INVITED:
+            if not upcoming_events.exists():
+                return Guardian.objects.none()
+
+            children_enrolled_to_every_upcoming_event = reduce(
+                lambda x, y: x.filter(occurrences__event=y), upcoming_events, children
+            )
+            children_with_invitation = children.exclude(
+                pk__in=children_enrolled_to_every_upcoming_event.values("pk")
+            )
+
+            return guardians.filter(children__in=children_with_invitation).distinct()
+
+        elif self.recipient_selection == Message.ENROLLED:
+            return guardians.filter(
+                children__enrolments__in=enrolments.filter(occurrence__time__gte=now)
+            ).distinct()
+
+        elif self.recipient_selection == Message.ATTENDED:
+            return guardians.filter(
+                children__enrolments__in=enrolments.filter(
+                    occurrence__time__lt=now, attended=True
+                )
+            ).distinct()
+
+        elif self.recipient_selection == Message.SUBSCRIBED_TO_FREE_SPOT_NOTIFICATION:
+            return guardians.filter(
+                children__free_spot_notification_subscriptions__in=subscriptions
+            ).distinct()
+
+        else:
+            raise ValueError(
+                f"Cannot send message {self} because of invalid recipient selection "
+                f'value "{self.recipient_selection}".'
+            )
 
     def can_user_administer(self, user):
         return user.projects.filter(pk=self.project.pk).exists()
