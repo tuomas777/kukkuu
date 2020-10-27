@@ -110,10 +110,9 @@ class AddMessageMutation(graphene.relay.ClientIDMutation):
             info, data.pop("project_id"), Project
         )
 
-        if "event_id" in data:
-            data["event"] = get_obj_if_user_can_administer(
-                info, data.pop("event_id"), Event
-            )
+        event_id = data.pop("event_id", None)
+        if event_id:
+            data["event"] = get_obj_if_user_can_administer(info, event_id, Event)
         else:
             data["event"] = None
         occurrences = [
@@ -163,9 +162,10 @@ class UpdateMessageMutation(graphene.relay.ClientIDMutation):
             )
 
         if "event_id" in data:
+            event_id = data.pop("event_id")
             data["event"] = (
-                get_obj_if_user_can_administer(info, data["event_id"], Event)
-                if data["event_id"]
+                get_obj_if_user_can_administer(info, event_id, Event)
+                if event_id
                 else None
             )
         if "occurrence_ids" in data:
