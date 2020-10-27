@@ -19,7 +19,7 @@ from common.utils import (
 from events.models import Event, Occurrence
 from kukkuu.exceptions import DataValidationError, MessageAlreadySentError
 
-from .models import Message
+from .models import AlreadySentError, Message
 
 logger = logging.getLogger(__name__)
 
@@ -163,8 +163,10 @@ class UpdateMessageMutation(graphene.relay.ClientIDMutation):
             )
 
         if "event_id" in data:
-            data["event"] = get_obj_if_user_can_administer(
-                info, data.pop("event_id"), Event
+            data["event"] = (
+                get_obj_if_user_can_administer(info, data["event_id"], Event)
+                if data["event_id"]
+                else None
             )
         if "occurrence_ids" in data:
             occurrences = [
@@ -214,12 +216,13 @@ class SendMessageMutation(graphene.relay.ClientIDMutation):
     @project_user_required
     def mutate_and_get_payload(cls, root, info, **kwargs):
         message = get_obj_if_user_can_administer(info, kwargs["id"], Message)
-        if message.sent_at:
+
+        try:
+            message.send()
+        except AlreadySentError:
             raise MessageAlreadySentError(
                 "Cannot send because the message has already been sent."
             )
-
-        message.send()
 
         logger.info(f"user {info.context.user.uuid} sent message {message}")
 
