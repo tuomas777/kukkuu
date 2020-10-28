@@ -14,7 +14,6 @@ from common.tests.utils import assert_mails_match_snapshot
 from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize("guardian_language", ("fi", "en"))
 def test_message_sending(snapshot, guardian_language, message):
     ChildWithGuardianFactory(
@@ -29,7 +28,6 @@ def test_message_sending(snapshot, guardian_language, message):
     assert message.sent_at
 
 
-@pytest.mark.django_db
 def test_cannot_send_message_again_without_force(snapshot, message):
     message.sent_at = now()
     message.save(update_fields=("sent_at",))
@@ -66,7 +64,6 @@ def test_cannot_send_message_again_without_force(snapshot, message):
         "occurrence_yesterday_1",
     ),
 )
-@pytest.mark.django_db
 def test_message_sending_with_filters(snapshot, recipient_selection, event_selection):
     """Ridiculously complex filtering test
 
