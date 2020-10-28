@@ -37,7 +37,7 @@ class RecipientSelectionEnum(graphene.Enum):
     INVITED = "invited"
     ENROLLED = "enrolled"
     ATTENDED = "attended"
-    SUBSCRIBED_TO_FREE_SPOT_MESSAGE = "subscribed_to_free_spot_message"
+    SUBSCRIBED_TO_FREE_SPOT_NOTIFICATION = "subscribed_to_free_spot_notification"
 
 
 class MessageNode(DjangoObjectType):
