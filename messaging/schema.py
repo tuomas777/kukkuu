@@ -7,7 +7,6 @@ from django.db import transaction
 from graphene import relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
-from graphql_jwt.decorators import login_required
 from projects.models import Project
 
 from common.schema import LanguageEnum
@@ -65,14 +64,14 @@ class MessageNode(DjangoObjectType):
         filter_fields = ("project_id",)
 
     @classmethod
-    @login_required
+    @project_user_required
     def get_queryset(cls, queryset, info):
         return queryset.user_can_view(info.context.user).prefetch_related(
             "translations"
         )
 
     @classmethod
-    @login_required
+    @project_user_required
     def get_node(cls, info, id):
         try:
             return (
@@ -201,9 +200,7 @@ def validate_event_and_occurrences(event, occurrences):
         raise DataValidationError("Event is needed when there are occurrences.")
 
     if any(occurrence.event != event for occurrence in occurrences):
-        raise DataValidationError(
-            "All of the occurrences do not belong to the same event."
-        )
+        raise DataValidationError("All of the occurrences do not belong to the event.")
 
 
 class SendMessageMutation(graphene.relay.ClientIDMutation):
