@@ -4,7 +4,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django_ilmoitin.utils import send_mail
+from django_ilmoitin.utils import Message as MailerMessage
+from django_ilmoitin.utils import send_all, send_mail
 from parler.models import TranslatedFields
 from parler.utils.context import switch_language
 from projects.models import Project
@@ -95,6 +96,13 @@ class Message(TimestampedModel, TranslatableModel):
 
         for guardian in guardians:
             with switch_language(self, guardian.language):
+
+                # hopefully this functionality that uses django-ilmoitin's internals
+                # is only temporarily here, and will be removed when either
+                # 1) we need to use a notification template and thus will use ilmoitin's
+                #    regular send_notification(), or
+                # 2) support for sending a mail without a notification template will be
+                #    added to ilmoitin and we can use that
                 if guardian.language in getattr(
                     settings, "ILMOITIN_TRANSLATED_FROM_EMAIL", {}
                 ):
@@ -107,6 +115,10 @@ class Message(TimestampedModel, TranslatableModel):
                 send_mail(
                     self.subject, self.body_text, guardian.email, from_email=from_email,
                 )
+
+        if not getattr(settings, "ILMOITIN_QUEUE_NOTIFICATIONS", False):
+            MailerMessage.objects.retry_deferred()
+            send_all()
 
     def get_recipient_guardians(self):
         guardians = Guardian.objects.filter(children__project=self.project)
