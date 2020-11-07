@@ -82,6 +82,9 @@ class MessageNode(DjangoObjectType):
         except cls._meta.model.DoesNotExist:
             return None
 
+    def resolve_recipient_count(self, info, **kwargs):
+        return self.get_recipient_count()
+
 
 class MessageTranslationsInput(graphene.InputObjectType):
     language_code = LanguageEnum(required=True)

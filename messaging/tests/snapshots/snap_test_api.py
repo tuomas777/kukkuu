@@ -13,7 +13,7 @@ snapshots["test_add_message[None] 1"] = {
                 "event": None,
                 "occurrences": {"edges": []},
                 "project": {"year": 2020},
-                "recipientCount": None,
+                "recipientCount": 0,
                 "recipientSelection": "ALL",
                 "sentAt": None,
                 "translations": [
@@ -35,7 +35,7 @@ snapshots["test_add_message[event] 1"] = {
                 "event": {"name": "Free heart significant machine try."},
                 "occurrences": {"edges": []},
                 "project": {"year": 2020},
-                "recipientCount": None,
+                "recipientCount": 0,
                 "recipientSelection": "ALL",
                 "sentAt": None,
                 "translations": [
@@ -63,7 +63,7 @@ snapshots["test_add_message[occurrences] 1"] = {
                     ]
                 },
                 "project": {"year": 2020},
-                "recipientCount": None,
+                "recipientCount": 0,
                 "recipientSelection": "ALL",
                 "sentAt": None,
                 "translations": [
@@ -93,7 +93,7 @@ snapshots["test_message_query 1"] = {
             "event": None,
             "occurrences": {"edges": []},
             "project": {"year": 2020},
-            "recipientCount": None,
+            "recipientCount": 0,
             "recipientSelection": "ALL",
             "sentAt": None,
             "subject": "Otsikko",
@@ -111,7 +111,7 @@ snapshots["test_messages_query 1"] = {
                         "event": None,
                         "occurrences": {"edges": []},
                         "project": {"year": 2020},
-                        "recipientCount": None,
+                        "recipientCount": 0,
                         "recipientSelection": "ALL",
                         "sentAt": None,
                         "subject": "Otsikko",
@@ -132,7 +132,7 @@ snapshots["test_messages_query_project_filter 1"] = {
                         "event": None,
                         "occurrences": {"edges": []},
                         "project": {"year": 2020},
-                        "recipientCount": None,
+                        "recipientCount": 0,
                         "recipientSelection": "ALL",
                         "sentAt": None,
                         "subject": "Otsikko",
@@ -162,7 +162,7 @@ snapshots["test_update_message[None] 1"] = {
                 "event": {"name": "Free heart significant machine try."},
                 "occurrences": {"edges": []},
                 "project": {"year": 2020},
-                "recipientCount": None,
+                "recipientCount": 0,
                 "recipientSelection": "ATTENDED",
                 "sentAt": None,
                 "translations": [
@@ -186,7 +186,7 @@ snapshots["test_update_message[event] 1"] = {
                 },
                 "occurrences": {"edges": []},
                 "project": {"year": 2020},
-                "recipientCount": None,
+                "recipientCount": 0,
                 "recipientSelection": "ATTENDED",
                 "sentAt": None,
                 "translations": [
@@ -212,7 +212,7 @@ snapshots["test_update_message[event_and_occurrences] 1"] = {
                     "edges": [{"node": {"time": "2016-08-16T07:10:00+00:00"}}]
                 },
                 "project": {"year": 2020},
-                "recipientCount": None,
+                "recipientCount": 0,
                 "recipientSelection": "ATTENDED",
                 "sentAt": None,
                 "translations": [

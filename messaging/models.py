@@ -84,6 +84,13 @@ class Message(TimestampedModel, TranslatableModel):
     def __str__(self):
         return f"({self.pk}) {self.subject} ({self.sent_at or 'not sent'})"
 
+    def get_recipient_count(self):
+        return (
+            self.recipient_count
+            if self.sent_at
+            else self.get_recipient_guardians().count()
+        )
+
     def send(self, *, force=False):
         if self.sent_at and not force:
             raise AlreadySentError()
