@@ -11,7 +11,7 @@ class MessageAdmin(TranslatableAdmin):
         "subject",
         "project",
         "sent_at",
-        "recipient_count",
+        "get_recipient_count",
         "created_at",
         "updated_at",
     )
@@ -24,10 +24,17 @@ class MessageAdmin(TranslatableAdmin):
         "occurrences",
         "created_at",
         "updated_at",
-        "recipient_count",
+        "get_recipient_count",
     )
-    readonly_fields = ("recipient_count", "created_at", "updated_at")
+    readonly_fields = ("get_recipient_count", "created_at", "updated_at")
     actions = ("send",)
+
+    def get_recipient_count(self, obj):
+        return str(obj.get_recipient_count()) + (
+            str(_(" (if sent now)")) if not obj.sent_at else ""
+        )
+
+    get_recipient_count.short_description = _("recipient count")
 
     def send(self, request, queryset):
         sent_count = 0
