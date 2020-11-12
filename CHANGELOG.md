@@ -1,6 +1,10 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.7.0] - 12 Nov 2020
+### Added
+- Add manual message functionality
+
 ## [1.6.0] - 16 Oct 2020
 ### Added
 - Add Free spot notification functionality

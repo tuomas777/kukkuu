@@ -21,6 +21,7 @@ from kukkuu.consts import (
     INELIGIBLE_OCCURRENCE_ENROLMENT,
     INVALID_EMAIL_FORMAT_ERROR,
     MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR,
+    MESSAGE_ALREADY_SENT_ERROR,
     MISSING_DEFAULT_TRANSLATION_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
     OCCURRENCE_IS_FULL_ERROR,
@@ -39,6 +40,7 @@ from kukkuu.exceptions import (
     InvalidEmailFormatError,
     KukkuuGraphQLError,
     MaxNumberOfChildrenPerGuardianError,
+    MessageAlreadySentError,
     MissingDefaultTranslationError,
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
@@ -68,6 +70,7 @@ error_codes_kukkuu = {
     IneligibleOccurrenceEnrolment: INELIGIBLE_OCCURRENCE_ENROLMENT,
     AlreadySubscribedError: ALREADY_SUBSCRIBED_ERROR,
     OccurrenceIsNotFullError: OCCURRENCE_IS_NOT_FULL_ERROR,
+    MessageAlreadySentError: MESSAGE_ALREADY_SENT_ERROR,
 }
 
 sentry_ignored_errors = (

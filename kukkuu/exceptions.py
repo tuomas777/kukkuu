@@ -62,3 +62,7 @@ class AlreadySubscribedError(KukkuuGraphQLError):
 
 class OccurrenceIsNotFullError(KukkuuGraphQLError):
     """Cannot subscribe to free spot notifications because the occurrence is not full"""
+
+
+class MessageAlreadySentError(KukkuuGraphQLError):
+    """Message already sent"""
