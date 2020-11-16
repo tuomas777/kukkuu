@@ -1,10 +1,13 @@
 from django.contrib import admin
-from django.forms import BaseInlineFormSet
+from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.db import transaction
+from django.forms import BaseInlineFormSet, ModelMultipleChoiceField
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
+from parler.forms import TranslatableModelForm
 from subscriptions.models import FreeSpotNotificationSubscription
 
-from .models import Enrolment, Event, Occurrence
+from .models import Enrolment, Event, EventGroup, Occurrence
 
 
 class OccurrencesInline(admin.StackedInline):
@@ -23,6 +26,7 @@ class EventAdmin(TranslatableAdmin):
         "get_project_year",
         "created_at",
         "updated_at",
+        "event_group",
     )
     list_display_links = ("id", "name")
     list_select_related = ("project",)
@@ -37,6 +41,7 @@ class EventAdmin(TranslatableAdmin):
         "image",
         "image_alt_text",
         "published_at",
+        "event_group",
     )
     inlines = [
         OccurrencesInline,
@@ -100,3 +105,52 @@ class OccurrenceAdmin(admin.ModelAdmin):
 
     get_enrolments.short_description = _("enrolments")
     get_free_spot_notification_subscriptions.short_description = _("subscriptions")
+
+
+class EventGroupForm(TranslatableModelForm):
+    events = ModelMultipleChoiceField(
+        queryset=Event.objects.all(),
+        widget=FilteredSelectMultiple(verbose_name="events", is_stacked=False),
+        required=False,
+    )
+
+    class Meta:
+        model = EventGroup
+        fields = (
+            "project",
+            "name",
+            "short_description",
+            "description",
+            "image",
+            "image_alt_text",
+            "published_at",
+            "events",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance:
+            self.fields["events"].initial = self.instance.events.all()
+
+
+@admin.register(EventGroup)
+class EventGroupAdmin(TranslatableAdmin):
+    list_display = (
+        "name",
+        "short_description",
+        "project",
+        "get_event_count",
+    )
+
+    readonly_fields = ("published_at",)
+    form = EventGroupForm
+
+    def get_event_count(self, obj):
+        return obj.events.count()
+
+    get_event_count.short_description = _("event count")
+
+    @transaction.atomic
+    def save_model(self, request, obj, form, change):
+        obj.events.set(form.cleaned_data["events"])
+        obj.save()

@@ -15,6 +15,48 @@ from events.utils import send_event_notifications_to_guardians
 from venues.models import Venue
 
 
+class EventGroupQueryset(TranslatableQuerySet):
+    def user_can_view(self, user):
+        return self.filter(
+            Q(project__users=user) | Q(published_at__isnull=False)
+        ).distinct()
+
+
+class EventGroup(TimestampedModel, TranslatableModel):
+    translations = TranslatedFields(
+        name=models.CharField(verbose_name=_("name"), max_length=255, blank=True),
+        short_description=models.TextField(
+            verbose_name=_("short description"), blank=True
+        ),
+        description=models.TextField(verbose_name=_("description"), blank=True),
+        image_alt_text=models.CharField(
+            verbose_name=_("image alt text"), blank=True, max_length=255
+        ),
+    )
+    image = models.ImageField(blank=True, verbose_name=_("image"))
+    published_at = models.DateTimeField(
+        blank=True, null=True, verbose_name=_("published at")
+    )
+    project = models.ForeignKey(
+        "projects.Project",
+        verbose_name=_("project"),
+        related_name="event_groups",
+        on_delete=models.CASCADE,
+    )
+
+    objects = EventGroupQueryset.as_manager()
+
+    class Meta:
+        verbose_name = _("event group")
+        verbose_name_plural = _("event groups")
+        ordering = ("id",)
+
+    def __str__(self):
+        name = self.safe_translation_getter("name", super().__str__())
+        published_text = _("published") if self.published_at else _("unpublished")
+        return f"{name} ({self.pk}) ({self.project.year}) ({published_text})"
+
+
 # This need to be inherited from TranslatableQuerySet instead of default model.QuerySet
 class EventQueryset(TranslatableQuerySet):
     def user_can_view(self, user):
@@ -66,6 +108,14 @@ class Event(TimestampedModel, TranslatableModel):
         "projects.Project",
         verbose_name=_("project"),
         related_name="events",
+        on_delete=models.CASCADE,
+    )
+    event_group = models.ForeignKey(
+        EventGroup,
+        verbose_name=_("event group"),
+        related_name="events",
+        blank=True,
+        null=True,
         on_delete=models.CASCADE,
     )
 
