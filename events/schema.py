@@ -25,7 +25,7 @@ from common.utils import (
     update_object_with_translations,
 )
 from events.filters import OccurrenceFilter
-from events.models import Enrolment, Event, Occurrence
+from events.models import Enrolment, Event, EventGroup, Occurrence
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
     DataValidationError,
@@ -40,6 +40,8 @@ from venues.models import Venue
 logger = logging.getLogger(__name__)
 
 EventTranslation = apps.get_model("events", "EventTranslation")
+
+EventGroupTranslation = apps.get_model("events", "EventGroupTranslation")
 
 
 def validate_enrolment(child, occurrence):
@@ -83,7 +85,6 @@ class EventNode(DjangoObjectType):
 
     @classmethod
     @login_required
-    # TODO: For now only logged in users can see events
     def get_queryset(cls, queryset, info):
         lang = get_language()
         return (
@@ -111,6 +112,70 @@ class EventNode(DjangoObjectType):
 class EventConnection(Connection):
     class Meta:
         node = EventNode
+
+
+class EventGroupTranslationType(DjangoObjectType):
+    language_code = LanguageEnum(required=True)
+
+    class Meta:
+        model = EventGroupTranslation
+        exclude = ("id", "master")
+
+
+class EventGroupNode(DjangoObjectType):
+    name = graphene.String()
+    description = graphene.String()
+    short_description = graphene.String()
+    image_alt_text = graphene.String()
+
+    class Meta:
+        model = EventGroup
+        interfaces = (relay.Node,)
+        fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "name",
+            "description",
+            "short_description",
+            "image",
+            "image_alt_text",
+            "published_at",
+            "project",
+            "translations",
+            "events",
+        )
+        filter_fields = ("project_id",)
+
+    @classmethod
+    @login_required
+    def get_queryset(cls, queryset, info):
+        lang = get_language()
+        return (
+            queryset.user_can_view(info.context.user)
+            .order_by("-created_at")
+            .language(lang)
+        )
+
+    @classmethod
+    @login_required
+    def get_node(cls, info, id):
+        return super().get_node(info, id)
+
+
+class EventOrEventGroup(graphene.Union):
+    class Meta:
+        types = (EventNode, EventGroupNode)
+
+
+class EventOrEventGroupConnection(Connection):
+    class Meta:
+        node = EventOrEventGroup
+
+
+class EventGroupConnection(Connection):
+    class Meta:
+        node = EventGroupNode
 
 
 class OccurrenceNode(DjangoObjectType):
@@ -496,10 +561,32 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
 
 class Query:
     events = DjangoFilterConnectionField(EventNode)
+    events_and_event_groups = graphene.ConnectionField(
+        EventOrEventGroupConnection, project_id=graphene.ID()
+    )
     occurrences = DjangoFilterConnectionField(OccurrenceNode)
 
     event = relay.Node.Field(EventNode)
+    event_group = relay.Node.Field(EventGroupNode)
     occurrence = relay.Node.Field(OccurrenceNode)
+
+    def resolve_events_and_event_groups(self, info, **kwargs):
+        event_qs = Event.objects.filter(event_group=None)
+        event_group_qs = EventGroup.objects.all()
+
+        if "project_id" in kwargs:
+            project_id = get_node_id_from_global_id(kwargs["project_id"], "ProjectNode")
+            event_qs = event_qs.filter(project_id=project_id)
+            event_group_qs = event_group_qs.filter(project_id=project_id)
+
+        return sorted(
+            (
+                *EventNode.get_queryset(event_qs, info),
+                *EventGroupNode.get_queryset(event_group_qs, info),
+            ),
+            key=lambda e: e.created_at,
+            reverse=True,
+        )
 
 
 class Mutation:
