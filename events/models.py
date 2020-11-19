@@ -56,6 +56,9 @@ class EventGroup(TimestampedModel, TranslatableModel):
         published_text = _("published") if self.published_at else _("unpublished")
         return f"{name} ({self.pk}) ({self.project.year}) ({published_text})"
 
+    def can_user_administer(self, user):
+        return user.projects.filter(pk=self.project_id).exists()
+
 
 # This need to be inherited from TranslatableQuerySet instead of default model.QuerySet
 class EventQueryset(TranslatableQuerySet):

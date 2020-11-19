@@ -559,6 +559,85 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
         return PublishEventMutation(event=event)
 
 
+class EventGroupTranslationsInput(graphene.InputObjectType):
+    name = graphene.String()
+    short_description = graphene.String()
+    description = graphene.String()
+    image_alt_text = graphene.String()
+    language_code = LanguageEnum(required=True)
+
+
+class AddEventGroupMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        translations = graphene.List(EventGroupTranslationsInput)
+        image = Upload()
+        project_id = graphene.GlobalID()
+
+    event_group = graphene.Field(EventGroupNode)
+
+    @classmethod
+    @project_user_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        kwargs["project_id"] = get_obj_if_user_can_administer(
+            info, kwargs.pop("project_id"), Project
+        ).pk
+        event_group = EventGroup.objects.create_translatable_object(**kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} added event group {event_group} "
+            f"with data {kwargs}"
+        )
+
+        return AddEventGroupMutation(event_group=event_group)
+
+
+class UpdateEventGroupMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        id = graphene.GlobalID()
+        image = Upload()
+        translations = graphene.List(EventGroupTranslationsInput)
+        project_id = graphene.GlobalID(required=False)
+
+    event_group = graphene.Field(EventGroupNode)
+
+    @classmethod
+    @project_user_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        project_global_id = kwargs.pop("project_id", None)
+        if project_global_id:
+            kwargs["project_id"] = get_obj_if_user_can_administer(
+                info, project_global_id, Project
+            ).pk
+
+        event_group = get_obj_if_user_can_administer(info, kwargs.pop("id"), EventGroup)
+        update_object_with_translations(event_group, kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} updated event group {event_group} "
+            f"with data {kwargs}"
+        )
+
+        return UpdateEventGroupMutation(event_group=event_group)
+
+
+class DeleteEventGroupMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        id = graphene.GlobalID()
+
+    @classmethod
+    @project_user_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        event_group = get_obj_if_user_can_administer(info, kwargs["id"], EventGroup)
+        event_group.delete()
+
+        logger.info(f"user {info.context.user.uuid} deleted event group {event_group}")
+
+        return DeleteEventGroupMutation()
+
+
 class Query:
     events = DjangoFilterConnectionField(EventNode)
     events_and_event_groups = graphene.ConnectionField(
@@ -601,3 +680,7 @@ class Mutation:
     enrol_occurrence = EnrolOccurrenceMutation.Field()
     unenrol_occurrence = UnenrolOccurrenceMutation.Field()
     set_enrolment_attendance = SetEnrolmentAttendanceMutation.Field()
+
+    add_event_group = AddEventGroupMutation.Field()
+    update_event_group = UpdateEventGroupMutation.Field()
+    delete_event_group = DeleteEventGroupMutation.Field()

@@ -6,6 +6,28 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
+snapshots["test_add_event_group 1"] = {
+    "data": {
+        "addEventGroup": {
+            "eventGroup": {
+                "image": "",
+                "imageAltText": "Image alt text",
+                "project": {"year": 2020},
+                "publishedAt": None,
+                "translations": [
+                    {
+                        "description": "desc",
+                        "imageAltText": "Image alt text",
+                        "languageCode": "FI",
+                        "name": "Event group test",
+                        "shortDescription": "Short desc",
+                    }
+                ],
+            }
+        }
+    }
+}
+
 snapshots["test_add_event_project_user 1"] = {
     "data": {
         "addEvent": {
@@ -56,6 +78,10 @@ snapshots["test_child_enrol_occurence_from_different_project 1"] = {
             }
         }
     }
+}
+
+snapshots["test_delete_event_group 1"] = {
+    "data": {"deleteEventGroup": {"__typename": "DeleteEventGroupMutationPayload"}}
 }
 
 snapshots["test_enrol_occurrence 1"] = {
@@ -215,10 +241,6 @@ Myself yourself able process base sing according. Watch media do concern sit ent
             "updatedAt": "2020-12-12T00:00:00+00:00",
         }
     }
-}
-
-snapshots["test_event_group_query_project_user_wrong_project 1"] = {
-    "data": {"eventGroup": None}
 }
 
 snapshots["test_event_group_query_wrong_project 1"] = {"data": {"eventGroup": None}}
@@ -979,6 +1001,32 @@ snapshots["test_unenrol_occurrence 1"] = {
         "unenrolOccurrence": {
             "child": {"firstName": "Jesse"},
             "occurrence": {"time": "2020-12-12T00:00:00+00:00"},
+        }
+    }
+}
+
+snapshots["test_update_event_group 1"] = {
+    "data": {
+        "updateEventGroup": {
+            "eventGroup": {
+                "image": "spring.jpg",
+                "translations": [
+                    {
+                        "description": "desc",
+                        "imageAltText": "Image alt text",
+                        "languageCode": "SV",
+                        "name": "Event group test in swedish",
+                        "shortDescription": "Short desc",
+                    },
+                    {
+                        "description": "desc",
+                        "imageAltText": "Image alt text",
+                        "languageCode": "FI",
+                        "name": "Event group test in suomi",
+                        "shortDescription": "Short desc",
+                    },
+                ],
+            }
         }
     }
 }
