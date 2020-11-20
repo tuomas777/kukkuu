@@ -152,5 +152,5 @@ class EventGroupAdmin(TranslatableAdmin):
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        obj.events.set(form.cleaned_data["events"])
         obj.save()
+        obj.events.set(form.cleaned_data["events"])
