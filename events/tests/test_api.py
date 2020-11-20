@@ -15,7 +15,12 @@ from projects.factories import ProjectFactory
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
 from common.utils import get_global_id
-from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
+from events.factories import (
+    EnrolmentFactory,
+    EventFactory,
+    EventGroupFactory,
+    OccurrenceFactory,
+)
 from events.models import Enrolment, Event, Occurrence
 from kukkuu.consts import (
     CHILD_ALREADY_JOINED_EVENT_ERROR,
@@ -1356,3 +1361,139 @@ def test_occurrence_capacity(
     )
 
     snapshot.assert_match(executed)
+
+
+EVENT_GROUP_QUERY = """
+query EventGroup($id: ID!) {
+  eventGroup(id: $id) {
+    translations{
+      name
+      shortDescription
+      description
+      imageAltText
+      languageCode
+    }
+    project {
+      year
+    }
+    name
+    description
+    shortDescription
+    image
+    imageAltText
+    publishedAt
+    createdAt
+    updatedAt
+    events {
+      edges {
+        node {
+          __typename
+          name
+        }
+      }
+    }
+  }
+}
+"""
+
+
+@pytest.mark.parametrize("published", (False, True))
+def test_event_group_query_normal_user_and_project_user(
+    snapshot, user_api_client, project_user_api_client, published
+):
+    event_group = EventGroupFactory(published_at=now() if published else None)
+    variables = {"id": get_global_id(event_group)}
+
+    executed = user_api_client.execute(EVENT_GROUP_QUERY, variables=variables)
+    snapshot.assert_match(executed)
+
+    executed = project_user_api_client.execute(EVENT_GROUP_QUERY, variables=variables)
+    snapshot.assert_match(executed)
+
+
+def test_event_group_query_wrong_project(
+    snapshot, project_user_api_client, another_project
+):
+    event_group = EventGroupFactory(project=another_project)
+
+    executed = project_user_api_client.execute(
+        EVENT_GROUP_QUERY, variables={"id": get_global_id(event_group)}
+    )
+
+    snapshot.assert_match(executed)
+
+
+EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY = """
+query EventsAndEventGroups($projectId: ID) {
+  eventsAndEventGroups(projectId: $projectId) {
+    edges {
+      node {
+        ... on EventNode {
+          __typename
+          name
+        }
+        ... on EventGroupNode {
+          __typename
+          name
+        }
+      }
+    }
+  }
+}
+"""
+
+
+def test_events_and_event_groups_query_normal_user(snapshot, guardian_api_client):
+    EventFactory(name="I'M UNPUBLISHED AND SHOULDN'T BE VISIBLE")
+    EventFactory(name="Published Event", published_at=now())
+    EventGroupFactory(name="I'M UNPUBLISHED AND SHOULD NOT BE VISIBLE")
+    EventGroupFactory(name="Published EventGroup", published_at=now())
+
+    executed = guardian_api_client.execute(EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY)
+
+    snapshot.assert_match(executed)
+
+
+def test_events_and_event_groups_query_project_user(snapshot, project_user_api_client):
+    first_event = EventFactory(name="I should be the first")
+    EventFactory(event_group=EventGroupFactory(name="I should be the in the middle"))
+    last_event = EventFactory(name="I should be the last")
+    Event.objects.filter(pk=first_event.pk).update(
+        created_at=now() + timedelta(minutes=1)
+    )
+    Event.objects.filter(pk=last_event.pk).update(
+        created_at=now() - timedelta(minutes=1)
+    )
+
+    executed = project_user_api_client.execute(EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY)
+
+    snapshot.assert_match(executed)
+
+
+def test_events_and_event_groups_query_project_filtering(
+    snapshot, project_user_api_client, project, another_project
+):
+    EventGroupFactory(name="The project's EventGroup", project=project)
+    EventFactory(name="The project's Event", project=project)
+    EventGroupFactory(name="Another project's EventGroup", project=another_project)
+    EventFactory(name="Another project's Event", project=another_project)
+
+    executed = project_user_api_client.execute(EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY)
+    snapshot.assert_match(
+        executed, name="No filter, no permission to see another project"
+    )
+
+    project_user_api_client.user.projects.add(another_project)
+    executed = project_user_api_client.execute(
+        EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY,
+        name="No filter, permission to see both projects",
+    )
+    snapshot.assert_match(executed)
+
+    executed = project_user_api_client.execute(
+        EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY,
+        variables={"projectId": get_global_id(project)},
+    )
+    snapshot.assert_match(
+        executed, name="First project in filter, permission to see both projects"
+    )

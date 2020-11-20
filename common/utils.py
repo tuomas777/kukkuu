@@ -40,6 +40,8 @@ def get_global_id(obj):
 
 
 def get_node_id_from_global_id(global_id, expected_node_name):
+    if not global_id:
+        return None
     try:
         name, id = from_global_id(global_id)
     except (
