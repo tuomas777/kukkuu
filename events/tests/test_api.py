@@ -563,9 +563,12 @@ def test_add_event_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_add_event_project_user(snapshot, project_user_api_client, project):
+def test_add_event_project_user(
+    snapshot, project_user_api_client, project, event_group
+):
     variables = deepcopy(ADD_EVENT_VARIABLES)
     variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
+    variables["input"]["eventGroupId"] = to_global_id("EventGroupNode", event_group.id)
     executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
     snapshot.assert_match(executed)
 
@@ -650,9 +653,14 @@ def test_update_event_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_update_event_project_user(snapshot, project_user_api_client, event):
+def test_update_event_project_user(
+    snapshot, project_user_api_client, event, event_group
+):
     event_variables = deepcopy(UPDATE_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", event.id)
+    event_variables["input"]["eventGroupId"] = to_global_id(
+        "EventGroupNode", event_group.id
+    )
     executed = project_user_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
     )

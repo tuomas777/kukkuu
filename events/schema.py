@@ -279,6 +279,7 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
         capacity_per_occurrence = graphene.Int(required=True)
         image = Upload()
         project_id = graphene.GlobalID()
+        event_group_id = graphene.GlobalID(required=False)
 
     event = graphene.Field(EventNode)
 
@@ -289,6 +290,10 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
         kwargs["project_id"] = get_obj_if_user_can_administer(
             info, kwargs.pop("project_id"), Project
         ).pk
+        if "event_group_id" in kwargs and kwargs["event_group_id"]:
+            kwargs["event_group_id"] = get_obj_if_user_can_administer(
+                info, kwargs.get("event_group_id"), EventGroup
+            ).pk
         event = Event.objects.create_translatable_object(**kwargs)
 
         logger.info(
@@ -307,6 +312,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         image = Upload()
         translations = graphene.List(EventTranslationsInput)
         project_id = graphene.GlobalID(required=False)
+        event_group_id = graphene.GlobalID(required=False)
 
     event = graphene.Field(EventNode)
 
@@ -318,6 +324,11 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         if project_global_id:
             kwargs["project_id"] = get_obj_if_user_can_administer(
                 info, project_global_id, Project
+            ).pk
+
+        if "event_group_id" in kwargs and kwargs["event_group_id"]:
+            kwargs["event_group_id"] = get_obj_if_user_can_administer(
+                info, kwargs["event_group_id"], EventGroup
             ).pk
 
         event = get_obj_if_user_can_administer(info, kwargs.pop("id"), Event)
