@@ -21,7 +21,7 @@ from events.factories import (
     EventGroupFactory,
     OccurrenceFactory,
 )
-from events.models import Enrolment, Event, Occurrence
+from events.models import Enrolment, Event, EventGroup, Occurrence
 from kukkuu.consts import (
     CHILD_ALREADY_JOINED_EVENT_ERROR,
     DATA_VALIDATION_ERROR,
@@ -563,9 +563,12 @@ def test_add_event_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_add_event_project_user(snapshot, project_user_api_client, project):
+def test_add_event_project_user(
+    snapshot, project_user_api_client, project, event_group
+):
     variables = deepcopy(ADD_EVENT_VARIABLES)
     variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
+    variables["input"]["eventGroupId"] = to_global_id("EventGroupNode", event_group.id)
     executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
     snapshot.assert_match(executed)
 
@@ -650,9 +653,14 @@ def test_update_event_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
-def test_update_event_project_user(snapshot, project_user_api_client, event):
+def test_update_event_project_user(
+    snapshot, project_user_api_client, event, event_group
+):
     event_variables = deepcopy(UPDATE_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", event.id)
+    event_variables["input"]["eventGroupId"] = to_global_id(
+        "EventGroupNode", event_group.id
+    )
     executed = project_user_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
     )
@@ -1497,3 +1505,151 @@ def test_events_and_event_groups_query_project_filtering(
     snapshot.assert_match(
         executed, name="First project in filter, permission to see both projects"
     )
+
+
+ADD_EVENT_GROUP_MUTATION = """
+mutation AddEventGroup($input: AddEventGroupMutationInput!) {
+  addEventGroup(input: $input) {
+    eventGroup {
+      translations{
+        languageCode
+        name
+        description
+        imageAltText
+        shortDescription
+      }
+      project{
+        year
+      }
+      image
+      imageAltText
+      publishedAt
+    }
+  }
+}
+"""
+
+ADD_EVENT_GROUP_VARIABLES = {
+    "input": {
+        "translations": [
+            {
+                "name": "Event group test",
+                "shortDescription": "Short desc",
+                "description": "desc",
+                "imageAltText": "Image alt text",
+                "languageCode": "FI",
+            }
+        ],
+        "projectId": "",
+    }
+}
+
+
+def test_add_event_group_permission_denied(api_client, user_api_client):
+    executed = api_client.execute(
+        ADD_EVENT_GROUP_MUTATION, variables=ADD_EVENT_GROUP_VARIABLES
+    )
+    assert_permission_denied(executed)
+
+    executed = user_api_client.execute(
+        ADD_EVENT_GROUP_MUTATION, variables=ADD_EVENT_GROUP_VARIABLES
+    )
+    assert_permission_denied(executed)
+
+
+def test_add_event_group(snapshot, project_user_api_client, project):
+    variables = deepcopy(ADD_EVENT_GROUP_VARIABLES)
+    variables["input"]["projectId"] = get_global_id(project)
+    executed = project_user_api_client.execute(
+        ADD_EVENT_GROUP_MUTATION, variables=variables
+    )
+    snapshot.assert_match(executed)
+
+
+UPDATE_EVENT_GROUP_MUTATION = """
+mutation UpdateEventGroup($input: UpdateEventGroupMutationInput!) {
+  updateEventGroup(input: $input) {
+    eventGroup {
+      translations{
+        name
+        shortDescription
+        description
+        imageAltText
+        languageCode
+      }
+      image
+    }
+  }
+}
+"""
+
+UPDATE_EVENT_GROUP_VARIABLES = {
+    "input": {
+        "id": "",
+        "translations": [
+            {
+                "name": "Event group test in suomi",
+                "shortDescription": "Short desc",
+                "description": "desc",
+                "imageAltText": "Image alt text",
+                "languageCode": "FI",
+            },
+            {
+                "name": "Event group test in swedish",
+                "shortDescription": "Short desc",
+                "description": "desc",
+                "imageAltText": "Image alt text",
+                "languageCode": "SV",
+            },
+        ],
+    }
+}
+
+
+def test_update_event_group_permission_denied(api_client, user_api_client):
+    executed = api_client.execute(
+        UPDATE_EVENT_GROUP_MUTATION, variables=UPDATE_EVENT_GROUP_VARIABLES
+    )
+    assert_permission_denied(executed)
+
+    executed = user_api_client.execute(
+        UPDATE_EVENT_GROUP_MUTATION, variables=UPDATE_EVENT_GROUP_VARIABLES
+    )
+    assert_permission_denied(executed)
+
+
+def test_update_event_group(snapshot, project_user_api_client, event_group):
+    variables = deepcopy(UPDATE_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(event_group)
+    executed = project_user_api_client.execute(
+        UPDATE_EVENT_GROUP_MUTATION, variables=variables
+    )
+    snapshot.assert_match(executed)
+
+
+DELETE_EVENT_GROUP_MUTATION = """
+mutation DeleteEventGroup($input: DeleteEventGroupMutationInput!) {
+  deleteEventGroup(input: $input) {
+    __typename
+  }
+}
+"""
+
+
+def test_delete_event_group_permission_denied(api_client, user_api_client, event_group):
+    variables = {"input": {"id": get_global_id(event_group)}}
+    executed = api_client.execute(DELETE_EVENT_GROUP_MUTATION, variables=variables)
+    assert_permission_denied(executed)
+
+    executed = user_api_client.execute(DELETE_EVENT_GROUP_MUTATION, variables=variables)
+    assert_permission_denied(executed)
+
+
+def test_delete_event_group(snapshot, project_user_api_client, event_group):
+    executed = project_user_api_client.execute(
+        DELETE_EVENT_GROUP_MUTATION,
+        variables={"input": {"id": get_global_id(event_group)}},
+    )
+
+    snapshot.assert_match(executed)
+    assert EventGroup.objects.count() == 0
