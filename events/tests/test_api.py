@@ -697,7 +697,7 @@ def test_update_event_translations(project_user_api_client, event):
         "name": "Event name",
         "description": "Event description",
         "shortDescription": "Event short description",
-        "languageCode": "SV",
+        "languageCode": "EN",
     }
     event_variables["input"]["translations"].append(new_translation)
     project_user_api_client.execute(UPDATE_EVENT_MUTATION, variables=event_variables)
