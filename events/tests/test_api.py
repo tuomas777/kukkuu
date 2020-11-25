@@ -26,6 +26,7 @@ from kukkuu.consts import (
     CHILD_ALREADY_JOINED_EVENT_ERROR,
     DATA_VALIDATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
+    EVENT_GROUP_ALREADY_PUBLISHED_ERROR,
     GENERAL_ERROR,
     INELIGIBLE_OCCURRENCE_ENROLMENT,
     MISSING_DEFAULT_TRANSLATION_ERROR,
@@ -1653,3 +1654,67 @@ def test_delete_event_group(snapshot, project_user_api_client, event_group):
 
     snapshot.assert_match(executed)
     assert EventGroup.objects.count() == 0
+
+
+PUBLISH_EVENT_GROUP_MUTATION = """
+mutation PublishEventGroup($input: PublishEventGroupMutationInput!) {
+  publishEventGroup(input: $input) {
+    eventGroup {
+      publishedAt
+      events {
+        edges {
+          node {
+            publishedAt
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+PUBLISH_EVENT_GROUP_VARIABLES = {"input": {"id": ""}}
+
+
+def test_publish_event_group_permission_denied(
+    user_api_client, project_user_api_client, another_project
+):
+    event = EventFactory(
+        project=another_project, event_group=EventGroupFactory(project=another_project)
+    )
+    variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(event.event_group)
+
+    executed = user_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    assert_permission_denied(executed)
+
+    executed = project_user_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+
+
+def test_publish_event_group(snapshot, project_user_api_client):
+    event = EventFactory(event_group=EventGroupFactory())
+    variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(event.event_group)
+
+    executed = project_user_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+
+    event.refresh_from_db()
+    assert event.event_group.published_at
+    assert event.published_at
+
+    executed = project_user_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, EVENT_GROUP_ALREADY_PUBLISHED_ERROR)
