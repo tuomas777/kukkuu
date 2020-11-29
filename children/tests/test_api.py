@@ -15,7 +15,12 @@ from projects.factories import ProjectFactory
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
 from common.utils import get_global_id, get_node_id_from_global_id
-from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
+from events.factories import (
+    EnrolmentFactory,
+    EventFactory,
+    EventGroupFactory,
+    OccurrenceFactory,
+)
 from kukkuu.consts import (
     API_USAGE_ERROR,
     DATA_VALIDATION_ERROR,
@@ -982,3 +987,121 @@ def test_children_query_ordering(snapshot, project, project_user_api_client):
     )
 
     snapshot.assert_match(executed)
+
+
+CHILD_AVAILABLE_EVENTS_AND_EVENT_GROUPS_QUERY = """
+query Child($id: ID!) {
+  child(id: $id) {
+    availableEventsAndEventGroups{
+      edges {
+        node {
+          ... on EventNode {
+            name
+            __typename
+          }
+          ... on EventGroupNode {
+            name
+            __typename
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+
+def test_available_events_and_event_groups(
+    snapshot,
+    guardian_api_client,
+    child_with_user_guardian,
+    future,
+    past,
+    project,
+    another_project,
+):
+    # the following should NOT be returned
+
+    EventFactory(published_at=now())  # event without occurrences
+    OccurrenceFactory(time=future)  # unpublished event
+    EnrolmentFactory(
+        child=child_with_user_guardian,
+        occurrence=OccurrenceFactory(time=future, event=EventFactory()),
+    )  # enrolled event
+    OccurrenceFactory(event__published_at=now(), time=past)  # event in past
+    OccurrenceFactory(
+        time=future, event__published_at=now(), event__project=another_project,
+    )  # event from another project
+    EventGroupFactory(published_at=now())  # empty event group
+    EventFactory(
+        event_group=EventGroupFactory(published_at=now()), published_at=now()
+    )  # event group without occurrences
+    OccurrenceFactory(
+        time=future, event__event_group=EventGroupFactory()
+    )  # unpublished event group
+    event_group = EventGroupFactory(published_at=now())
+    event_group_occurrences = OccurrenceFactory.create_batch(
+        2,
+        time=timezone.now(),
+        event__published_at=now(),
+        event__event_group=event_group,
+    )
+    EnrolmentFactory(
+        child=child_with_user_guardian, occurrence=event_group_occurrences[0]
+    )  # event group with one of two events enrolled
+    OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__project=another_project,
+        event__event_group=EventGroupFactory(
+            published_at=now(), project=another_project
+        ),
+    )  # event group from another project
+
+    # the following should be returned
+
+    OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__event_group=EventGroupFactory(
+            name="this should be the third", published_at=now() + timedelta(minutes=2)
+        ),
+    )
+    OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__event_group=EventGroupFactory(
+            name="this should be the first", published_at=now() + timedelta(minutes=4)
+        ),
+    )
+    OccurrenceFactory(
+        time=future,
+        event=EventFactory(
+            published_at=now() + timedelta(minutes=3), name="this should be the second"
+        ),
+    )
+    OccurrenceFactory(
+        time=future,
+        event=EventFactory(
+            published_at=now() + timedelta(minutes=1), name="this should be the fourth"
+        ),
+    )
+
+    variables = {"id": get_global_id(child_with_user_guardian)}
+
+    executed = guardian_api_client.execute(
+        CHILD_AVAILABLE_EVENTS_AND_EVENT_GROUPS_QUERY, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+
+    guardian_api_client.user.projects.add(project)
+    executed2 = guardian_api_client.execute(
+        CHILD_AVAILABLE_EVENTS_AND_EVENT_GROUPS_QUERY, variables=variables
+    )
+
+    # having admin rights on the project should not affect available events
+    assert (
+        executed2["data"]["child"]["availableEventsAndEventGroups"]
+        == executed["data"]["child"]["availableEventsAndEventGroups"]
+    )

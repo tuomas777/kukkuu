@@ -50,6 +50,9 @@ class ChildrenConnection(graphene.Connection):
 
 class ChildNode(DjangoObjectType):
     available_events = relay.ConnectionField("events.schema.EventConnection")
+    available_events_and_event_groups = relay.ConnectionField(
+        "events.schema.EventOrEventGroupConnection"
+    )
     past_events = relay.ConnectionField("events.schema.EventConnection")
     languages_spoken_at_home = DjangoConnectionField(LanguageNode)
 
@@ -118,12 +121,25 @@ class ChildNode(DjangoObjectType):
         return past_unparticipated_events | past_enough_participated_events
 
     def resolve_available_events(self, info, **kwargs):
-        return (
-            self.project.events.user_can_view(info.context.user)
-            .published()
-            .filter(occurrences__time__gte=timezone.now())
-            .distinct()
-            .exclude(occurrences__in=self.occurrences.all())
+        return self.project.events.user_can_view(info.context.user).available(self)
+
+    def resolve_available_events_and_event_groups(self, info, **kwargs):
+        from events.schema import EventGroupNode, EventNode  # noqa
+
+        available_events = self.project.events.available(self)
+        available_event_groups = self.project.event_groups.filter(
+            events__in=available_events
+        )
+
+        return sorted(
+            (
+                *EventNode.get_queryset(
+                    available_events.filter(event_group=None), info
+                ),
+                *EventGroupNode.get_queryset(available_event_groups, info),
+            ),
+            key=lambda e: e.published_at,
+            reverse=True,
         )
 
     def resolve_occurrences(self, info, **kwargs):

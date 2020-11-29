@@ -93,6 +93,26 @@ class EventQueryset(TranslatableQuerySet):
     def unpublished(self):
         return self.filter(published_at__isnull=True)
 
+    def available(self, child):
+        """
+        A child's available events must match all of the following rules:
+            * the event must be published
+            * the event must have at least one occurrence in the future
+            * the child must not have enrolled to the event
+            * the child must not have enrolled to any event in the same event group
+              as the event
+        """
+        child_enrolled_event_groups = EventGroup.objects.filter(
+            events__occurrences__in=child.occurrences.all()
+        )
+        return (
+            self.published()
+            .filter(occurrences__time__gte=timezone.now())
+            .distinct()
+            .exclude(occurrences__in=child.occurrences.all())
+            .exclude(event_group__in=child_enrolled_event_groups)
+        )
+
 
 class Event(TimestampedModel, TranslatableModel):
     CHILD_AND_GUARDIAN = "child_and_guardian"
