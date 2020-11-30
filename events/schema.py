@@ -30,6 +30,7 @@ from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
     DataValidationError,
     EventAlreadyPublishedError,
+    EventGroupAlreadyPublishedError,
     IneligibleOccurrenceEnrolment,
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
@@ -649,6 +650,29 @@ class DeleteEventGroupMutation(graphene.relay.ClientIDMutation):
         return DeleteEventGroupMutation()
 
 
+class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        id = graphene.GlobalID()
+
+    event_group = graphene.Field(EventGroupNode)
+
+    @classmethod
+    @project_user_required
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        event_group = get_obj_if_user_can_administer(info, kwargs["id"], EventGroup)
+
+        if event_group.is_published():
+            raise EventGroupAlreadyPublishedError("Event group is already published")
+
+        event_group.publish()
+
+        logger.info(
+            f"user {info.context.user.uuid} published event group {event_group}"
+        )
+
+        return PublishEventGroupMutation(event_group=event_group)
+
+
 class Query:
     events = DjangoFilterConnectionField(EventNode)
     events_and_event_groups = graphene.ConnectionField(
@@ -695,3 +719,4 @@ class Mutation:
     add_event_group = AddEventGroupMutation.Field()
     update_event_group = UpdateEventGroupMutation.Field()
     delete_event_group = DeleteEventGroupMutation.Field()
+    publish_event_group = PublishEventGroupMutation.Field()

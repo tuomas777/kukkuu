@@ -11,7 +11,10 @@ from parler.models import TranslatedFields
 from children.models import Child
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
 from events.consts import NotificationType
-from events.utils import send_event_notifications_to_guardians
+from events.utils import (
+    send_event_group_notifications_to_guardians,
+    send_event_notifications_to_guardians,
+)
 from venues.models import Venue
 
 
@@ -59,6 +62,23 @@ class EventGroup(TimestampedModel, TranslatableModel):
     def can_user_administer(self, user):
         return user.projects.filter(pk=self.project_id).exists()
 
+    def publish(self):
+        with transaction.atomic():
+            self.published_at = timezone.now()
+            self.save()
+
+            for event in self.events.unpublished():
+                event.publish(send_notifications=False)
+
+        send_event_group_notifications_to_guardians(
+            self,
+            NotificationType.EVENT_GROUP_PUBLISHED,
+            self.project.children.prefetch_related("guardians"),
+        )
+
+    def is_published(self):
+        return bool(self.published_at)
+
 
 # This need to be inherited from TranslatableQuerySet instead of default model.QuerySet
 class EventQueryset(TranslatableQuerySet):
@@ -69,6 +89,9 @@ class EventQueryset(TranslatableQuerySet):
 
     def published(self):
         return self.filter(published_at__isnull=False)
+
+    def unpublished(self):
+        return self.filter(published_at__isnull=True)
 
 
 class Event(TimestampedModel, TranslatableModel):
@@ -154,15 +177,16 @@ class Event(TimestampedModel, TranslatableModel):
     def can_user_administer(self, user):
         return user.projects.filter(pk=self.project_id).exists()
 
-    def publish(self):
+    def publish(self, send_notifications=True):
         self.published_at = timezone.now()
         self.save()
 
-        send_event_notifications_to_guardians(
-            self,
-            NotificationType.EVENT_PUBLISHED,
-            self.project.children.prefetch_related("guardians"),
-        )
+        if send_notifications:
+            send_event_notifications_to_guardians(
+                self,
+                NotificationType.EVENT_PUBLISHED,
+                self.project.children.prefetch_related("guardians"),
+            )
 
     def is_published(self):
         return bool(self.published_at)

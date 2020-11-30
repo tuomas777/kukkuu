@@ -140,10 +140,14 @@ class EventGroupAdmin(TranslatableAdmin):
         "short_description",
         "project",
         "get_event_count",
+        "published_at",
+        "created_at",
+        "updated_at",
     )
 
     readonly_fields = ("published_at",)
     form = EventGroupForm
+    actions = ("publish",)
 
     def get_event_count(self, obj):
         return obj.events.count()
@@ -154,3 +158,8 @@ class EventGroupAdmin(TranslatableAdmin):
     def save_model(self, request, obj, form, change):
         obj.save()
         obj.events.set(form.cleaned_data["events"])
+
+    def publish(self, request, queryset):
+        for obj in queryset:
+            obj.publish()
+        self.message_user(request, _("%s successfully published.") % queryset.count())
