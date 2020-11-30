@@ -1718,3 +1718,51 @@ def test_publish_event_group(snapshot, project_user_api_client):
     )
 
     assert_match_error_code(executed, EVENT_GROUP_ALREADY_PUBLISHED_ERROR)
+
+
+EVENT_GROUP_EVENTS_FILTER_QUERY = """
+query EventGroup($id: ID!, $availableForChild: String) {
+  eventGroup(id: $id) {
+    events(availableForChild: $availableForChild) {
+      edges {
+        node {
+          name
+        }
+      }
+    }
+  }
+}
+"""
+
+
+def test_event_group_events_filtering_by_available_for_child_id(
+    snapshot, guardian_api_client, user_api_client, event_group, past, future
+):
+    child_with_guardian = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user
+    )
+    OccurrenceFactory(
+        time=past, event__published_at=past, event__event_group=event_group
+    )
+    OccurrenceFactory(
+        time=future,
+        event__published_at=past,
+        event__name="ME ME ME",
+        event__event_group=event_group,
+    )
+
+    variables = {
+        "id": get_global_id(event_group),
+        "availableForChild": get_global_id(child_with_guardian),
+    }
+
+    executed = guardian_api_client.execute(
+        EVENT_GROUP_EVENTS_FILTER_QUERY, variables=variables
+    )
+    snapshot.assert_match(executed)
+
+    # filtering by someone else's child should not do anything
+    executed = user_api_client.execute(
+        EVENT_GROUP_EVENTS_FILTER_QUERY, variables=variables
+    )
+    snapshot.assert_match(executed)

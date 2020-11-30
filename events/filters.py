@@ -5,8 +5,9 @@ from django.conf import settings
 from django.utils import timezone
 from graphql_relay import from_global_id
 
+from children.models import Child
 from common.utils import get_node_id_from_global_id
-from events.models import Occurrence
+from events.models import Event, Occurrence
 from events.utils import convert_to_localtime_tz
 
 
@@ -78,3 +79,24 @@ class OccurrenceFilter(django_filters.FilterSet):
     def filter_by_project_global_id(self, qs, name, value):
         node_id = get_node_id_from_global_id(value, "ProjectNode")
         return qs.filter(event__project_id=node_id) if node_id else qs.none()
+
+
+class EventFilter(django_filters.FilterSet):
+    available_for_child = django_filters.CharFilter(
+        method="filter_by_available_for_child"
+    )
+
+    class Meta:
+        model = Event
+        fields = [
+            "project_id",
+            "available_for_child",
+        ]
+
+    def filter_by_available_for_child(self, qs, name, value):
+        child_id = get_node_id_from_global_id(value, "ChildNode")
+        try:
+            child = Child.objects.user_can_view(self.request.user).get(id=child_id)
+        except Child.DoesNotExist:
+            return qs
+        return qs.available(child)
