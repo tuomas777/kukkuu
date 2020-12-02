@@ -34,6 +34,16 @@ def setup_test_environment(settings):
 
 
 @pytest.fixture
+def future():
+    return timezone.now() + timedelta(days=1)
+
+
+@pytest.fixture
+def past():
+    return timezone.now() - timedelta(days=1)
+
+
+@pytest.fixture
 def languages():
     return [
         Language.objects.create_from_language_code(code)

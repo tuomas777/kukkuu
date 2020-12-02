@@ -28,6 +28,7 @@ class EventFactory(factory.django.DjangoModelFactory):
     )
     capacity_per_occurrence = factory.Faker("random_int", max=50)
     project = factory.LazyFunction(lambda: Project.objects.get(year=2020))
+    event_group = None
 
     class Meta:
         model = Event

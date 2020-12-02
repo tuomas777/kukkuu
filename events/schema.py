@@ -24,7 +24,7 @@ from common.utils import (
     update_object,
     update_object_with_translations,
 )
-from events.filters import OccurrenceFilter
+from events.filters import EventFilter, OccurrenceFilter
 from events.models import Enrolment, Event, EventGroup, Occurrence
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
@@ -82,7 +82,7 @@ class EventNode(DjangoObjectType):
     class Meta:
         model = Event
         interfaces = (relay.Node,)
-        filter_fields = ("project_id",)
+        filterset_class = EventFilter
 
     @classmethod
     @login_required

@@ -19,6 +19,41 @@ snapshots["test_add_child_mutation 1"] = {
     }
 }
 
+snapshots["test_available_events_and_event_groups 1"] = {
+    "data": {
+        "child": {
+            "availableEventsAndEventGroups": {
+                "edges": [
+                    {
+                        "node": {
+                            "__typename": "EventGroupNode",
+                            "name": "this should be the first",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "name": "this should be the second",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventGroupNode",
+                            "name": "this should be the third",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "name": "this should be the fourth",
+                        }
+                    },
+                ]
+            }
+        }
+    }
+}
+
 snapshots["test_child_query 1"] = {
     "data": {
         "child": {

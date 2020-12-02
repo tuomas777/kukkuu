@@ -155,6 +155,23 @@ snapshots["test_event_filter_by_project 1"] = {
     "data": {"events": {"edges": [{"node": {"name": "Should be visible"}}]}}
 }
 
+snapshots["test_event_group_events_filtering_by_available_for_child_id 1"] = {
+    "data": {"eventGroup": {"events": {"edges": [{"node": {"name": "ME ME ME"}}]}}}
+}
+
+snapshots["test_event_group_events_filtering_by_available_for_child_id 2"] = {
+    "data": {
+        "eventGroup": {
+            "events": {
+                "edges": [
+                    {"node": {"name": "Think significant land especially can quite."}},
+                    {"node": {"name": "ME ME ME"}},
+                ]
+            }
+        }
+    }
+}
+
 snapshots["test_event_group_query_normal_user_and_project_user[False] 1"] = {
     "data": {"eventGroup": None}
 }
