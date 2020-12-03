@@ -3,7 +3,7 @@ import logging
 import graphene
 from django.apps import apps
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, relay
@@ -90,6 +90,12 @@ class EventNode(DjangoObjectType):
         lang = get_language()
         return (
             queryset.user_can_view(info.context.user)
+            .prefetch_related(
+                Prefetch(
+                    "translations",
+                    queryset=EventTranslation.objects.order_by("language_code"),
+                )
+            )
             .order_by("-created_at")
             .language(lang)
         )
@@ -108,6 +114,9 @@ class EventNode(DjangoObjectType):
         return self.occurrences.annotate(
             enrolment_count=Count("enrolments", distinct=True)
         ).order_by("time")
+
+    def resolve_translations(self, info, **kwargs):
+        return self.translations.order_by("language_code")
 
 
 class EventConnection(Connection):
@@ -154,6 +163,12 @@ class EventGroupNode(DjangoObjectType):
         lang = get_language()
         return (
             queryset.user_can_view(info.context.user)
+            .prefetch_related(
+                Prefetch(
+                    "translations",
+                    queryset=EventGroupTranslation.objects.order_by("language_code"),
+                )
+            )
             .order_by("-created_at")
             .language(lang)
         )
@@ -162,6 +177,9 @@ class EventGroupNode(DjangoObjectType):
     @login_required
     def get_node(cls, info, id):
         return super().get_node(info, id)
+
+    def resolve_translations(self, info, **kwargs):
+        return self.translations.order_by("language_code")
 
 
 class EventOrEventGroup(graphene.Union):
