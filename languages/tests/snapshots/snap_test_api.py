@@ -12,9 +12,9 @@ snapshots["test_language_query 1"] = {
             "alpha3Code": "fin",
             "name": "suomi",
             "translations": [
-                {"languageCode": "SV", "name": "Finska"},
-                {"languageCode": "FI", "name": "suomi"},
                 {"languageCode": "EN", "name": "Finnish"},
+                {"languageCode": "FI", "name": "suomi"},
+                {"languageCode": "SV", "name": "Finska"},
             ],
         }
     }

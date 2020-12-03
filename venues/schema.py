@@ -3,7 +3,7 @@ import logging
 import graphene
 from django.apps import apps
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 from django.utils.translation import get_language
 from graphene import relay
 from graphene_django import DjangoObjectType
@@ -55,7 +55,17 @@ class VenueNode(DjangoObjectType):
         # always order venues by their name in Finnish, because that is all we need ATM
         # in Kukkuu FE and Kukkuu admin, and properly supporting ordering by the other
         # languages isn't trivial
-        return queryset.translated("fi").order_by("translations__name").language(lang)
+        return (
+            queryset.prefetch_related(
+                Prefetch(
+                    "translations",
+                    queryset=VenueTranslation.objects.order_by("language_code"),
+                )
+            )
+            .translated("fi")
+            .order_by("translations__name")
+            .language(lang)
+        )
 
     @classmethod
     @login_required
@@ -70,6 +80,9 @@ class VenueNode(DjangoObjectType):
             .select_related("event")
             .order_by("time")
         )
+
+    def resolve_translations(self, info, **kwargs):
+        return self.translations.order_by("language_code")
 
 
 class VenueTranslationsInput(graphene.InputObjectType):

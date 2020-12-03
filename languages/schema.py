@@ -1,6 +1,6 @@
 import graphene
 from django.apps import apps
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 from languages.models import Language
@@ -25,7 +25,12 @@ class LanguageNode(DjangoObjectType):
     @classmethod
     def get_queryset(cls, queryset, info):
         return (
-            queryset.prefetch_related("translations")
+            queryset.prefetch_related(
+                Prefetch(
+                    "translations",
+                    queryset=LanguageTranslation.objects.order_by("language_code"),
+                )
+            )
             .translated()
             .annotate(has_code=Count("alpha_3_code"))  # to order null codes as last
             .order_by("-has_code", "translations__name", "id")
