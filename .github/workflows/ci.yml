@@ -56,7 +56,7 @@ jobs:
       - name: Run tests
         run: pytest -ra -vv --doctest-modules --cov=.
         env:
-          DATABASE_URL: localhost://kukkuu:kukkuu@postgres:5432/kukkuu
+          DATABASE_URL: postgres://kukkuu:kukkuu@localhost:5432/kukkuu
 
       - name: Coverage
         run: codecov
