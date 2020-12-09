@@ -2,8 +2,8 @@ name: Continuous integration
 
 on:
   push:
-    branches: [master]
-  pull_request:
+    # branches: [master]
+  # pull_request:
 
 
 env:
@@ -35,6 +35,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+
       - name: Cache pip packages
         uses: actions/cache@v2
         env:
@@ -48,8 +53,7 @@ jobs:
             ${{ runner.os }}-
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt -r requirements-dev.txt codecov && \
-          apt-get update && apt-get install -y build-essential
+          pip install -r requirements.txt -r requirements-dev.txt codecov
       - name: Run tests
         run: pytest -ra -vv --doctest-modules --cov=.
         env:
