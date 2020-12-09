@@ -14,7 +14,6 @@ jobs:
   test:
     name: Tests
     runs-on: ubuntu-latest
-    container: python:3.7-buster
 
     services:
       postgres:
