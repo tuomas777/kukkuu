@@ -800,8 +800,6 @@ def test_get_past_events(
 ):
     variables = {"id": to_global_id("ChildNode", child_with_user_guardian.id)}
 
-    next_project = ProjectFactory(year=2021)
-
     past = timezone.now() - timedelta(
         minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY + 1
     )
@@ -820,7 +818,7 @@ def test_get_past_events(
     the_past_occurrence = OccurrenceFactory(time=past, event=event, venue=venue)
     EnrolmentFactory(child=child_with_user_guardian, occurrence=the_past_occurrence)
 
-    # Enrolled occurrence in the past but not enough, event should be NOT visible
+    # Enrolled occurrence in the past but not enough, event should NOT be visible
     event_2 = EventFactory(
         published_at=timezone.now(),
         project=project,
@@ -834,37 +832,14 @@ def test_get_past_events(
         child=child_with_user_guardian, occurrence=the_not_so_past_occurrence
     )
 
-    # Event without an enrolment in the past, should be visible
+    # Event without an enrolment in the past, should NOT be visible
     event_3 = EventFactory(
-        published_at=timezone.now(), project=project, name="event in the past"
+        published_at=timezone.now(),
+        project=project,
+        name="unenrolled event in the past",
     )
     OccurrenceFactory(time=past, event=event_3, venue=venue)
     OccurrenceFactory(time=not_enough_past, event=event_3, venue=venue)
-
-    # Event without an enrolment in the future, should NOT be visible
-    event_4 = EventFactory(
-        published_at=timezone.now(), project=project, name="event in the future"
-    )
-    OccurrenceFactory(time=not_enough_past, event=event_4, venue=venue)
-    OccurrenceFactory(time=future, event=event_4, venue=venue)
-
-    # Past occurrence but from another project, should NOT be visible
-    OccurrenceFactory(
-        time=past,
-        event__published_at=timezone.now(),
-        event__project=next_project,
-        event__name="another project event",
-        venue=venue,
-    )
-
-    # Unpublished occurrences in the past, should NOT be visible
-    OccurrenceFactory.create_batch(
-        3,
-        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)),
-        event__project=project,
-        event__name="unpublished event in the past",
-        venue=venue,
-    )
 
     executed = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
     snapshot.assert_match(executed)

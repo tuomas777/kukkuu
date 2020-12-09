@@ -417,21 +417,7 @@ snapshots["test_get_available_events 1"] = {
 snapshots["test_get_past_events 1"] = {
     "data": {
         "child": {
-            "availableEvents": {
-                "edges": [
-                    {
-                        "node": {
-                            "createdAt": "2020-12-12T00:00:00+00:00",
-                            "occurrences": {
-                                "edges": [
-                                    {"node": {"remainingCapacity": 0}},
-                                    {"node": {"remainingCapacity": 0}},
-                                ]
-                            },
-                        }
-                    }
-                ]
-            },
+            "availableEvents": {"edges": []},
             "occurrences": {
                 "edges": [
                     {"node": {"time": "2020-12-11T23:29:00+00:00"}},
@@ -451,19 +437,7 @@ snapshots["test_get_past_events 1"] = {
                                 ]
                             },
                         }
-                    },
-                    {
-                        "node": {
-                            "createdAt": "2020-12-12T00:00:00+00:00",
-                            "name": "event in the past",
-                            "occurrences": {
-                                "edges": [
-                                    {"node": {"remainingCapacity": 32}},
-                                    {"node": {"remainingCapacity": 32}},
-                                ]
-                            },
-                        }
-                    },
+                    }
                 ]
             },
         }
