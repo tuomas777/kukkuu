@@ -27,6 +27,7 @@ from kukkuu.consts import (
     DATA_VALIDATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
     EVENT_GROUP_ALREADY_PUBLISHED_ERROR,
+    EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
     GENERAL_ERROR,
     INELIGIBLE_OCCURRENCE_ENROLMENT,
     MISSING_DEFAULT_TRANSLATION_ERROR,
@@ -270,6 +271,7 @@ mutation AddEvent($input: AddEventMutationInput!) {
       participantsPerInvite
       capacityPerOccurrence
       publishedAt
+      readyForEventGroupPublishing
     }
   }
 }
@@ -316,6 +318,7 @@ mutation UpdateEvent($input: UpdateEventMutationInput!) {
           }
         }
       }
+      readyForEventGroupPublishing
     }
   }
 }
@@ -664,6 +667,18 @@ def test_update_event_project_user(
     )
     executed = project_user_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
+    )
+    snapshot.assert_match(executed)
+
+
+def test_update_event_ready_for_event_group_publishing(
+    snapshot, project_user_api_client, event, event_group
+):
+    variables = {
+        "input": {"id": get_global_id(event), "readyForEventGroupPublishing": True},
+    }
+    executed = project_user_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=variables
     )
     snapshot.assert_match(executed)
 
@@ -1698,8 +1713,23 @@ def test_publish_event_group_permission_denied(
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
 
 
-def test_publish_event_group(snapshot, project_user_api_client):
+def test_publish_event_group_events_not_ready(snapshot, project_user_api_client):
     event = EventFactory(event_group=EventGroupFactory())
+    EventFactory(event_group=event.event_group, ready_for_event_group_publishing=False)
+    variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(event.event_group)
+
+    executed = project_user_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR)
+
+
+def test_publish_event_group(snapshot, project_user_api_client):
+    event = EventFactory(
+        event_group=EventGroupFactory(), ready_for_event_group_publishing=True
+    )
     variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
     variables["input"]["id"] = get_global_id(event.event_group)
 
