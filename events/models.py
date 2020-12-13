@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import F, Q
 from django.utils import timezone
@@ -15,6 +16,7 @@ from events.utils import (
     send_event_group_notifications_to_guardians,
     send_event_notifications_to_guardians,
 )
+from kukkuu.consts import EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR
 from venues.models import Venue
 
 
@@ -63,11 +65,18 @@ class EventGroup(TimestampedModel, TranslatableModel):
         return user.projects.filter(pk=self.project_id).exists()
 
     def publish(self):
+        unpublished_events = self.events.unpublished()
+        if any(not e.ready_for_event_group_publishing for e in unpublished_events):
+            raise ValidationError(
+                f"All events are not ready for event group publishing.",
+                code=EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
+            )
+
         with transaction.atomic():
             self.published_at = timezone.now()
             self.save()
 
-            for event in self.events.unpublished():
+            for event in unpublished_events:
                 event.publish(send_notifications=False)
 
         send_event_group_notifications_to_guardians(
@@ -163,6 +172,9 @@ class Event(TimestampedModel, TranslatableModel):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
+    )
+    ready_for_event_group_publishing = models.BooleanField(
+        verbose_name=_("ready for event group publishing"), default=False
     )
 
     objects = EventQueryset.as_manager()
