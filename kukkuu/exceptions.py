@@ -40,6 +40,10 @@ class EventGroupAlreadyPublishedError(KukkuuGraphQLError):
     """Error when admin publish event group which is already published"""
 
 
+class EventGroupNotReadyForPublishingError(KukkuuGraphQLError):
+    """Event group not ready for publishing"""
+
+
 class ObjectDoesNotExistError(KukkuuGraphQLError):
     """Object does not exist"""
 

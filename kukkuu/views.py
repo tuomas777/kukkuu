@@ -18,6 +18,7 @@ from kukkuu.consts import (
     DATA_VALIDATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
     EVENT_GROUP_ALREADY_PUBLISHED_ERROR,
+    EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
     GENERAL_ERROR,
     INELIGIBLE_OCCURRENCE_ENROLMENT,
     INVALID_EMAIL_FORMAT_ERROR,
@@ -38,6 +39,7 @@ from kukkuu.exceptions import (
     DataValidationError,
     EventAlreadyPublishedError,
     EventGroupAlreadyPublishedError,
+    EventGroupNotReadyForPublishingError,
     IneligibleOccurrenceEnrolment,
     InvalidEmailFormatError,
     KukkuuGraphQLError,
@@ -74,6 +76,7 @@ error_codes_kukkuu = {
     AlreadySubscribedError: ALREADY_SUBSCRIBED_ERROR,
     OccurrenceIsNotFullError: OCCURRENCE_IS_NOT_FULL_ERROR,
     MessageAlreadySentError: MESSAGE_ALREADY_SENT_ERROR,
+    EventGroupNotReadyForPublishingError: EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
 }
 
 sentry_ignored_errors = (

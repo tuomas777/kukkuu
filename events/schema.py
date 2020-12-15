@@ -2,6 +2,7 @@ import logging
 
 import graphene
 from django.apps import apps
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count, Prefetch, Q
 from django.utils import timezone
@@ -36,6 +37,7 @@ from kukkuu.exceptions import (
     OccurrenceIsFullError,
     PastOccurrenceError,
 )
+from kukkuu.utils import get_kukkuu_error_by_code
 from venues.models import Venue
 
 logger = logging.getLogger(__name__)
@@ -299,6 +301,7 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
         image = Upload()
         project_id = graphene.GlobalID()
         event_group_id = graphene.GlobalID(required=False)
+        ready_for_event_group_publishing = graphene.Boolean()
 
     event = graphene.Field(EventNode)
 
@@ -332,6 +335,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         translations = graphene.List(EventTranslationsInput)
         project_id = graphene.GlobalID(required=False)
         event_group_id = graphene.GlobalID(required=False)
+        ready_for_event_group_publishing = graphene.Boolean()
 
     event = graphene.Field(EventNode)
 
@@ -682,7 +686,14 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
         if event_group.is_published():
             raise EventGroupAlreadyPublishedError("Event group is already published")
 
-        event_group.publish()
+        try:
+            event_group.publish()
+        except ValidationError as e:
+            kukkuu_error = get_kukkuu_error_by_code(e.code)
+            if kukkuu_error:
+                raise kukkuu_error(e.message)
+            else:
+                raise
 
         logger.info(
             f"user {info.context.user.uuid} published event group {event_group}"

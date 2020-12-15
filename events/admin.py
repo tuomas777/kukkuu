@@ -1,5 +1,6 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import BaseInlineFormSet, ModelMultipleChoiceField
 from django.utils.translation import ugettext_lazy as _
@@ -27,6 +28,7 @@ class EventAdmin(TranslatableAdmin):
         "created_at",
         "updated_at",
         "event_group",
+        "ready_for_event_group_publishing",
     )
     list_display_links = ("id", "name")
     list_select_related = ("project",)
@@ -42,6 +44,7 @@ class EventAdmin(TranslatableAdmin):
         "image_alt_text",
         "published_at",
         "event_group",
+        "ready_for_event_group_publishing",
     )
     inlines = [
         OccurrencesInline,
@@ -160,6 +163,12 @@ class EventGroupAdmin(TranslatableAdmin):
         obj.events.set(form.cleaned_data["events"])
 
     def publish(self, request, queryset):
+        success_count = 0
         for obj in queryset:
-            obj.publish()
-        self.message_user(request, _("%s successfully published.") % queryset.count())
+            try:
+                obj.publish()
+                success_count += 1
+            except ValidationError as e:
+                self.message_user(request, e.message, level=messages.ERROR)
+        if success_count:
+            self.message_user(request, _("%s successfully published.") % success_count)

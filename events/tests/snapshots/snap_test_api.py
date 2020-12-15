@@ -39,6 +39,7 @@ snapshots["test_add_event_project_user 1"] = {
                 "participantsPerInvite": "FAMILY",
                 "project": {"year": 2020},
                 "publishedAt": None,
+                "readyForEventGroupPublishing": False,
                 "translations": [
                     {
                         "description": "desc",
@@ -1004,6 +1005,7 @@ snapshots["test_required_translation 1"] = {
                 "participantsPerInvite": "FAMILY",
                 "project": {"year": 2020},
                 "publishedAt": None,
+                "readyForEventGroupPublishing": False,
                 "translations": [
                     {
                         "description": "desc",
@@ -1071,6 +1073,7 @@ snapshots["test_update_event_project_user 1"] = {
                 "imageAltText": "Image alt text",
                 "occurrences": {"edges": []},
                 "participantsPerInvite": "FAMILY",
+                "readyForEventGroupPublishing": True,
                 "translations": [
                     {
                         "description": "desc",
@@ -1086,6 +1089,32 @@ snapshots["test_update_event_project_user 1"] = {
                         "name": "Event test in swedish",
                         "shortDescription": "Short desc",
                     },
+                ],
+            }
+        }
+    }
+}
+
+snapshots["test_update_event_ready_for_event_group_publishing 1"] = {
+    "data": {
+        "updateEvent": {
+            "event": {
+                "capacityPerOccurrence": 50,
+                "duration": 197,
+                "image": "http://testserver/media/spring.jpg",
+                "imageAltText": "",
+                "occurrences": {"edges": []},
+                "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
+                "readyForEventGroupPublishing": True,
+                "translations": [
+                    {
+                        "description": """Serious listen police shake. Page box child care any concern.
+Agree room laugh prevent make. Our very television beat at success decade.""",
+                        "imageAltText": "",
+                        "languageCode": "FI",
+                        "name": "Free heart significant machine try.",
+                        "shortDescription": "Perform in weight success answer.",
+                    }
                 ],
             }
         }
