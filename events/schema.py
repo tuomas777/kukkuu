@@ -2,8 +2,9 @@ import logging
 
 import graphene
 from django.apps import apps
+from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, relay
@@ -24,22 +25,26 @@ from common.utils import (
     update_object,
     update_object_with_translations,
 )
-from events.filters import OccurrenceFilter
-from events.models import Enrolment, Event, Occurrence
+from events.filters import EventFilter, OccurrenceFilter
+from events.models import Enrolment, Event, EventGroup, Occurrence
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
     DataValidationError,
     EventAlreadyPublishedError,
+    EventGroupAlreadyPublishedError,
     IneligibleOccurrenceEnrolment,
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
     PastOccurrenceError,
 )
+from kukkuu.utils import get_kukkuu_error_by_code
 from venues.models import Venue
 
 logger = logging.getLogger(__name__)
 
 EventTranslation = apps.get_model("events", "EventTranslation")
+
+EventGroupTranslation = apps.get_model("events", "EventGroupTranslation")
 
 
 def validate_enrolment(child, occurrence):
@@ -79,15 +84,20 @@ class EventNode(DjangoObjectType):
     class Meta:
         model = Event
         interfaces = (relay.Node,)
-        filter_fields = ("project_id",)
+        filterset_class = EventFilter
 
     @classmethod
     @login_required
-    # TODO: For now only logged in users can see events
     def get_queryset(cls, queryset, info):
         lang = get_language()
         return (
             queryset.user_can_view(info.context.user)
+            .prefetch_related(
+                Prefetch(
+                    "translations",
+                    queryset=EventTranslation.objects.order_by("language_code"),
+                )
+            )
             .order_by("-created_at")
             .language(lang)
         )
@@ -107,10 +117,86 @@ class EventNode(DjangoObjectType):
             enrolment_count=Count("enrolments", distinct=True)
         ).order_by("time")
 
+    def resolve_translations(self, info, **kwargs):
+        return self.translations.order_by("language_code")
+
 
 class EventConnection(Connection):
     class Meta:
         node = EventNode
+
+
+class EventGroupTranslationType(DjangoObjectType):
+    language_code = LanguageEnum(required=True)
+
+    class Meta:
+        model = EventGroupTranslation
+        exclude = ("id", "master")
+
+
+class EventGroupNode(DjangoObjectType):
+    name = graphene.String()
+    description = graphene.String()
+    short_description = graphene.String()
+    image_alt_text = graphene.String()
+
+    class Meta:
+        model = EventGroup
+        interfaces = (relay.Node,)
+        fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "name",
+            "description",
+            "short_description",
+            "image",
+            "image_alt_text",
+            "published_at",
+            "project",
+            "translations",
+            "events",
+        )
+        filter_fields = ("project_id",)
+
+    @classmethod
+    @login_required
+    def get_queryset(cls, queryset, info):
+        lang = get_language()
+        return (
+            queryset.user_can_view(info.context.user)
+            .prefetch_related(
+                Prefetch(
+                    "translations",
+                    queryset=EventGroupTranslation.objects.order_by("language_code"),
+                )
+            )
+            .order_by("-created_at")
+            .language(lang)
+        )
+
+    @classmethod
+    @login_required
+    def get_node(cls, info, id):
+        return super().get_node(info, id)
+
+    def resolve_translations(self, info, **kwargs):
+        return self.translations.order_by("language_code")
+
+
+class EventOrEventGroup(graphene.Union):
+    class Meta:
+        types = (EventNode, EventGroupNode)
+
+
+class EventOrEventGroupConnection(Connection):
+    class Meta:
+        node = EventOrEventGroup
+
+
+class EventGroupConnection(Connection):
+    class Meta:
+        node = EventGroupNode
 
 
 class OccurrenceNode(DjangoObjectType):
@@ -214,6 +300,8 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
         capacity_per_occurrence = graphene.Int(required=True)
         image = Upload()
         project_id = graphene.GlobalID()
+        event_group_id = graphene.GlobalID(required=False)
+        ready_for_event_group_publishing = graphene.Boolean()
 
     event = graphene.Field(EventNode)
 
@@ -224,6 +312,10 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
         kwargs["project_id"] = get_obj_if_user_can_administer(
             info, kwargs.pop("project_id"), Project
         ).pk
+        if "event_group_id" in kwargs and kwargs["event_group_id"]:
+            kwargs["event_group_id"] = get_obj_if_user_can_administer(
+                info, kwargs.get("event_group_id"), EventGroup
+            ).pk
         event = Event.objects.create_translatable_object(**kwargs)
 
         logger.info(
@@ -242,6 +334,8 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         image = Upload()
         translations = graphene.List(EventTranslationsInput)
         project_id = graphene.GlobalID(required=False)
+        event_group_id = graphene.GlobalID(required=False)
+        ready_for_event_group_publishing = graphene.Boolean()
 
     event = graphene.Field(EventNode)
 
@@ -253,6 +347,11 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         if project_global_id:
             kwargs["project_id"] = get_obj_if_user_can_administer(
                 info, project_global_id, Project
+            ).pk
+
+        if "event_group_id" in kwargs and kwargs["event_group_id"]:
+            kwargs["event_group_id"] = get_obj_if_user_can_administer(
+                info, kwargs["event_group_id"], EventGroup
             ).pk
 
         event = get_obj_if_user_can_administer(info, kwargs.pop("id"), Event)
@@ -494,12 +593,143 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
         return PublishEventMutation(event=event)
 
 
+class EventGroupTranslationsInput(graphene.InputObjectType):
+    name = graphene.String()
+    short_description = graphene.String()
+    description = graphene.String()
+    image_alt_text = graphene.String()
+    language_code = LanguageEnum(required=True)
+
+
+class AddEventGroupMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        translations = graphene.List(EventGroupTranslationsInput)
+        image = Upload()
+        project_id = graphene.GlobalID()
+
+    event_group = graphene.Field(EventGroupNode)
+
+    @classmethod
+    @project_user_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        kwargs["project_id"] = get_obj_if_user_can_administer(
+            info, kwargs.pop("project_id"), Project
+        ).pk
+        event_group = EventGroup.objects.create_translatable_object(**kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} added event group {event_group} "
+            f"with data {kwargs}"
+        )
+
+        return AddEventGroupMutation(event_group=event_group)
+
+
+class UpdateEventGroupMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        id = graphene.GlobalID()
+        image = Upload()
+        translations = graphene.List(EventGroupTranslationsInput)
+        project_id = graphene.GlobalID(required=False)
+
+    event_group = graphene.Field(EventGroupNode)
+
+    @classmethod
+    @project_user_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        project_global_id = kwargs.pop("project_id", None)
+        if project_global_id:
+            kwargs["project_id"] = get_obj_if_user_can_administer(
+                info, project_global_id, Project
+            ).pk
+
+        event_group = get_obj_if_user_can_administer(info, kwargs.pop("id"), EventGroup)
+        update_object_with_translations(event_group, kwargs)
+
+        logger.info(
+            f"user {info.context.user.uuid} updated event group {event_group} "
+            f"with data {kwargs}"
+        )
+
+        return UpdateEventGroupMutation(event_group=event_group)
+
+
+class DeleteEventGroupMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        id = graphene.GlobalID()
+
+    @classmethod
+    @project_user_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        event_group = get_obj_if_user_can_administer(info, kwargs["id"], EventGroup)
+        event_group.delete()
+
+        logger.info(f"user {info.context.user.uuid} deleted event group {event_group}")
+
+        return DeleteEventGroupMutation()
+
+
+class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        id = graphene.GlobalID()
+
+    event_group = graphene.Field(EventGroupNode)
+
+    @classmethod
+    @project_user_required
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        event_group = get_obj_if_user_can_administer(info, kwargs["id"], EventGroup)
+
+        if event_group.is_published():
+            raise EventGroupAlreadyPublishedError("Event group is already published")
+
+        try:
+            event_group.publish()
+        except ValidationError as e:
+            kukkuu_error = get_kukkuu_error_by_code(e.code)
+            if kukkuu_error:
+                raise kukkuu_error(e.message)
+            else:
+                raise
+
+        logger.info(
+            f"user {info.context.user.uuid} published event group {event_group}"
+        )
+
+        return PublishEventGroupMutation(event_group=event_group)
+
+
 class Query:
     events = DjangoFilterConnectionField(EventNode)
+    events_and_event_groups = graphene.ConnectionField(
+        EventOrEventGroupConnection, project_id=graphene.ID()
+    )
     occurrences = DjangoFilterConnectionField(OccurrenceNode)
 
     event = relay.Node.Field(EventNode)
+    event_group = relay.Node.Field(EventGroupNode)
     occurrence = relay.Node.Field(OccurrenceNode)
+
+    def resolve_events_and_event_groups(self, info, **kwargs):
+        event_qs = Event.objects.filter(event_group=None)
+        event_group_qs = EventGroup.objects.all()
+
+        if "project_id" in kwargs:
+            project_id = get_node_id_from_global_id(kwargs["project_id"], "ProjectNode")
+            event_qs = event_qs.filter(project_id=project_id)
+            event_group_qs = event_group_qs.filter(project_id=project_id)
+
+        return sorted(
+            (
+                *EventNode.get_queryset(event_qs, info),
+                *EventGroupNode.get_queryset(event_group_qs, info),
+            ),
+            key=lambda e: e.created_at,
+            reverse=True,
+        )
 
 
 class Mutation:
@@ -514,3 +744,8 @@ class Mutation:
     enrol_occurrence = EnrolOccurrenceMutation.Field()
     unenrol_occurrence = UnenrolOccurrenceMutation.Field()
     set_enrolment_attendance = SetEnrolmentAttendanceMutation.Field()
+
+    add_event_group = AddEventGroupMutation.Field()
+    update_event_group = UpdateEventGroupMutation.Field()
+    delete_event_group = DeleteEventGroupMutation.Field()
+    publish_event_group = PublishEventGroupMutation.Field()

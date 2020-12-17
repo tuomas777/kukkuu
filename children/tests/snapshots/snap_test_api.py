@@ -19,6 +19,41 @@ snapshots["test_add_child_mutation 1"] = {
     }
 }
 
+snapshots["test_available_events_and_event_groups 1"] = {
+    "data": {
+        "child": {
+            "availableEventsAndEventGroups": {
+                "edges": [
+                    {
+                        "node": {
+                            "__typename": "EventGroupNode",
+                            "name": "this should be the first",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "name": "this should be the second",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventGroupNode",
+                            "name": "this should be the third",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "name": "this should be the fourth",
+                        }
+                    },
+                ]
+            }
+        }
+    }
+}
+
 snapshots["test_child_query 1"] = {
     "data": {
         "child": {
@@ -382,21 +417,7 @@ snapshots["test_get_available_events 1"] = {
 snapshots["test_get_past_events 1"] = {
     "data": {
         "child": {
-            "availableEvents": {
-                "edges": [
-                    {
-                        "node": {
-                            "createdAt": "2020-12-12T00:00:00+00:00",
-                            "occurrences": {
-                                "edges": [
-                                    {"node": {"remainingCapacity": 0}},
-                                    {"node": {"remainingCapacity": 0}},
-                                ]
-                            },
-                        }
-                    }
-                ]
-            },
+            "availableEvents": {"edges": []},
             "occurrences": {
                 "edges": [
                     {"node": {"time": "2020-12-11T23:29:00+00:00"}},
@@ -416,19 +437,7 @@ snapshots["test_get_past_events 1"] = {
                                 ]
                             },
                         }
-                    },
-                    {
-                        "node": {
-                            "createdAt": "2020-12-12T00:00:00+00:00",
-                            "name": "event in the past",
-                            "occurrences": {
-                                "edges": [
-                                    {"node": {"remainingCapacity": 32}},
-                                    {"node": {"remainingCapacity": 32}},
-                                ]
-                            },
-                        }
-                    },
+                    }
                 ]
             },
         }

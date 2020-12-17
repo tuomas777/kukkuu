@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import F, Q
 from django.utils import timezone
@@ -11,8 +12,81 @@ from parler.models import TranslatedFields
 from children.models import Child
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
 from events.consts import NotificationType
-from events.utils import send_event_notifications_to_guardians
+from events.utils import (
+    send_event_group_notifications_to_guardians,
+    send_event_notifications_to_guardians,
+)
+from kukkuu.consts import EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR
 from venues.models import Venue
+
+
+class EventGroupQueryset(TranslatableQuerySet):
+    def user_can_view(self, user):
+        return self.filter(
+            Q(project__users=user) | Q(published_at__isnull=False)
+        ).distinct()
+
+
+class EventGroup(TimestampedModel, TranslatableModel):
+    translations = TranslatedFields(
+        name=models.CharField(verbose_name=_("name"), max_length=255, blank=True),
+        short_description=models.TextField(
+            verbose_name=_("short description"), blank=True
+        ),
+        description=models.TextField(verbose_name=_("description"), blank=True),
+        image_alt_text=models.CharField(
+            verbose_name=_("image alt text"), blank=True, max_length=255
+        ),
+    )
+    image = models.ImageField(blank=True, verbose_name=_("image"))
+    published_at = models.DateTimeField(
+        blank=True, null=True, verbose_name=_("published at")
+    )
+    project = models.ForeignKey(
+        "projects.Project",
+        verbose_name=_("project"),
+        related_name="event_groups",
+        on_delete=models.CASCADE,
+    )
+
+    objects = EventGroupQueryset.as_manager()
+
+    class Meta:
+        verbose_name = _("event group")
+        verbose_name_plural = _("event groups")
+        ordering = ("id",)
+
+    def __str__(self):
+        name = self.safe_translation_getter("name", super().__str__())
+        published_text = _("published") if self.published_at else _("unpublished")
+        return f"{name} ({self.pk}) ({self.project.year}) ({published_text})"
+
+    def can_user_administer(self, user):
+        return user.projects.filter(pk=self.project_id).exists()
+
+    def publish(self):
+        unpublished_events = self.events.unpublished()
+        if any(not e.ready_for_event_group_publishing for e in unpublished_events):
+            raise ValidationError(
+                f"All events are not ready for event group publishing.",
+                code=EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
+            )
+
+        with transaction.atomic():
+            self.published_at = timezone.now()
+            self.save()
+
+            for event in unpublished_events:
+                event.publish(send_notifications=False)
+
+        send_event_group_notifications_to_guardians(
+            self,
+            NotificationType.EVENT_GROUP_PUBLISHED,
+            self.project.children.prefetch_related("guardians"),
+        )
+
+    def is_published(self):
+        return bool(self.published_at)
 
 
 # This need to be inherited from TranslatableQuerySet instead of default model.QuerySet
@@ -24,6 +98,29 @@ class EventQueryset(TranslatableQuerySet):
 
     def published(self):
         return self.filter(published_at__isnull=False)
+
+    def unpublished(self):
+        return self.filter(published_at__isnull=True)
+
+    def available(self, child):
+        """
+        A child's available events must match all of the following rules:
+            * the event must be published
+            * the event must have at least one occurrence in the future
+            * the child must not have enrolled to the event
+            * the child must not have enrolled to any event in the same event group
+              as the event
+        """
+        child_enrolled_event_groups = EventGroup.objects.filter(
+            events__occurrences__in=child.occurrences.all()
+        )
+        return (
+            self.published()
+            .filter(occurrences__time__gte=timezone.now())
+            .distinct()
+            .exclude(occurrences__in=child.occurrences.all())
+            .exclude(event_group__in=child_enrolled_event_groups)
+        )
 
 
 class Event(TimestampedModel, TranslatableModel):
@@ -68,6 +165,17 @@ class Event(TimestampedModel, TranslatableModel):
         related_name="events",
         on_delete=models.CASCADE,
     )
+    event_group = models.ForeignKey(
+        EventGroup,
+        verbose_name=_("event group"),
+        related_name="events",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    ready_for_event_group_publishing = models.BooleanField(
+        verbose_name=_("ready for event group publishing"), default=False
+    )
 
     objects = EventQueryset.as_manager()
 
@@ -101,15 +209,16 @@ class Event(TimestampedModel, TranslatableModel):
     def can_user_administer(self, user):
         return user.projects.filter(pk=self.project_id).exists()
 
-    def publish(self):
+    def publish(self, send_notifications=True):
         self.published_at = timezone.now()
         self.save()
 
-        send_event_notifications_to_guardians(
-            self,
-            NotificationType.EVENT_PUBLISHED,
-            self.project.children.prefetch_related("guardians"),
-        )
+        if send_notifications:
+            send_event_notifications_to_guardians(
+                self,
+                NotificationType.EVENT_PUBLISHED,
+                self.project.children.prefetch_related("guardians"),
+            )
 
     def is_published(self):
         return bool(self.published_at)

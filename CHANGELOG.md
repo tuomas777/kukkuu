@@ -1,6 +1,17 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.8.0] - 17 Dec 2020
+### Added
+- Add event group functionality
+- Add `availableForChild(childId)` filter to `EventNode`
+
+### Changed
+- Disable django-parler caching
+- Migrate CI/CD to GitHub actions
+- Exclude unenrolled events from `ChildNode.pastEvents()`
+- Add ordering for API's `translations` fields
+
 ## [1.7.0] - 12 Nov 2020
 ### Added
 - Add manual message functionality
@@ -133,7 +144,9 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.7.0...v1.8.0
+[1.7.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.4.0...v1.5.0

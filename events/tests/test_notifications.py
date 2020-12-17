@@ -15,7 +15,12 @@ from common.tests.utils import (
     create_notification_template_in_language,
 )
 from common.utils import get_global_id
-from events.factories import EnrolmentFactory, OccurrenceFactory
+from events.factories import (
+    EnrolmentFactory,
+    EventFactory,
+    EventGroupFactory,
+    OccurrenceFactory,
+)
 from events.models import Enrolment, Occurrence
 from events.notifications import NotificationType
 from events.tests.test_api import (
@@ -36,6 +41,24 @@ def notification_template_event_published_fi():
         Event FI: {{ event.name }}
         Guardian FI: {{ guardian }}
         Event URL: {{ event_url }}
+""",
+    )
+
+
+@pytest.fixture
+def notification_template_event_group_published_fi():
+    return create_notification_template_in_language(
+        NotificationType.EVENT_GROUP_PUBLISHED,
+        "fi",
+        subject="Event group published FI",
+        body_text="""
+        Event group FI: {{ event_group.name }}
+        Guardian FI: {{ guardian }}
+        Url: {{ event_group_url }}
+        Events:
+        {% for event in events %}
+            {{ event.obj.name}} {{ event.obj.published_at }} {{ event.event_url }}
+        {% endfor %}
 """,
     )
 
@@ -120,6 +143,22 @@ def test_event_publish_notification(
     project_user_api_client.execute(PUBLISH_EVENT_MUTATION, variables=event_variables)
 
     assert len(mail.outbox) == 5  # 3 children of which one has 3 guardians
+
+
+@pytest.mark.django_db
+def test_event_group_publish_notification(
+    snapshot,
+    notification_template_event_published_fi,
+    notification_template_event_group_published_fi,
+    another_project,
+):
+    ChildWithGuardianFactory(id=777)
+    ChildWithGuardianFactory(project=another_project)
+    event = EventFactory(id=777, event_group=EventGroupFactory(id=777))
+
+    event.event_group.publish()
+
+    assert_mails_match_snapshot(snapshot)
 
 
 @pytest.mark.django_db

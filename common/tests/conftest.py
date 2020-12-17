@@ -14,7 +14,7 @@ from projects.factories import ProjectFactory
 from projects.models import Project
 
 from children.factories import ChildWithGuardianFactory
-from events.factories import EventFactory, OccurrenceFactory
+from events.factories import EventFactory, EventGroupFactory, OccurrenceFactory
 from kukkuu.schema import schema
 from kukkuu.views import SentryGraphQLView
 from users.factories import GuardianFactory, UserFactory
@@ -31,6 +31,16 @@ def setup_test_environment(settings):
     with translation.override("fi"), freeze_time("2020-12-12"):
         yield
     shutil.rmtree("test_media", ignore_errors=True)
+
+
+@pytest.fixture
+def future():
+    return timezone.now() + timedelta(days=1)
+
+
+@pytest.fixture
+def past():
+    return timezone.now() - timedelta(days=1)
 
 
 @pytest.fixture
@@ -121,6 +131,11 @@ def unpublished_occurrence(venue, unpublished_event):
     return OccurrenceFactory(
         time=timezone.now() + timedelta(hours=6), venue=venue, event=unpublished_event
     )
+
+
+@pytest.fixture
+def event_group():
+    return EventGroupFactory(published_at=timezone.now())
 
 
 @pytest.fixture()
