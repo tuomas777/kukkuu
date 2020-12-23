@@ -17,9 +17,13 @@ class Project(TranslatableModel):
         verbose_name = _("project")
         verbose_name_plural = _("projects")
         ordering = ["year"]
+        permissions = (
+            ("admin", _("Base admin permission")),
+            ("publish", _("Can publish")),
+        )
 
     def __str__(self):
         return f"{self.name} {self.year}".strip()
 
     def can_user_administer(self, user):
-        return user.projects.filter(pk=self.pk).exists()
+        return user.can_administer_project(self)

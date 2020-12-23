@@ -19,12 +19,13 @@ django-cors-headers==3.1.1  # via -r requirements.in
 django-environ==0.4.5     # via -r requirements.in
 django-filter==2.2.0      # via -r requirements.in
 django-graphql-jwt==0.2.2  # via -r requirements.in
+django-guardian==2.3.0    # via -r requirements.in
 django-helusers==0.5.6    # via -r requirements.in
 django-ilmoitin==0.6.0    # via -r requirements.in
 django-mailer==2.0        # via django-ilmoitin
 django-parler==2.1        # via -r requirements.in, django-ilmoitin
 django-storages[azure,google]==1.9.1  # via -r requirements.in
-django==2.2.13            # via -r requirements.in, django-anymail, django-cors-headers, django-filter, django-graphql-jwt, django-helusers, django-ilmoitin, django-mailer, django-storages, drf-oidc-auth, graphene-django
+django==2.2.13            # via -r requirements.in, django-anymail, django-cors-headers, django-filter, django-graphql-jwt, django-guardian, django-helusers, django-ilmoitin, django-mailer, django-storages, drf-oidc-auth, graphene-django
 djangorestframework==3.10.3  # via drf-oidc-auth
 drf-oidc-auth==0.9        # via django-helusers
 ecdsa==0.13.3             # via python-jose
