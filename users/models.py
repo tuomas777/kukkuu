@@ -1,12 +1,19 @@
+from typing import List, TYPE_CHECKING
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Q
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
+from guardian.shortcuts import get_objects_for_user
 from helusers.models import AbstractUser
 from languages.models import Language
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
+
+if TYPE_CHECKING:
+    from projects.models import Project
 
 
 class User(AbstractUser):
@@ -14,10 +21,21 @@ class User(AbstractUser):
         verbose_name = _("user")
         verbose_name_plural = _("users")
 
+    @cached_property
+    def administered_projects(self) -> List["Project"]:
+        from projects.models import Project  # noqa
+
+        return list(get_objects_for_user(self, "admin", Project))
+
+    def can_administer_project(self, project: "Project") -> bool:
+        return project in self.administered_projects
+
 
 class GuardianQuerySet(models.QuerySet):
     def user_can_view(self, user):
-        return self.filter(Q(user=user) | Q(children__project__users=user)).distinct()
+        return self.filter(
+            Q(user=user) | Q(children__project__in=user.administered_projects)
+        ).distinct()
 
 
 class Guardian(UUIDPrimaryKeyModel, TimestampedModel):

@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 import pytest
+from guardian.shortcuts import assign_perm
 from projects.factories import ProjectFactory
 
 from children.factories import RelationshipFactory
@@ -306,7 +307,7 @@ def test_my_admin_profile_normal_user(user_api_client):
 
 def test_my_admin_profile_project_admin(snapshot, user_api_client):
     project = ProjectFactory(year=2021, name="my only project")
-    project.users.add(user_api_client.user)
+    assign_perm("admin", user_api_client.user, project)
     ProjectFactory(year=2022, name="someone else's project")
 
     executed = user_api_client.execute(MY_ADMIN_PROFILE_QUERY)

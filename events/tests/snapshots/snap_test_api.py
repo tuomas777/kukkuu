@@ -393,6 +393,36 @@ snapshots[
     }
 }
 
+snapshots[
+    "test_events_and_event_groups_query_project_filtering No filter, permission to see both projects"
+] = {
+    "data": {
+        "eventsAndEventGroups": {
+            "edges": [
+                {"node": {"__typename": "EventNode", "name": "The project's Event"}},
+                {
+                    "node": {
+                        "__typename": "EventNode",
+                        "name": "Another project's Event",
+                    }
+                },
+                {
+                    "node": {
+                        "__typename": "EventGroupNode",
+                        "name": "The project's EventGroup",
+                    }
+                },
+                {
+                    "node": {
+                        "__typename": "EventGroupNode",
+                        "name": "Another project's EventGroup",
+                    }
+                },
+            ]
+        }
+    }
+}
+
 snapshots["test_events_and_event_groups_query_project_user 1"] = {
     "data": {
         "eventsAndEventGroups": {

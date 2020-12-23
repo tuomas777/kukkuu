@@ -4,7 +4,7 @@ import graphene
 from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, Prefetch
 from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, relay
@@ -278,10 +278,7 @@ class EnrolmentNode(DjangoObjectType):
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        user = info.context.user
-        return queryset.filter(
-            Q(child__guardians__user=info.context.user) | Q(child__project__users=user)
-        ).distinct()
+        return queryset.user_can_view(info.context.user)
 
 
 class EventTranslationsInput(graphene.InputObjectType):

@@ -9,6 +9,7 @@ from django.test import RequestFactory
 from django.utils import timezone, translation
 from freezegun import freeze_time
 from graphene.test import Client
+from guardian.shortcuts import assign_perm
 from languages.models import Language
 from projects.factories import ProjectFactory
 from projects.models import Project
@@ -90,7 +91,7 @@ def guardian_api_client():
 @pytest.fixture()
 def project_user_api_client(project):
     user = UserFactory()
-    user.projects.set([project])
+    assign_perm("admin", user, project)
     return create_api_client_with_user(user)
 
 
@@ -141,14 +142,14 @@ def event_group():
 @pytest.fixture()
 def wrong_project_api_client(another_project):
     user = UserFactory()
-    user.projects.set([another_project])
+    assign_perm("admin", user, another_project)
     return create_api_client_with_user(user)
 
 
 @pytest.fixture
 def two_project_user_api_client(project, another_project):
     user = UserFactory()
-    user.projects.set([project, another_project])
+    assign_perm("admin", user, [project, another_project])
     return create_api_client_with_user(user)
 
 

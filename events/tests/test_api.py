@@ -1495,7 +1495,11 @@ def test_events_and_event_groups_query_project_user(snapshot, project_user_api_c
 
 
 def test_events_and_event_groups_query_project_filtering(
-    snapshot, project_user_api_client, project, another_project
+    snapshot,
+    project_user_api_client,
+    two_project_user_api_client,
+    project,
+    another_project,
 ):
     EventGroupFactory(name="The project's EventGroup", project=project)
     EventFactory(name="The project's Event", project=project)
@@ -1507,14 +1511,10 @@ def test_events_and_event_groups_query_project_filtering(
         executed, name="No filter, no permission to see another project"
     )
 
-    project_user_api_client.user.projects.add(another_project)
-    executed = project_user_api_client.execute(
-        EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY,
-        name="No filter, permission to see both projects",
-    )
-    snapshot.assert_match(executed)
+    executed = two_project_user_api_client.execute(EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY)
+    snapshot.assert_match(executed, name="No filter, permission to see both projects")
 
-    executed = project_user_api_client.execute(
+    executed = two_project_user_api_client.execute(
         EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY,
         variables={"projectId": get_global_id(project)},
     )
