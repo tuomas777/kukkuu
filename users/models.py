@@ -30,6 +30,9 @@ class User(AbstractUser):
     def can_administer_project(self, project: "Project") -> bool:
         return project in self.administered_projects
 
+    def can_publish_in_project(self, project: "Project") -> bool:
+        return self.has_perm("publish", project)
+
 
 class GuardianQuerySet(models.QuerySet):
     def user_can_view(self, user):

@@ -64,6 +64,9 @@ class EventGroup(TimestampedModel, TranslatableModel):
     def can_user_administer(self, user):
         return user.can_administer_project(self.project)
 
+    def can_user_publish(self, user):
+        return user.can_publish_in_project(self.project)
+
     def publish(self):
         unpublished_events = self.events.unpublished()
         if any(not e.ready_for_event_group_publishing for e in unpublished_events):
@@ -208,6 +211,9 @@ class Event(TimestampedModel, TranslatableModel):
 
     def can_user_administer(self, user):
         return user.can_administer_project(self.project)
+
+    def can_user_publish(self, user):
+        return user.can_publish_in_project(self.project)
 
     def publish(self, send_notifications=True):
         self.published_at = timezone.now()

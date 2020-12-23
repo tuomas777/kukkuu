@@ -1011,6 +1011,10 @@ snapshots["test_project_user_publish_event 1"] = {
     "data": {"publishEvent": {"event": {"publishedAt": "2020-12-12T00:00:00+00:00"}}}
 }
 
+snapshots["test_publish_event 1"] = {
+    "data": {"publishEvent": {"event": {"publishedAt": "2020-12-12T00:00:00+00:00"}}}
+}
+
 snapshots["test_publish_event_group 1"] = {
     "data": {
         "publishEventGroup": {

@@ -95,6 +95,14 @@ def project_user_api_client(project):
     return create_api_client_with_user(user)
 
 
+@pytest.fixture()
+def publisher_api_client(project):
+    user = UserFactory()
+    assign_perm("admin", user, project)
+    assign_perm("publish", user, project)
+    return create_api_client_with_user(user)
+
+
 @pytest.fixture
 def child_with_random_guardian(project):
     return ChildWithGuardianFactory(project=project)

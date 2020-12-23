@@ -2,7 +2,7 @@ import logging
 
 import graphene
 from django.apps import apps
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Count, Prefetch
 from django.utils import timezone
@@ -579,13 +579,17 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event = get_obj_if_user_can_administer(info, kwargs["id"], Event)
+        user = info.context.user
+
+        if not event.can_user_publish(user):
+            raise PermissionDenied("No permission to publish the event.")
 
         if event.is_published():
             raise EventAlreadyPublishedError("Event is already published")
 
         event.publish()
 
-        logger.info(f"user {info.context.user.uuid} published event {event}")
+        logger.info(f"user {user.uuid} published event {event}")
 
         return PublishEventMutation(event=event)
 
@@ -679,6 +683,10 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
     @project_user_required
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event_group = get_obj_if_user_can_administer(info, kwargs["id"], EventGroup)
+        user = info.context.user
+
+        if not event_group.can_user_publish(user):
+            raise PermissionDenied("No permission to publish the event group.")
 
         if event_group.is_published():
             raise EventGroupAlreadyPublishedError("Event group is already published")
@@ -692,9 +700,7 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
             else:
                 raise
 
-        logger.info(
-            f"user {info.context.user.uuid} published event group {event_group}"
-        )
+        logger.info(f"user {user.uuid} published event group {event_group}")
 
         return PublishEventGroupMutation(event_group=event_group)
 

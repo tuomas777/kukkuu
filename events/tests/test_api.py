@@ -744,18 +744,38 @@ def test_upload_image_to_event(project_user_api_client, snapshot, project):
     assert event.image
 
 
-def test_project_user_publish_event(
-    snapshot, project_user_api_client, unpublished_event
-):
+def test_publish_event_no_publish_permission(project_user_api_client):
+    event = EventFactory()
+    variables = deepcopy(PUBLISH_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(event)
+
+    executed = project_user_api_client.execute(
+        PUBLISH_EVENT_MUTATION, variables=variables
+    )
+
+    assert_permission_denied(executed)
+
+
+def test_publish_event_not_own_project(publisher_api_client, another_project):
+    event = EventFactory(project=another_project)
+    variables = deepcopy(PUBLISH_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(event)
+
+    executed = publisher_api_client.execute(PUBLISH_EVENT_MUTATION, variables=variables)
+
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+
+
+def test_publish_event(snapshot, publisher_api_client, unpublished_event):
     assert not unpublished_event.is_published()
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", unpublished_event.id)
-    executed = project_user_api_client.execute(
+    executed = publisher_api_client.execute(
         PUBLISH_EVENT_MUTATION, variables=event_variables
     )
     snapshot.assert_match(executed)
 
-    executed = project_user_api_client.execute(
+    executed = publisher_api_client.execute(
         PUBLISH_EVENT_MUTATION, variables=event_variables
     )
 
@@ -1691,49 +1711,53 @@ mutation PublishEventGroup($input: PublishEventGroupMutationInput!) {
 PUBLISH_EVENT_GROUP_VARIABLES = {"input": {"id": ""}}
 
 
-def test_publish_event_group_permission_denied(
-    user_api_client, project_user_api_client, another_project
-):
+def test_publish_event_group_no_publish_permission(project_user_api_client):
+    event = EventFactory(event_group=EventGroupFactory())
+    variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(event.event_group)
+
+    executed = project_user_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    assert_permission_denied(executed)
+
+
+def test_publish_event_group_not_own_project(publisher_api_client, another_project):
     event = EventFactory(
         project=another_project, event_group=EventGroupFactory(project=another_project)
     )
     variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
     variables["input"]["id"] = get_global_id(event.event_group)
 
-    executed = user_api_client.execute(
-        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
-    )
-
-    assert_permission_denied(executed)
-
-    executed = project_user_api_client.execute(
+    executed = publisher_api_client.execute(
         PUBLISH_EVENT_GROUP_MUTATION, variables=variables
     )
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
 
 
-def test_publish_event_group_events_not_ready(snapshot, project_user_api_client):
+def test_publish_event_group_events_not_ready(publisher_api_client):
     event = EventFactory(event_group=EventGroupFactory())
     EventFactory(event_group=event.event_group, ready_for_event_group_publishing=False)
     variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
     variables["input"]["id"] = get_global_id(event.event_group)
 
-    executed = project_user_api_client.execute(
+    executed = publisher_api_client.execute(
         PUBLISH_EVENT_GROUP_MUTATION, variables=variables
     )
 
     assert_match_error_code(executed, EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR)
 
 
-def test_publish_event_group(snapshot, project_user_api_client):
+def test_publish_event_group(snapshot, publisher_api_client):
     event = EventFactory(
         event_group=EventGroupFactory(), ready_for_event_group_publishing=True
     )
     variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
     variables["input"]["id"] = get_global_id(event.event_group)
 
-    executed = project_user_api_client.execute(
+    executed = publisher_api_client.execute(
         PUBLISH_EVENT_GROUP_MUTATION, variables=variables
     )
 
@@ -1743,7 +1767,7 @@ def test_publish_event_group(snapshot, project_user_api_client):
     assert event.event_group.published_at
     assert event.published_at
 
-    executed = project_user_api_client.execute(
+    executed = publisher_api_client.execute(
         PUBLISH_EVENT_GROUP_MUTATION, variables=variables
     )
 
