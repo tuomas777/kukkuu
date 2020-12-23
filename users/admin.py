@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import ugettext_lazy as _
 from languages.models import Language
-from projects.models import Project
 
 from children.models import Relationship
 from users.models import Guardian
@@ -51,16 +50,10 @@ class GuardianAdmin(admin.ModelAdmin):
     inlines = (RelationshipInline, LanguagesSpokenAtHomeInline)
 
 
-class ProjectInline(admin.TabularInline):
-    model = Project.users.through
-    extra = 0
-
-
 class UserAdmin(DjangoUserAdmin):
     list_display = DjangoUserAdmin.list_display + ("uuid",)
     fieldsets = DjangoUserAdmin.fieldsets + (("UUID", {"fields": ("uuid",)}),)
     readonly_fields = ("uuid",)
-    inlines = (ProjectInline,)
 
 
 admin.site.register(get_user_model(), UserAdmin)
