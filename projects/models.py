@@ -18,6 +18,10 @@ class Project(TranslatableModel):
             ("publish", _("Can publish")),
         )
 
+    @classmethod
+    def get_permission_codenames(cls):
+        return [codename for codename, _ in cls._meta.permissions]
+
     def __str__(self):
         return f"{self.name} {self.year}".strip()
 
