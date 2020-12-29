@@ -467,3 +467,6 @@ class Enrolment(TimestampedModel):
             occurrence=self.occurrence,
             enrolment=self,
         )
+
+    def is_upcoming(self):
+        return self.occurrence.time >= timezone.now()

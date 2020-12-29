@@ -33,6 +33,7 @@ from kukkuu.consts import (
     MISSING_DEFAULT_TRANSLATION_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
     OCCURRENCE_IS_FULL_ERROR,
+    PAST_ENROLMENT_ERROR,
     PAST_OCCURRENCE_ERROR,
 )
 from kukkuu.exceptions import QueryTooDeepError
@@ -468,6 +469,8 @@ mutation UnenrolOccurrence($input: UnenrolOccurrenceMutationInput!) {
 
 """
 
+UNENROL_OCCURRENCE_VARIABLES = {"input": {"occurrenceId": "", "childId": ""}}
+
 SET_ENROLMENT_ATTENDANCE_MUTATION = """
 mutation SetEnrolmentAttendance($input: SetEnrolmentAttendanceMutationInput!) {
   setEnrolmentAttendance(input: $input) {
@@ -902,6 +905,22 @@ def test_unenrol_occurrence(
     assert child.occurrences.count() == 0
     assert child_with_random_guardian.occurrences.count() == 1
     snapshot.assert_match(executed)
+
+
+def test_cannot_unenrol_from_occurrence_in_past(
+    guardian_api_client, child_with_user_guardian, past
+):
+    enrolment = EnrolmentFactory(occurrence__time=past, child=child_with_user_guardian)
+
+    variables = deepcopy(UNENROL_OCCURRENCE_VARIABLES)
+    variables["input"]["occurrenceId"] = get_global_id(enrolment.occurrence)
+    variables["input"]["childId"] = get_global_id(child_with_user_guardian)
+
+    executed = guardian_api_client.execute(
+        UNENROL_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, PAST_ENROLMENT_ERROR)
 
 
 def test_maximum_enrolment(
