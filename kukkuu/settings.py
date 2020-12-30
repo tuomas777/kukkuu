@@ -148,6 +148,7 @@ INSTALLED_APPS = [
     "mailer",
     "django_ilmoitin",
     "django_filters",
+    "guardian",
     # local apps
     "users",
     "children",
@@ -197,7 +198,10 @@ AUTH_USER_MODEL = "users.User"
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "kukkuu.oidc.GraphQLApiTokenAuthentication",
+    "guardian.backends.ObjectPermissionBackend",
 ]
+
+ANONYMOUS_USER_NAME = None  # we don't need django-guardian's AnonymousUser
 
 OIDC_API_TOKEN_AUTH = {
     "AUDIENCE": env.str("TOKEN_AUTH_ACCEPTED_AUDIENCE"),

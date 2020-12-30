@@ -23,7 +23,7 @@ from venues.models import Venue
 class EventGroupQueryset(TranslatableQuerySet):
     def user_can_view(self, user):
         return self.filter(
-            Q(project__users=user) | Q(published_at__isnull=False)
+            Q(project__in=user.administered_projects) | Q(published_at__isnull=False)
         ).distinct()
 
 
@@ -62,7 +62,10 @@ class EventGroup(TimestampedModel, TranslatableModel):
         return f"{name} ({self.pk}) ({self.project.year}) ({published_text})"
 
     def can_user_administer(self, user):
-        return user.projects.filter(pk=self.project_id).exists()
+        return user.can_administer_project(self.project)
+
+    def can_user_publish(self, user):
+        return user.can_publish_in_project(self.project)
 
     def publish(self):
         unpublished_events = self.events.unpublished()
@@ -93,7 +96,7 @@ class EventGroup(TimestampedModel, TranslatableModel):
 class EventQueryset(TranslatableQuerySet):
     def user_can_view(self, user):
         return self.filter(
-            Q(project__users=user) | Q(published_at__isnull=False)
+            Q(project__in=user.administered_projects) | Q(published_at__isnull=False)
         ).distinct()
 
     def published(self):
@@ -207,7 +210,10 @@ class Event(TimestampedModel, TranslatableModel):
             self.occurrences.send_free_spot_notifications_if_needed()
 
     def can_user_administer(self, user):
-        return user.projects.filter(pk=self.project_id).exists()
+        return user.can_administer_project(self.project)
+
+    def can_user_publish(self, user):
+        return user.can_publish_in_project(self.project)
 
     def publish(self, send_notifications=True):
         self.published_at = timezone.now()
@@ -227,7 +233,8 @@ class Event(TimestampedModel, TranslatableModel):
 class OccurrenceQueryset(models.QuerySet):
     def user_can_view(self, user):
         return self.filter(
-            Q(event__project__users=user) | Q(event__published_at__isnull=False)
+            Q(event__project__in=user.administered_projects)
+            | Q(event__published_at__isnull=False)
         ).distinct()
 
     def delete(self, *args, **kwargs):
@@ -328,7 +335,7 @@ class Occurrence(TimestampedModel):
     def can_user_administer(self, user):
         # There shouldn't ever be a situation where event.project != venue.project
         # so we can just check one of them
-        return user.projects.filter(pk=self.event.project.pk).exists()
+        return self.event.can_user_administer(user)
 
     def send_free_spot_notifications_if_needed(self):
         if (
@@ -343,6 +350,12 @@ class Occurrence(TimestampedModel):
 
 
 class EnrolmentQueryset(models.QuerySet):
+    def user_can_view(self, user):
+        return self.filter(
+            Q(child__guardians__user=user)
+            | Q(child__project__in=user.administered_projects)
+        ).distinct()
+
     def send_reminder_notifications(self):
         today = timezone.localtime().date()
         close_enough = today + timedelta(days=settings.KUKKUU_REMINDER_DAYS_IN_ADVANCE)

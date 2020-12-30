@@ -10,7 +10,9 @@ from users.models import Guardian
 
 class ChildQuerySet(models.QuerySet):
     def user_can_view(self, user):
-        return self.filter(Q(guardians__user=user) | Q(project__users=user)).distinct()
+        return self.filter(
+            Q(guardians__user=user) | Q(project__in=user.administered_projects)
+        ).distinct()
 
     def user_can_update(self, user):
         return self.filter(guardians__user=user)
@@ -63,13 +65,13 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
         return f"{self.first_name} {self.last_name} ({self.birthdate})"
 
     def can_user_administer(self, user):
-        return user.projects.filter(pk=self.project_id).exists()
+        return user.can_administer_project(self.project)
 
 
 class RelationshipQuerySet(models.QuerySet):
     def user_can_view(self, user):
         return self.filter(
-            Q(guardian__user=user) | Q(child__project__users=user)
+            Q(guardian__user=user) | Q(child__project__in=user.administered_projects)
         ).distinct()
 
 
