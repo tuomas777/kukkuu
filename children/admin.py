@@ -21,7 +21,7 @@ class RelationshipInline(admin.TabularInline):
 
 class EnrolmentInline(admin.TabularInline):
     model = Enrolment
-    extra = 1
+    extra = 0
     readonly_fields = ("created_at",)
 
 

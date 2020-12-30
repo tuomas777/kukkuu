@@ -13,7 +13,7 @@ from .models import Enrolment, Event, EventGroup, Occurrence
 
 class OccurrencesInline(admin.StackedInline):
     model = Occurrence
-    extra = 1
+    extra = 0
 
 
 @admin.register(Event)
