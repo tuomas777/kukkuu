@@ -356,6 +356,14 @@ class EnrolmentQueryset(models.QuerySet):
             | Q(child__project__in=user.administered_projects)
         ).distinct()
 
+    @transaction.atomic()
+    def delete(self):
+        for enrolment in self:
+            enrolment.delete()
+
+    def upcoming(self):
+        return self.filter(occurrence__time__gt=now())
+
     def send_reminder_notifications(self):
         today = timezone.localtime().date()
         close_enough = today + timedelta(days=settings.KUKKUU_REMINDER_DAYS_IN_ADVANCE)
@@ -380,8 +388,10 @@ class Enrolment(TimestampedModel):
     child = models.ForeignKey(
         Child,
         related_name="enrolments",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name=_("child"),
+        null=True,
+        blank=True,
     )
     occurrence = models.ForeignKey(
         Occurrence,
