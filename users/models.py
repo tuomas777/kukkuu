@@ -11,7 +11,20 @@ from languages.models import Language
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
 
 
+class UserQuerySet(models.QuerySet):
+    def possible_admins(self):
+        # This filtering isn't perfect because
+        #   1) it is possible there are a few normal users without a Guardian object
+        #   2) this prevents using the same user account for Kukkuu UI and Kukkuu admin
+        #      which was convenient in dev/testing, and might be a valid case in
+        #      production as well in the future
+        # but for now this should be easily good enough.
+        return self.filter(guardian=None)
+
+
 class User(AbstractUser):
+    objects = UserQuerySet.as_manager()
+
     class Meta:
         verbose_name = _("user")
         verbose_name_plural = _("users")
