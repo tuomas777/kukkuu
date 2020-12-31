@@ -55,8 +55,8 @@ class EventAdmin(TranslatableAdmin):
         "name",
         "capacity_per_occurrence",
         "participants_per_invite",
-        "is_published",
-        "get_project_year",
+        "published_at",
+        "project",
         "created_at",
         "updated_at",
         "event_group",
@@ -95,17 +95,15 @@ class EventAdmin(TranslatableAdmin):
 
     publish.short_description = _("Publish selected events")
 
-    def get_project_year(self, obj):
-        return obj.project.year
-
-    get_project_year.short_description = _("project")
-
     def get_queryset(self, request):
         return (
             super()
             .get_queryset(request)
             .prefetch_related(
-                "translations", "event_group__translations", "event_group__project"
+                "translations",
+                "event_group__translations",
+                "project__translations",
+                "event_group__project",
             )
         )
 
