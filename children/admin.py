@@ -46,13 +46,19 @@ class ChildAdmin(admin.ModelAdmin):
         "last_name",
         "birthdate",
         "postal_code",
-        "get_project_year",
+        "get_guardian",
         "created_at",
         "updated_at",
     )
-    list_select_related = ("project",)
-    fields = ("project", "first_name", "last_name", "birthdate", "postal_code")
-    search_fields = ("first_name", "last_name")
+    fields = ("first_name", "last_name", "birthdate", "postal_code")
+    search_fields = (
+        "first_name",
+        "last_name",
+        "birthdate",
+        "guardians__first_name",
+        "guardians__last_name",
+        "guardians__email",
+    )
     inlines = (
         RelationshipInline,
         EnrolmentInline,
@@ -60,7 +66,13 @@ class ChildAdmin(admin.ModelAdmin):
         SubscriptionInline,
     )
 
-    def get_project_year(self, obj):
-        return obj.project.year
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("guardians")
 
-    get_project_year.short_description = _("project")
+    def get_guardian(self, obj):
+        try:
+            return obj.guardians.all()[0]
+        except IndexError:
+            return None
+
+    get_guardian.short_description = _("guardian")

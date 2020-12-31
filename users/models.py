@@ -83,7 +83,7 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
         verbose_name_plural = _("guardians")
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name} ({self.email})"
 
     def save(self, *args, **kwargs):
         if not self.email:
