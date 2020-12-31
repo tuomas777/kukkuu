@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
@@ -51,6 +51,11 @@ class GuardianQuerySet(models.QuerySet):
             Q(user=user) | Q(children__project__in=user.administered_projects)
         ).distinct()
 
+    @transaction.atomic()
+    def delete(self):
+        for child in self:
+            child.delete()
+
 
 class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
     user = models.OneToOneField(
@@ -89,3 +94,10 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
         if not self.email:
             self.email = self.user.email
         super().save(*args, **kwargs)
+
+    @transaction.atomic()
+    def delete(self, *args, **kwargs):
+        for child in self.children.all():
+            if child.guardians.count() == 1:
+                child.delete()
+        return super().delete(*args, **kwargs)
