@@ -63,7 +63,6 @@ class EventAdmin(TranslatableAdmin):
         "ready_for_event_group_publishing",
     )
     list_display_links = ("id", "name")
-    list_select_related = ("project",)
     fields = (
         "project",
         "name",
@@ -100,6 +99,15 @@ class EventAdmin(TranslatableAdmin):
         return obj.project.year
 
     get_project_year.short_description = _("project")
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(
+                "translations", "event_group__translations", "event_group__project"
+            )
+        )
 
 
 class EnrolmentsInlineFormSet(BaseInlineFormSet):
@@ -154,6 +162,18 @@ class OccurrenceAdmin(admin.ModelAdmin):
 
     get_enrolments.short_description = _("enrolments")
     get_free_spot_notification_subscriptions.short_description = _("subscriptions")
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(
+                "event__translations",
+                "venue__translations",
+                "enrolments",
+                "free_spot_notification_subscriptions",
+            )
+        )
 
 
 class EventGroupForm(TranslatableModelForm):
@@ -219,3 +239,10 @@ class EventGroupAdmin(TranslatableAdmin):
                 self.message_user(request, e.message, level=messages.ERROR)
         if success_count:
             self.message_user(request, _("%s successfully published.") % success_count)
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related("translations", "project__translations", "events")
+        )
