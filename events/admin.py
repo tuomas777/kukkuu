@@ -11,6 +11,38 @@ from subscriptions.models import FreeSpotNotificationSubscription
 from .models import Enrolment, Event, EventGroup, Occurrence
 
 
+class BaseBooleanListFilter(admin.SimpleListFilter):
+    def lookups(self, request, model_admin):
+        return ("1", _("Yes")), ("0", _("No"))
+
+
+class IsPublishedFilter(BaseBooleanListFilter):
+    title = _("published")
+    parameter_name = "is_published"
+    lookup_kwarg = "published_at__isnull"
+
+    def queryset(self, request, queryset):
+        if self.value() == "0":
+            return queryset.filter(**{self.lookup_kwarg: True})
+        if self.value() == "1":
+            return queryset.filter(**{self.lookup_kwarg: False})
+
+
+class OccurrenceIsPublishedFilter(IsPublishedFilter):
+    lookup_kwarg = "event__published_at__isnull"
+
+
+class OccurrenceIsUpcomingFilter(BaseBooleanListFilter):
+    title = _("upcoming")
+    parameter_name = "is_upcoming"
+
+    def queryset(self, request, queryset):
+        if self.value() == "0":
+            return queryset.in_past()
+        if self.value() == "1":
+            return queryset.upcoming()
+
+
 class OccurrencesInline(admin.StackedInline):
     model = Occurrence
     extra = 0
@@ -51,6 +83,11 @@ class EventAdmin(TranslatableAdmin):
     ]
     actions = ["publish"]
     readonly_fields = ("published_at",)
+    list_filter = (
+        "project",
+        ("event_group", admin.RelatedOnlyFieldListFilter),
+        IsPublishedFilter,
+    )
 
     def publish(self, request, queryset):
         for obj in queryset:
@@ -101,6 +138,13 @@ class OccurrenceAdmin(admin.ModelAdmin):
     )
     fields = ("time", "event", "venue", "occurrence_language", "capacity_override")
     inlines = [EnrolmentsInline, FreeSpotNotificationSubscriptionInline]
+    list_filter = (
+        "event__project",
+        ("event", admin.RelatedOnlyFieldListFilter),
+        ("venue", admin.RelatedOnlyFieldListFilter),
+        OccurrenceIsPublishedFilter,
+        OccurrenceIsUpcomingFilter,
+    )
 
     def get_enrolments(self, obj):
         return f"{obj.get_enrolment_count()} / {obj.get_capacity()}"
@@ -153,6 +197,7 @@ class EventGroupAdmin(TranslatableAdmin):
     readonly_fields = ("published_at",)
     form = EventGroupForm
     actions = ("publish",)
+    list_filter = ("project", IsPublishedFilter)
 
     def get_event_count(self, obj):
         return obj.events.count()

@@ -65,6 +65,7 @@ class ChildAdmin(admin.ModelAdmin):
         LanguagesSpokenAtHomeInline,
         SubscriptionInline,
     )
+    list_filter = ("project",)
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("guardians")

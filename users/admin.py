@@ -52,6 +52,7 @@ class GuardianAdmin(admin.ModelAdmin):
     exclude = ("languages_spoken_at_home",)
     form = GuardianForm
     inlines = (RelationshipInline, LanguagesSpokenAtHomeInline)
+    list_filter = ("children__project",)
 
 
 class PermissionFilterMixin:

@@ -245,6 +245,12 @@ class OccurrenceQueryset(models.QuerySet):
         for obj in self:
             obj.send_free_spot_notifications_if_needed()
 
+    def upcoming(self):
+        return self.filter(time__gt=now())
+
+    def in_past(self):
+        return self.exclude(time__gt=now())
+
 
 class Occurrence(TimestampedModel):
     time = models.DateTimeField(verbose_name=_("time"))
