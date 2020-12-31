@@ -29,6 +29,9 @@ class User(AbstractUser):
         verbose_name = _("user")
         verbose_name_plural = _("users")
 
+    def __str__(self):
+        return super().__str__() or self.username
+
     @cached_property
     def administered_projects(self):
         from projects.models import Project  # noqa
