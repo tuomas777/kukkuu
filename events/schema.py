@@ -35,6 +35,7 @@ from kukkuu.exceptions import (
     IneligibleOccurrenceEnrolment,
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
+    PastEnrolmentError,
     PastOccurrenceError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
@@ -58,6 +59,13 @@ def validate_enrolment(child, occurrence):
         raise OccurrenceIsFullError("Maximum enrolments created")
     if occurrence.time < timezone.now():
         raise PastOccurrenceError("Cannot join occurrence in the past")
+
+
+def validate_enrolment_deletion(enrolment):
+    if not enrolment.is_upcoming():
+        raise PastEnrolmentError(
+            "Cannot unenrol from an occurrence that is in the past."
+        )
 
 
 class EventParticipantsPerInvite(graphene.Enum):
@@ -435,6 +443,8 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
             )
         except Enrolment.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
+
+        validate_enrolment_deletion(enrolment)
 
         occurrence = enrolment.occurrence
         enrolment.delete_and_send_notification()
