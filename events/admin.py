@@ -151,6 +151,7 @@ class OccurrenceAdmin(admin.ModelAdmin):
         OccurrenceIsPublishedFilter,
         OccurrenceIsUpcomingFilter,
     )
+    ordering = ("-time",)
 
     def get_enrolments(self, obj):
         return f"{obj.get_enrolment_count()} / {obj.get_capacity()}"
