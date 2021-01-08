@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.base_user import BaseUserManager
 from django.db import models, transaction
 from django.db.models import Q
 from django.utils.functional import cached_property
@@ -23,7 +24,7 @@ class UserQuerySet(models.QuerySet):
 
 
 class User(AbstractUser):
-    objects = UserQuerySet.as_manager()
+    objects = BaseUserManager.from_queryset(UserQuerySet)()
 
     class Meta:
         verbose_name = _("user")
