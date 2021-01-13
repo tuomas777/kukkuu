@@ -1,4 +1,7 @@
+from django import forms
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from guardian.admin import (
     AdminGroupObjectPermissionsForm,
     AdminUserObjectPermissionsForm,
@@ -22,6 +25,16 @@ class GroupPermissionsForm(PermissionFilterMixin, AdminGroupObjectPermissionsFor
     pass
 
 
+class UserSelectForm(forms.Form):
+    user = forms.ModelChoiceField(
+        queryset=get_user_model().objects.possible_admins(), required=True
+    )
+
+
+class GroupSelectForm(forms.Form):
+    group = forms.ModelChoiceField(queryset=Group.objects.all(), required=True)
+
+
 @admin.register(Project)
 class ProjectAdmin(TranslatableAdmin, GuardedModelAdmin):
     change_form_template = "project_change_form.html"
@@ -41,3 +54,9 @@ class ProjectAdmin(TranslatableAdmin, GuardedModelAdmin):
 
     def get_obj_perms_manage_group_form(self, request):
         return GroupPermissionsForm
+
+    def get_obj_perms_user_select_form(self, request):
+        return UserSelectForm
+
+    def get_obj_perms_group_select_form(self, request):
+        return GroupSelectForm
