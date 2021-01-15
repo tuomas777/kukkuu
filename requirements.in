@@ -16,3 +16,4 @@ sentry-sdk
 Pillow
 pycountry
 django-guardian
+requests
