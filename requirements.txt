@@ -61,7 +61,7 @@ pyjwt==1.7.1              # via django-graphql-jwt
 python-dateutil==2.8.1    # via azure-storage-common, faker
 python-jose==3.0.1        # via django-helusers
 pytz==2019.3              # via django, google-api-core
-requests==2.22.0          # via azure-storage-common, django-anymail, django-helusers, google-api-core, pyjwkest
+requests==2.22.0          # via -r requirements.in, azure-storage-common, django-anymail, django-helusers, google-api-core, pyjwkest
 rsa==4.0                  # via google-auth, python-jose
 rx==1.6.1                 # via graphql-core
 sentry-sdk==0.12.3        # via -r requirements.in
