@@ -1,9 +1,11 @@
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_ilmoitin.dummy_context import dummy_context
 from django_ilmoitin.registry import notifications
 from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
+from common.utils import get_global_id
 from events.consts import NotificationType
 from events.factories import (
     EnrolmentFactory,
@@ -11,7 +13,7 @@ from events.factories import (
     EventGroupFactory,
     OccurrenceFactory,
 )
-from events.utils import get_event_ui_url
+from events.utils import get_event_ui_url, get_occurrence_ui_url
 from users.factories import GuardianFactory
 from venues.factories import VenueFactory
 
@@ -43,27 +45,41 @@ dummy_context.update(
             "event": event,
             "child": child,
             "event_url": get_event_ui_url(event, child, guardian.language),
+            "localtime": timezone.template_localtime,
+            "get_global_id": get_global_id,
         },
         NotificationType.OCCURRENCE_ENROLMENT: {
             "guardian": guardian,
             "occurrence": occurrence,
             "child": child,
+            "localtime": timezone.template_localtime,
+            "get_global_id": get_global_id,
         },
         NotificationType.OCCURRENCE_UNENROLMENT: {
             "guardian": guardian,
             "occurrence": occurrence,
             "child": child,
+            "localtime": timezone.template_localtime,
+            "get_global_id": get_global_id,
         },
         NotificationType.OCCURRENCE_CANCELLED: {
             "guardian": guardian,
             "occurrence": occurrence,
             "child": child,
+            "localtime": timezone.template_localtime,
+            "get_global_id": get_global_id,
         },
         NotificationType.OCCURRENCE_REMINDER: {
             "guardian": guardian,
+            "event": event,
             "occurrence": occurrence,
             "child": child,
             "enrolment": enrolment,
+            "localtime": timezone.template_localtime,
+            "get_global_id": get_global_id,
+            "occurrence_url": get_occurrence_ui_url(
+                occurrence, child, guardian.language
+            ),
         },
         NotificationType.EVENT_GROUP_PUBLISHED: {
             "guardian": guardian,
@@ -75,6 +91,8 @@ dummy_context.update(
                     "enrolment": enrolment,
                 }
             ],
+            "localtime": timezone.template_localtime,
+            "get_global_id": get_global_id,
         },
     }
 )
