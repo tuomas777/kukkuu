@@ -55,6 +55,7 @@ env = environ.Env(
     KUKKUU_UI_BASE_URL=(str, "http://localhost:3000"),
     KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY=(int, 30),
     KUKKUU_REMINDER_DAYS_IN_ADVANCE=(int, 7),
+    KUKKUU_NOTIFICATIONS_SHEET_ID=(str, ""),
 )
 
 if os.path.exists(env_file):
@@ -150,6 +151,7 @@ INSTALLED_APPS = [
     "django_filters",
     "guardian",
     # local apps
+    "common",
     "users",
     "children",
     "utils",
@@ -236,6 +238,7 @@ KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY = env(
     "KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY"
 )
 KUKKUU_REMINDER_DAYS_IN_ADVANCE = env("KUKKUU_REMINDER_DAYS_IN_ADVANCE")
+KUKKUU_NOTIFICATIONS_SHEET_ID = env("KUKKUU_NOTIFICATIONS_SHEET_ID")
 
 LOGGING = {
     "version": 1,
