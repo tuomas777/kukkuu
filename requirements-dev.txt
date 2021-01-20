@@ -40,9 +40,9 @@ pyparsing==2.4.2          # via packaging
 pytest-cov==2.8.1         # via -r requirements-dev.in
 pytest-django==3.5.1      # via -r requirements-dev.in
 pytest==5.2.1             # via -r requirements-dev.in, pytest-cov, pytest-django
-python-dateutil==2.8.1    # via freezegun
+python-dateutil==2.8.1    # via -c requirements.txt, freezegun
 regex==2019.11.1          # via black
-six==1.12.0               # via freezegun, packaging, prompt-toolkit, python-dateutil, snapshottest, traitlets
+six==1.12.0               # via -c requirements.txt, freezegun, packaging, prompt-toolkit, python-dateutil, snapshottest, traitlets
 snapshottest==0.6.0       # via -r requirements-dev.in
 termcolor==1.1.0          # via snapshottest
 toml==0.10.0              # via black
