@@ -3,6 +3,7 @@ from datetime import timedelta
 
 import factory.random
 import pytest
+import responses
 from django.apps import apps
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
@@ -32,6 +33,12 @@ def setup_test_environment(settings):
     with translation.override("fi"), freeze_time("2020-12-12"):
         yield
     shutil.rmtree("test_media", ignore_errors=True)
+
+
+@pytest.fixture
+def mocked_responses():
+    with responses.RequestsMock() as rsps:
+        yield rsps
 
 
 @pytest.fixture
