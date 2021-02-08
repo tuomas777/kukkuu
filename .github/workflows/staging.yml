@@ -66,6 +66,7 @@ jobs:
           K8S_SECRET_DATABASE_DB: ${{ secrets.K8S_SECRET_DATABASE_DB_STAGING }}
           K8S_SECRET_DATABASE_USERNAME: ${{ secrets.K8S_SECRET_DATABASE_USERNAME_STAGING }}
           K8S_SECRET_DATABASE_PASSWORD: ${{ secrets.K8S_SECRET_DATABASE_PASSWORD_STAGING }}
+          K8S_SECRET_KUKKUU_NOTIFICATIONS_SHEET_ID: ${{ secrets.K8S_SECRET_KUKKUU_NOTIFICATIONS_SHEET_ID_STAGING }}
 
       - name: Deploy send mail cronjob
         uses: City-of-Helsinki/setup-cronjob-action@main
