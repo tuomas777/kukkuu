@@ -74,7 +74,7 @@ jobs:
           image_repository: ghcr.io/city-of-helsinki/${{ github.event.repository.name }}
           image_tag:  ${{ github.sha }}
           kubeconfig_raw: ${{ env.KUBECONFIG_RAW}}
-          target_namespace: ${{ env.K8S_NAMESPACE }}
+          target_namespace: ${{ secrets.K8S_NAMESPACE_STAGING }}
           schedule: "* * * * *" # every min
           secret_name: "project-staging-kukkuu-secret"
           command: "{/bin/sh}"
@@ -88,7 +88,7 @@ jobs:
           image_repository: ghcr.io/city-of-helsinki/${{ github.event.repository.name }}
           image_tag:  ${{ github.sha }}
           kubeconfig_raw: ${{ env.KUBECONFIG_RAW}}
-          target_namespace: ${{ env.K8S_NAMESPACE }}
+          target_namespace: ${{ secrets.K8S_NAMESPACE_STAGING }}
           schedule: "*/20 * * * *" # every 20 mins
           secret_name: "project-staging-kukkuu-secret"
           command: "{/bin/sh}"
@@ -102,7 +102,7 @@ jobs:
           image_repository: ghcr.io/city-of-helsinki/${{ github.event.repository.name }}
           image_tag:  ${{ github.sha }}
           kubeconfig_raw: ${{ env.KUBECONFIG_RAW}}
-          target_namespace: ${{ env.K8S_NAMESPACE }}
+          target_namespace: ${{ secrets.K8S_NAMESPACE_STAGING }}
           schedule: "0 12 * * *" # daily at noon UTC
           secret_name: "project-staging-kukkuu-secret"
           command: "{/bin/sh}"
