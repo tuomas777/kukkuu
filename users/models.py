@@ -29,7 +29,7 @@ class UserManager(OriginalUserManager.from_queryset(UserQuerySet)):
 
 
 class User(AbstractUser):
-    objects = UserManager()
+    objects = OriginalUserManager.from_queryset(UserQuerySet)()
 
     class Meta:
         verbose_name = _("user")
